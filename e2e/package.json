@@ -1,0 +1,17 @@
+{
+  "name": "@inkflow/e2e",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "echo \"run via pnpm test:e2e from the repo root\"",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@playwright/test": "1.63.0",
+    "@inkflow/shared": "workspace:*",
+    "pg": "^8.16.0",
+    "@types/pg": "^8.15.0"
+  }
+}

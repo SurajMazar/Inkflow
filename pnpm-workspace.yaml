@@ -1,0 +1,12 @@
+packages:
+  - apps/*
+  - packages/*
+  - e2e
+onlyBuiltDependencies:
+  - "@prisma/client"
+  - "@prisma/engines"
+  - prisma
+  - esbuild
+  - "@swc/core"
+  - "@nestjs/core"
+  - "@tailwindcss/oxide"

@@ -1,0 +1,39 @@
+{
+  "name": "@inkflow/collaboration",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Real-time collaboration protocol, operation reconciliation and sync client",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch --no-clean",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@inkflow/elements": "workspace:*",
+    "@inkflow/scene": "workspace:*",
+    "@inkflow/shared": "workspace:*",
+    "zod": "^4.1.0"
+  },
+  "devDependencies": {}
+}

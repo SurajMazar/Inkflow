@@ -1,0 +1,8 @@
+node_modules
+dist
+coverage
+pnpm-lock.yaml
+**/migrations/**/*.sql
+playwright-report
+test-results
+.turbo

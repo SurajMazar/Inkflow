@@ -1,0 +1,41 @@
+{
+  "name": "@inkflow/importers",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Validated importers for native JSON, SVG, images and diagram text",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch --no-clean",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@inkflow/geometry": "workspace:*",
+    "@inkflow/elements": "workspace:*",
+    "@inkflow/scene": "workspace:*",
+    "@inkflow/diagram-engine": "workspace:*",
+    "@inkflow/shared": "workspace:*",
+    "zod": "^4.1.0"
+  },
+  "devDependencies": {}
+}

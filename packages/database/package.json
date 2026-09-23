@@ -1,0 +1,48 @@
+{
+  "name": "@inkflow/database",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "PostgreSQL schema, migrations and Prisma client",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    }
+  },
+  "files": [
+    "dist",
+    "prisma"
+  ],
+  "prisma": {
+    "schema": "prisma/schema.prisma"
+  },
+  "scripts": {
+    "build": "prisma generate && tsup",
+    "dev": "tsup --watch --no-clean",
+    "generate": "prisma generate",
+    "migrate:dev": "prisma migrate dev",
+    "migrate:deploy": "prisma migrate deploy",
+    "migrate:reset": "prisma migrate reset --force --skip-seed",
+    "migrate:status": "prisma migrate status",
+    "studio": "prisma studio",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.19.0"
+  },
+  "devDependencies": {
+    "prisma": "^6.19.0"
+  }
+}

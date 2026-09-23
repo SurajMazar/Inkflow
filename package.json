@@ -1,0 +1,61 @@
+{
+  "name": "inkflow",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Inkflow — an infinite-canvas collaborative whiteboard and diagramming platform",
+  "packageManager": "pnpm@10.21.0",
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "dev": "pnpm build:packages && concurrently -k -n pkgs,api,web -c gray,blue,green \"pnpm dev:packages\" \"pnpm --filter @inkflow/api dev\" \"pnpm --filter @inkflow/web dev\"",
+    "dev:packages": "pnpm -r --parallel --filter \"./packages/**\" dev",
+    "build": "pnpm build:packages && pnpm --filter @inkflow/api build && pnpm --filter @inkflow/web build",
+    "build:packages": "pnpm -r --filter \"./packages/**\" build",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm build:packages && pnpm -r --workspace-concurrency=1 test",
+    "test:unit": "pnpm -r --filter \"./packages/**\" --filter @inkflow/web test",
+    "test:integration": "pnpm --filter @inkflow/api test:integration",
+    "test:e2e": "playwright test -c e2e/playwright.config.ts",
+    "lint": "eslint . --max-warnings=0",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "db:generate": "pnpm --filter @inkflow/database generate",
+    "db:migrate": "pnpm --filter @inkflow/database migrate:dev",
+    "db:migrate:deploy": "pnpm --filter @inkflow/database migrate:deploy",
+    "db:seed": "pnpm --filter @inkflow/database build && pnpm --filter @inkflow/api seed",
+    "db:reset": "pnpm --filter @inkflow/database migrate:reset",
+    "infra:up": "podman compose up -d postgres redis minio minio-init mailpit",
+    "infra:down": "podman compose down",
+    "stack:up": "podman compose --profile app up -d --build",
+    "stack:down": "podman compose --profile app down"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.0",
+    "@playwright/test": "1.63.0",
+    "@types/node": "^24.13.0",
+    "concurrently": "^9.2.0",
+    "eslint": "^9.39.0",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.20",
+    "globals": "^16.5.0",
+    "prettier": "^3.6.0",
+    "tsup": "^8.5.0",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.46.0",
+    "vitest": "^3.2.7"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@prisma/client",
+      "@prisma/engines",
+      "prisma",
+      "esbuild",
+      "@swc/core",
+      "@nestjs/core",
+      "@tailwindcss/oxide"
+    ]
+  },
+  "type": "module"
+}

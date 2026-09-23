@@ -31,6 +31,13 @@ const HANDLE_POS: Record<ResizeHandle, [number, number]> = {
   w: [0, 0.5],
 };
 
+/** World position of a handle on the (unpadded) box, rotation applied. */
+export function handlePoint(frame: SelectionFrame, handle: ResizeHandle): Point {
+  const [nx, ny] = HANDLE_POS[handle];
+  const c = { x: frame.x + frame.width / 2, y: frame.y + frame.height / 2 };
+  return rotatePoint({ x: frame.x + nx * frame.width, y: frame.y + ny * frame.height }, c, frame.angle);
+}
+
 export interface SelectionFrame {
   /** Unrotated box in world units. */
   x: number;

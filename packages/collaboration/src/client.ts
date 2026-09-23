@@ -421,8 +421,18 @@ export class CollabClient {
     if (touched.size) this.emitRebased(touched);
   }
 
+  /** Authoritative states rebased with pending local operations (e.g. to undo stale previews). */
+  getRebasedElements(ids: Iterable<string>): SceneElement[] {
+    return this.computeRebased(new Set(ids));
+  }
+
   /** Recomputes local states (server + pending) for the given element ids and emits them. */
   private emitRebased(ids: ReadonlySet<string>) {
+    const out = this.computeRebased(ids);
+    if (out.length) this.options.onElements(out);
+  }
+
+  private computeRebased(ids: ReadonlySet<string>): SceneElement[] {
     const pendingByTarget = new Map<string, Operation[]>();
     for (const op of this.pending) {
       for (const id of operationTargets(op)) {
@@ -447,7 +457,7 @@ export class CollabClient {
       }
       if (el) out.push(el);
     }
-    if (out.length) this.options.onElements(out);
+    return out;
   }
 
   private handleAck(batchId: string, results: readonly OpResult[]) {
@@ -551,7 +561,8 @@ export class CollabClient {
 
   private updateStatus() {
     const pendingOps = this.pending.length;
-    const online = this.status.connection === 'online' || this.httpReachable;
+    // The very first connection attempt is not "offline" yet.
+    const online = this.status.connection === 'online' || this.status.connection === 'connecting' || this.httpReachable;
     let save: SaveState;
     if (!online) save = 'offline';
     else if (pendingOps === 0) save = 'saved';

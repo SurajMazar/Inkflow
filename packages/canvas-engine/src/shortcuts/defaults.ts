@@ -81,6 +81,7 @@ export const DEFAULT_SHORTCUTS: readonly ShortcutDefinition[] = [
   { id: 'view.toggleTheme', label: 'Toggle dark mode', category: 'view', keys: ['Alt+Shift+D'] },
   { id: 'view.zenMode', label: 'Zen mode', category: 'view', keys: ['Alt+Z'] },
   { id: 'view.present', label: 'Present frames', category: 'view', keys: ['Alt+P'] },
+  { id: 'export.board', label: 'Export', category: 'view', keys: ['Shift+Mod+E'] },
   { id: 'view.shortcuts', label: 'Keyboard shortcuts', category: 'view', keys: ['?', 'Shift+/'] },
   { id: 'view.commandPalette', label: 'Command palette', category: 'view', keys: ['Mod+K', 'Mod+/'] },
 

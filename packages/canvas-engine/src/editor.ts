@@ -568,14 +568,34 @@ export class Editor {
   applyStyle(patch: Partial<StyleDefaults>, elementPatch?: ElementPatch): void {
     this.setState({ style: { ...this.state.style, ...patch } });
     const selected = this.getSelectedElements().filter((e) => !e.locked);
-    if (selected.length === 0 || !elementPatch) return;
+    elementPatch ??= patch as ElementPatch;
+    if (selected.length === 0) return;
     const patches: (readonly [string, ElementPatch])[] = [];
     for (const el of selected) {
       const p = adaptPatchToElement(el, elementPatch);
       if (Object.keys(p).length) patches.push([el.id, p]);
     }
-    this.updateElements(patches, 'Change style');
+    if (patches.length === 0) return;
+    // Continuous edits (dragging a color or slider) collapse into one undo step.
+    const last = this.history.peekUndo();
+    const selectionKey = selected.map((e) => e.id).join(',');
+    const merge =
+      !!last &&
+      last.label === 'Change style' &&
+      Date.now() - this.lastStyleChange.time < 1000 &&
+      this.lastStyleChange.selection === selectionKey;
+    this.lastStyleChange = { time: Date.now(), selection: selectionKey };
+    this.mutate(
+      'Change style',
+      (tx) => {
+        tx.updateMany(patches);
+        this.refreshBindings(tx, patches.map(([id]) => id));
+      },
+      { merge },
+    );
   }
+
+  private lastStyleChange = { time: 0, selection: '' };
 
   // ───────────────────────────── history ─────────────────────────────
 
@@ -830,7 +850,7 @@ export class Editor {
     }
     const selectionBefore = edit.isNew ? [] : [edit.elementId];
     this.finishTransaction(tx, selectionBefore, {
-      merge: edit.isNew,
+      merge: false,
       selectionAfter: empty ? [] : [edit.elementId],
     });
   }
@@ -872,10 +892,21 @@ export class Editor {
       text: '',
       autoResize: true,
     });
+    if (this.isReadOnly) return;
+    this.commitTextEditIfAny();
     const size = measureTextElement({ ...el, text: 'W' });
-    const withSize = { ...el, width: size.width, height: size.height };
-    const [created] = this.addElements([withSize], { label: 'Add text' });
-    if (created) this.startTextEdit(created.id, 'text', { isNew: true });
+    const [index] = indicesAbove(this.scene.getElementsIncludingDeleted(), 1);
+    // Creation and the first edit form one transaction: an abandoned empty text leaves no trace.
+    const tx = new Transaction(this.scene, 'Add text');
+    const created = tx.create({ ...el, width: size.width, height: size.height, index: index! });
+    this.refreshFrameMembership(tx, [created.id]);
+    this.textEditTx = tx;
+    this.setState({
+      textEdit: { elementId: created.id, kind: 'text', isNew: true, initialText: '' },
+      selectedIds: [created.id],
+      interaction: 'idle',
+    });
+    this.events.emit('presence', { editingId: created.id });
   }
 
   // ───────────────────────────── images ─────────────────────────────

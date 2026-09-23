@@ -37,7 +37,7 @@ class FakeSocket implements WebSocketLike {
 
 const user = { id: 'u1', name: 'Ada', avatarUrl: null, color: '#f00', anonymous: false };
 
-function welcome(seq: number, missed: ServerMessage extends infer M ? (M extends { t: 'welcome' } ? M['missed'] : never) : never = []): ServerMessage {
+function welcome(seq: number, missed: Extract<ServerMessage, { t: 'welcome' }>['missed'] = []): ServerMessage {
   return { t: 'welcome', protocol: 1, clientId: 'c1', role: 'EDITOR', user, seq, peers: [], missed };
 }
 

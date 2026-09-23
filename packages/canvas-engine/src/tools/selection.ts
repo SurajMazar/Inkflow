@@ -41,6 +41,7 @@ import {
   cursorForHandle,
   frameCorners,
   getSelectionFrame,
+  handlePoint,
   hitTestHandles,
   type ResizeHandle,
   type SelectionFrame,
@@ -68,7 +69,15 @@ type Mode =
       guides: SnapGuides;
       frameTarget: string | null;
     }
-  | { kind: 'resizing'; handle: ResizeHandle; frame: SelectionFrame; originals: SceneElement[]; guides: SnapGuides }
+  | {
+      kind: 'resizing';
+      handle: ResizeHandle;
+      frame: SelectionFrame;
+      originals: SceneElement[];
+      guides: SnapGuides;
+      /** Offset between the pointer and the box edge at the start of the drag. */
+      grab: Point;
+    }
   | { kind: 'rotating'; center: Point; start: Point; originals: SceneElement[]; baseAngle: number }
   | {
       kind: 'point';
@@ -241,7 +250,9 @@ export class SelectionTool extends BaseTool {
     }
     const frame = getSelectionFrame(selected);
     if (!frame || !editor.beginGesture('Resize')) return;
-    this.mode = { kind: 'resizing', handle: handle.id as ResizeHandle, frame, originals: selected, guides: EMPTY_GUIDES };
+    const onBox = handlePoint(frame, handle.id as ResizeHandle);
+    const grab = { x: e.world.x - onBox.x, y: e.world.y - onBox.y };
+    this.mode = { kind: 'resizing', handle: handle.id as ResizeHandle, frame, originals: selected, guides: EMPTY_GUIDES, grab };
     editor.setState({ interaction: 'resizing', cursor: cursorForHandle(handle.id as ResizeHandle, frame.angle) });
   }
 
@@ -454,7 +465,8 @@ export class SelectionTool extends BaseTool {
     const mode = this.mode;
     const tx = this.editor.activeGesture;
     if (mode.kind !== 'resizing' || !tx) return;
-    let pointer = e.world;
+    // Keep the grab offset (handles sit slightly outside the box) so the edge doesn't jump.
+    let pointer = { x: e.world.x - mode.grab.x, y: e.world.y - mode.grab.y };
     mode.guides = EMPTY_GUIDES;
     if (mode.frame.angle === 0) {
       const snap = snapDrawingPoint(this.editor, pointer, new Set(mode.originals.map((o) => o.id)), e.mod);

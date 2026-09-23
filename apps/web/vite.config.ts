@@ -72,6 +72,8 @@ export const viteConfig: UserConfig = {
     // Container builds disable sourcemaps to fit small build VMs (INKFLOW_SOURCEMAP=false).
     sourcemap: process.env.INKFLOW_SOURCEMAP !== 'false',
     chunkSizeWarningLimit: 900,
+    // Keep memory low for small container build VMs (gzip-size reporting buffers every chunk).
+    reportCompressedSize: process.env.INKFLOW_SOURCEMAP !== 'false',
     rollupOptions: {
       output: { manualChunks },
       onwarn(warning, warn) {

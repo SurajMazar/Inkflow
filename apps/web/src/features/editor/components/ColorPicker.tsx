@@ -338,8 +338,10 @@ export function ColorPicker({
         title={color}
         onClick={() => pick(color)}
         className={cn(
-          'relative rounded-[7px] p-[3px] outline-none transition-transform hover:scale-105 focus-visible:ring-2 focus-visible:ring-ring',
-          selected && 'ring-[1.5px] ring-primary',
+          'group/swatch relative rounded-[6px] p-0 outline-none transition-transform hover:scale-105 focus-visible:ring-2 focus-visible:ring-ring',
+          '[&>span:first-child]:transition-[outline-color]',
+          selected &&
+            '[&>span:first-child]:outline [&>span:first-child]:outline-[1.5px] [&>span:first-child]:outline-offset-[1.5px] [&>span:first-child]:outline-primary',
         )}
       >
         <ColorSwatch color={color} size={size} />
@@ -358,11 +360,11 @@ export function ColorPicker({
     : PALETTE_ROWS.map((row, i) => (i === 0 ? row.filter((c) => c !== 'transparent') : row));
 
   return (
-    <div className="flex items-center gap-1" data-testid={testId}>
+    <div className="flex items-center gap-2" data-testid={testId}>
       {quick
         .filter((c) => allowTransparent || c !== 'transparent')
         .map((c) => swatchButton(c, `q-${c}`, 20))}
-      <span className="mx-1 h-5 w-px bg-border" aria-hidden="true" />
+      <span className="h-5 w-px bg-border" aria-hidden="true" />
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <button
@@ -391,13 +393,13 @@ export function ColorPicker({
               </TabsTrigger>
             </TabsList>
             <TabsContent value="palette" className="flex flex-col gap-3">
-              <div className="grid grid-cols-5 gap-1" role="group" aria-label={`${label} palette`}>
+              <div className="grid grid-cols-5 gap-2" role="group" aria-label={`${label} palette`}>
                 {palette.flatMap((row, r) => row.map((c, i) => swatchButton(c, `p-${r}-${i}`)))}
               </div>
               {recent.length > 0 && (
                 <div>
                   <p className="mb-1 text-[11px] font-medium text-muted-foreground">Recent</p>
-                  <div className="flex flex-wrap gap-1">
+                  <div className="flex flex-wrap gap-2">
                     {recent.map((c) => swatchButton(c, `r-${c}`, 18))}
                   </div>
                 </div>
@@ -421,7 +423,7 @@ export function ColorPicker({
                   </button>
                 </div>
                 {favorites.length > 0 ? (
-                  <div className="flex flex-wrap gap-1">
+                  <div className="flex flex-wrap gap-2">
                     {favorites.map((c) => swatchButton(c, `f-${c}`, 18))}
                   </div>
                 ) : (

@@ -29,7 +29,7 @@ RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \
     NODE_ENV=development pnpm install --offline --frozen-lockfile --filter "@inkflow/web..."
 
 # Workspace packages resolve to their TypeScript sources through the `source` export condition.
-ENV INKFLOW_SOURCEMAP=false NODE_OPTIONS=--max-old-space-size=1536
+ENV INKFLOW_SOURCEMAP=false NODE_OPTIONS=--max-old-space-size=640
 RUN pnpm --filter @inkflow/web exec vite build
 
 ############################

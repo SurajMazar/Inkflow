@@ -83,9 +83,8 @@ services:
     build:
       context: .
       dockerfile: apps/api/Dockerfile
-    env_file:
-      - path: .env
-        required: false
+    # The container stack is configured here, independent of the host `.env` used by `pnpm dev`.
+    # Override the secrets for anything beyond local testing (see DEPLOYMENT.md).
     environment:
       NODE_ENV: production
       PORT: '4000'
@@ -99,8 +98,8 @@ services:
       SMTP_PORT: '1025'
       WEB_ORIGIN: http://localhost:${INKFLOW_WEB_PORT:-8190}
       PUBLIC_API_URL: http://localhost:${INKFLOW_WEB_PORT:-8190}/api
-      JWT_SECRET: ${JWT_SECRET:-container-jwt-secret-change-me-0123456789abcdef}
-      SESSION_SECRET: ${SESSION_SECRET:-container-session-secret-change-me-0123456789}
+      JWT_SECRET: ${INKFLOW_JWT_SECRET:-local-container-jwt-secret-7f3a9c2e5b8d1f4a6c0e}
+      SESSION_SECRET: ${INKFLOW_SESSION_SECRET:-local-container-session-secret-2b6e9d4f1a8c3e7b0d5f}
       TRUST_PROXY: 'true'
     depends_on:
       postgres:

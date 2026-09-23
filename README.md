@@ -88,7 +88,12 @@ Host ports can be changed through `INKFLOW_POSTGRES_PORT`, `INKFLOW_REDIS_PORT`,
 podman compose --profile app up -d --build
 ```
 
-This builds and runs the API and the web app (nginx) as well; open http://localhost:8190.
+This builds and runs the API (production mode, migrations applied on start) and the web app
+(nginx, which also proxies `/api` and the WebSocket); open http://localhost:8190. The container
+stack does not read the host `.env`; set `INKFLOW_JWT_SECRET` and `INKFLOW_SESSION_SECRET` to your
+own values for anything beyond local testing. The web image build is tuned to fit the default 2 GB
+Podman machine; builds run one image at a time if memory is tight
+(`podman compose --profile app build api && podman compose --profile app build web`).
 
 ## Commands
 

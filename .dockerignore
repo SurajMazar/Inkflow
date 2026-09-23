@@ -1,0 +1,16 @@
+# Keep build contexts small and free of secrets / host-specific artifacts.
+.git
+**/node_modules
+**/dist
+**/coverage
+**/*.tsbuildinfo
+**/.vite
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+playwright-report
+test-results
+e2e/.auth
+apps/web/dev-dist

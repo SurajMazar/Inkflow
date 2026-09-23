@@ -1,0 +1,679 @@
+// Inkflow PostgreSQL schema.
+//
+// Conventions: snake_case tables/columns, UUID primary keys, `created_at`/`updated_at` as
+// timestamptz(3). Secrets (refresh/verification/reset/invitation/share tokens) are stored only as
+// SHA-256 hashes. Raw SQL that Prisma cannot express (the `C` collation of `board_elements.z_index`
+// and the `pg_trgm` extension) lives in the migrations — see docs/DATABASE.md.
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x", "linux-arm64-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ───────────────────────────────── enums ─────────────────────────────────
+
+enum WorkspaceRole {
+  OWNER
+  ADMIN
+  MEMBER
+
+  @@map("workspace_role")
+}
+
+enum BoardRole {
+  OWNER
+  EDITOR
+  VIEWER
+
+  @@map("board_role")
+}
+
+enum WorkspaceAccess {
+  NONE
+  VIEWER
+  EDITOR
+
+  @@map("workspace_access")
+}
+
+enum ShareLinkRole {
+  EDITOR
+  VIEWER
+
+  @@map("share_link_role")
+}
+
+enum VersionKind {
+  AUTO
+  MANUAL
+  RESTORE_BACKUP
+
+  @@map("version_kind")
+}
+
+enum NotificationType {
+  BOARD_SHARED
+  WORKSPACE_INVITE
+  COMMENT_CREATED
+  COMMENT_REPLY
+  MENTION
+  COMMENT_RESOLVED
+
+  @@map("notification_type")
+}
+
+enum OAuthProvider {
+  google
+  github
+
+  @@map("oauth_provider")
+}
+
+enum TemplateCategory {
+  architecture
+  software
+  database
+  flowchart
+  uml
+  planning
+  brainstorm
+  other
+
+  @@map("template_category")
+}
+
+// ───────────────────────────────── identity ─────────────────────────────────
+
+model User {
+  id              String    @id @default(uuid()) @db.Uuid
+  /// Always stored trimmed + lower-cased.
+  email           String    @unique @db.VarChar(254)
+  name            String    @db.VarChar(80)
+  avatarUrl       String?   @map("avatar_url") @db.VarChar(2048)
+  /// argon2id PHC string; null for OAuth-only accounts.
+  passwordHash    String?   @map("password_hash")
+  emailVerifiedAt DateTime? @map("email_verified_at") @db.Timestamptz(3)
+  preferences     Json      @default("{}")
+  lastLoginAt     DateTime? @map("last_login_at") @db.Timestamptz(3)
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  sessions             Session[]
+  oauthAccounts        OAuthAccount[]
+  passwordResets       PasswordReset[]
+  emailVerifications   EmailVerification[]
+  workspaceMemberships WorkspaceMember[]
+  invitationsSent      WorkspaceInvitation[] @relation("InvitationInviter")
+  workspacesCreated    Workspace[]           @relation("WorkspaceCreator")
+  projectsCreated      Project[]             @relation("ProjectCreator")
+  foldersCreated       Folder[]              @relation("FolderCreator")
+  boardsOwned          Board[]               @relation("BoardOwner")
+  boardsDeleted        Board[]               @relation("BoardDeleter")
+  boardMemberships     BoardMember[]         @relation("BoardMemberUser")
+  boardMembersAdded    BoardMember[]         @relation("BoardMemberAddedBy")
+  favorites            BoardFavorite[]
+  views                BoardView[]
+  elementsUpdated      BoardElement[]
+  versionsCreated      BoardVersion[]
+  operations           BoardOperation[]
+  comments             Comment[]             @relation("CommentAuthor")
+  commentsResolved     Comment[]             @relation("CommentResolver")
+  replies              CommentReply[]
+  mentions             CommentMention[]
+  files                File[]
+  templates            Template[]
+  sharesSent           Share[]
+  shareLinks           ShareLink[]
+  notifications        Notification[]        @relation("NotificationRecipient")
+  notificationsCaused  Notification[]        @relation("NotificationActor")
+
+  @@map("users")
+}
+
+/// One row per issued refresh token. Rows of the same login share `family_id`; refreshing marks the
+/// presented row `rotated_at` and inserts its successor. Presenting a rotated token revokes the family.
+model Session {
+  id            String    @id @default(uuid()) @db.Uuid
+  userId        String    @map("user_id") @db.Uuid
+  familyId      String    @map("family_id") @db.Uuid
+  /// SHA-256 (hex) of the opaque refresh token.
+  tokenHash     String    @unique @map("token_hash") @db.Char(64)
+  /// When the logical session (family) was started, carried over on rotation.
+  startedAt     DateTime  @default(now()) @map("started_at") @db.Timestamptz(3)
+  userAgent     String?   @map("user_agent") @db.VarChar(512)
+  ip            String?   @db.VarChar(64)
+  lastUsedAt    DateTime  @default(now()) @map("last_used_at") @db.Timestamptz(3)
+  expiresAt     DateTime  @map("expires_at") @db.Timestamptz(3)
+  rotatedAt     DateTime? @map("rotated_at") @db.Timestamptz(3)
+  revokedAt     DateTime? @map("revoked_at") @db.Timestamptz(3)
+  revokedReason String?   @map("revoked_reason") @db.VarChar(64)
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, revokedAt])
+  @@index([familyId])
+  @@index([expiresAt])
+  @@map("sessions")
+}
+
+model OAuthAccount {
+  id                String        @id @default(uuid()) @db.Uuid
+  userId            String        @map("user_id") @db.Uuid
+  provider          OAuthProvider
+  providerAccountId String        @map("provider_account_id") @db.VarChar(255)
+  email             String?       @db.VarChar(254)
+  createdAt         DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt         DateTime      @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@unique([userId, provider])
+  @@map("oauth_accounts")
+}
+
+model PasswordReset {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  tokenHash String    @unique @map("token_hash") @db.Char(64)
+  expiresAt DateTime  @map("expires_at") @db.Timestamptz(3)
+  usedAt    DateTime? @map("used_at") @db.Timestamptz(3)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("password_resets")
+}
+
+model EmailVerification {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  email     String    @db.VarChar(254)
+  tokenHash String    @unique @map("token_hash") @db.Char(64)
+  expiresAt DateTime  @map("expires_at") @db.Timestamptz(3)
+  usedAt    DateTime? @map("used_at") @db.Timestamptz(3)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("email_verifications")
+}
+
+// ───────────────────────────────── workspaces ─────────────────────────────────
+
+model Workspace {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String   @db.VarChar(80)
+  slug        String   @unique @db.VarChar(120)
+  createdById String?  @map("created_by") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  createdBy   User?                 @relation("WorkspaceCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  members     WorkspaceMember[]
+  invitations WorkspaceInvitation[]
+  projects    Project[]
+  folders     Folder[]
+  boards      Board[]
+  templates   Template[]
+
+  @@map("workspaces")
+}
+
+model WorkspaceMember {
+  workspaceId String        @map("workspace_id") @db.Uuid
+  userId      String        @map("user_id") @db.Uuid
+  role        WorkspaceRole @default(MEMBER)
+  createdAt   DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime      @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([workspaceId, userId])
+  @@index([userId])
+  @@index([workspaceId, role])
+  @@map("workspace_members")
+}
+
+/// Pending invitations only: rows are deleted when accepted or revoked.
+model WorkspaceInvitation {
+  id          String        @id @default(uuid()) @db.Uuid
+  workspaceId String        @map("workspace_id") @db.Uuid
+  email       String        @db.VarChar(254)
+  role        WorkspaceRole @default(MEMBER)
+  tokenHash   String        @unique @map("token_hash") @db.Char(64)
+  invitedById String        @map("invited_by") @db.Uuid
+  expiresAt   DateTime      @map("expires_at") @db.Timestamptz(3)
+  createdAt   DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime      @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  invitedBy User      @relation("InvitationInviter", fields: [invitedById], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, email])
+  @@index([email])
+  @@map("workspace_invitations")
+}
+
+model Project {
+  id          String   @id @default(uuid()) @db.Uuid
+  workspaceId String   @map("workspace_id") @db.Uuid
+  name        String   @db.VarChar(120)
+  description String?  @db.VarChar(1000)
+  createdById String?  @map("created_by") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  createdBy User?     @relation("ProjectCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  folders   Folder[]
+  boards    Board[]
+
+  @@index([workspaceId, name])
+  @@map("projects")
+}
+
+model Folder {
+  id          String   @id @default(uuid()) @db.Uuid
+  workspaceId String   @map("workspace_id") @db.Uuid
+  projectId   String?  @map("project_id") @db.Uuid
+  parentId    String?  @map("parent_id") @db.Uuid
+  name        String   @db.VarChar(120)
+  createdById String?  @map("created_by") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  project   Project?  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  parent    Folder?   @relation("FolderTree", fields: [parentId], references: [id], onDelete: SetNull)
+  children  Folder[]  @relation("FolderTree")
+  createdBy User?     @relation("FolderCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  boards    Board[]
+
+  @@index([workspaceId, parentId])
+  @@index([projectId])
+  @@index([parentId])
+  @@map("folders")
+}
+
+// ───────────────────────────────── boards ─────────────────────────────────
+
+model Board {
+  id              String          @id @default(uuid()) @db.Uuid
+  workspaceId     String          @map("workspace_id") @db.Uuid
+  projectId       String?         @map("project_id") @db.Uuid
+  folderId        String?         @map("folder_id") @db.Uuid
+  ownerId         String          @map("owner_id") @db.Uuid
+  title           String          @db.VarChar(200)
+  workspaceAccess WorkspaceAccess @default(EDITOR) @map("workspace_access")
+  /// Board-level `DocumentAppState` (background, grid, frame order).
+  appState        Json            @default("{}") @map("app_state")
+  /// Sequence number of the last committed operation.
+  seq             BigInt          @default(0)
+  /// Number of non-deleted elements.
+  elementCount    Int             @default(0) @map("element_count")
+  opsSinceVersion Int             @default(0) @map("ops_since_version")
+  lastVersionAt   DateTime?       @map("last_version_at") @db.Timestamptz(3)
+  thumbnailKey    String?         @map("thumbnail_key") @db.VarChar(512)
+  deletedAt       DateTime?       @map("deleted_at") @db.Timestamptz(3)
+  deletedById     String?         @map("deleted_by") @db.Uuid
+  createdAt       DateTime        @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime        @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  workspace      Workspace        @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  project        Project?         @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  folder         Folder?          @relation(fields: [folderId], references: [id], onDelete: SetNull)
+  owner          User             @relation("BoardOwner", fields: [ownerId], references: [id], onDelete: Restrict)
+  deletedBy      User?            @relation("BoardDeleter", fields: [deletedById], references: [id], onDelete: SetNull)
+  members        BoardMember[]
+  favorites      BoardFavorite[]
+  views          BoardView[]
+  elements       BoardElement[]
+  versions       BoardVersion[]
+  operations     BoardOperation[]
+  comments       Comment[]
+  files          File[]
+  fileReferences FileReference[]
+  shares         Share[]
+  shareLinks     ShareLink[]
+
+  @@index([workspaceId, deletedAt, updatedAt(sort: Desc)])
+  @@index([projectId])
+  @@index([folderId])
+  @@index([ownerId])
+  @@index([deletedAt])
+  @@index([title(ops: raw("gin_trgm_ops"))], type: Gin, map: "boards_title_trgm_idx")
+  @@map("boards")
+}
+
+model BoardMember {
+  boardId   String    @map("board_id") @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  role      BoardRole @default(EDITOR)
+  addedById String?   @map("added_by") @db.Uuid
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  board   Board @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  user    User  @relation("BoardMemberUser", fields: [userId], references: [id], onDelete: Cascade)
+  addedBy User? @relation("BoardMemberAddedBy", fields: [addedById], references: [id], onDelete: SetNull)
+
+  @@id([boardId, userId])
+  @@index([userId])
+  @@map("board_members")
+}
+
+model BoardFavorite {
+  userId    String   @map("user_id") @db.Uuid
+  boardId   String   @map("board_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  board Board @relation(fields: [boardId], references: [id], onDelete: Cascade)
+
+  @@id([userId, boardId])
+  @@index([boardId])
+  @@map("board_favorites")
+}
+
+model BoardView {
+  userId       String   @map("user_id") @db.Uuid
+  boardId      String   @map("board_id") @db.Uuid
+  lastViewedAt DateTime @default(now()) @map("last_viewed_at") @db.Timestamptz(3)
+  viewCount    Int      @default(1) @map("view_count")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  board Board @relation(fields: [boardId], references: [id], onDelete: Cascade)
+
+  @@id([userId, boardId])
+  @@index([userId, lastViewedAt(sort: Desc)])
+  @@index([boardId])
+  @@map("board_views")
+}
+
+/// Current state of every element of a board (tombstones included, `is_deleted = true`).
+model BoardElement {
+  boardId     String   @map("board_id") @db.Uuid
+  elementId   String   @map("element_id") @db.VarChar(128)
+  type        String   @db.VarChar(32)
+  /// The full `SceneElement`.
+  data        Json
+  version     Int
+  /// Fractional order key; the column uses COLLATE "C" (see migration) so ORDER BY matches the
+  /// client's code-unit string comparison.
+  zIndex      String   @map("z_index")
+  isDeleted   Boolean  @default(false) @map("is_deleted")
+  /// Text, labels and names extracted for search (pg_trgm GIN index).
+  searchText  String   @default("") @map("search_text")
+  updatedById String?  @map("updated_by") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  board     Board @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  updatedBy User? @relation(fields: [updatedById], references: [id], onDelete: SetNull)
+
+  @@id([boardId, elementId])
+  @@index([boardId, isDeleted, zIndex, elementId])
+  @@index([searchText(ops: raw("gin_trgm_ops"))], type: Gin, map: "board_elements_search_text_trgm_idx")
+  @@map("board_elements")
+}
+
+model BoardVersion {
+  id           String      @id @default(uuid()) @db.Uuid
+  boardId      String      @map("board_id") @db.Uuid
+  number       Int
+  label        String?     @db.VarChar(120)
+  kind         VersionKind @default(MANUAL)
+  /// A complete `SceneDocument`.
+  snapshot     Json
+  elementCount Int         @default(0) @map("element_count")
+  seq          BigInt      @default(0)
+  createdById  String?     @map("created_by") @db.Uuid
+  createdAt    DateTime    @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime    @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  board     Board @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  createdBy User? @relation(fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@unique([boardId, number])
+  @@index([boardId, createdAt(sort: Desc)])
+  @@map("board_versions")
+}
+
+/// Append-only operation log. (board_id, seq) orders a board's history; (board_id, client_id, op_id)
+/// makes client retries idempotent.
+model BoardOperation {
+  id         BigInt   @id @default(autoincrement())
+  boardId    String   @map("board_id") @db.Uuid
+  seq        BigInt
+  clientId   String   @map("client_id") @db.VarChar(128)
+  opId       String   @map("op_id") @db.VarChar(128)
+  userId     String?  @map("user_id") @db.Uuid
+  type       String   @db.VarChar(32)
+  payload    Json
+  elementIds String[] @map("element_ids")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  board Board @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  user  User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@unique([boardId, seq])
+  @@unique([boardId, clientId, opId])
+  @@index([createdAt])
+  @@map("board_operations")
+}
+
+// ───────────────────────────────── comments ─────────────────────────────────
+
+model Comment {
+  id           String    @id @default(uuid()) @db.Uuid
+  boardId      String    @map("board_id") @db.Uuid
+  authorId     String    @map("author_id") @db.Uuid
+  body         String    @db.VarChar(5000)
+  /// `CommentAnchor` (point / element / frame).
+  anchor       Json
+  resolvedAt   DateTime? @map("resolved_at") @db.Timestamptz(3)
+  resolvedById String?   @map("resolved_by") @db.Uuid
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  board      Board            @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  author     User             @relation("CommentAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  resolvedBy User?            @relation("CommentResolver", fields: [resolvedById], references: [id], onDelete: SetNull)
+  replies    CommentReply[]
+  mentions   CommentMention[]
+
+  @@index([boardId, resolvedAt, createdAt])
+  @@index([authorId])
+  @@map("comments")
+}
+
+model CommentReply {
+  id        String   @id @default(uuid()) @db.Uuid
+  commentId String   @map("comment_id") @db.Uuid
+  authorId  String   @map("author_id") @db.Uuid
+  body      String   @db.VarChar(5000)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  comment  Comment          @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  author   User             @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  mentions CommentMention[]
+
+  @@index([commentId, createdAt])
+  @@index([authorId])
+  @@map("comment_replies")
+}
+
+/// A user mentioned in a comment (reply_id null) or in one of its replies.
+model CommentMention {
+  id        String   @id @default(uuid()) @db.Uuid
+  commentId String   @map("comment_id") @db.Uuid
+  replyId   String?  @map("reply_id") @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  comment Comment       @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  reply   CommentReply? @relation(fields: [replyId], references: [id], onDelete: Cascade)
+  user    User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([commentId])
+  @@index([replyId])
+  @@index([userId])
+  @@map("comment_mentions")
+}
+
+// ───────────────────────────────── files ─────────────────────────────────
+
+/// Uploaded image. Objects are content-addressed (`storage_key` = files/<sha256>), so several rows
+/// (e.g. of duplicated boards) may share one object; it is deleted when the last row goes away.
+model File {
+  id           String   @id @default(uuid()) @db.Uuid
+  boardId      String   @map("board_id") @db.Uuid
+  uploadedById String?  @map("uploaded_by") @db.Uuid
+  storageKey   String   @map("storage_key") @db.VarChar(512)
+  sha256       String   @db.Char(64)
+  mimeType     String   @map("mime_type") @db.VarChar(64)
+  size         Int
+  width        Int?
+  height       Int?
+  originalName String   @map("original_name") @db.VarChar(255)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  board      Board           @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  uploadedBy User?           @relation(fields: [uploadedById], references: [id], onDelete: SetNull)
+  references FileReference[]
+
+  @@index([boardId, sha256])
+  @@index([storageKey])
+  @@map("files")
+}
+
+/// Which (non-deleted) image element of a board references which file.
+model FileReference {
+  id        String   @id @default(uuid()) @db.Uuid
+  fileId    String   @map("file_id") @db.Uuid
+  boardId   String   @map("board_id") @db.Uuid
+  elementId String   @map("element_id") @db.VarChar(128)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  file  File  @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  board Board @relation(fields: [boardId], references: [id], onDelete: Cascade)
+
+  @@unique([boardId, elementId])
+  @@index([fileId])
+  @@map("file_references")
+}
+
+// ───────────────────────────────── templates ─────────────────────────────────
+
+model Template {
+  id           String           @id @default(uuid()) @db.Uuid
+  /// Stable key of built-in templates; null for workspace templates.
+  key          String?          @unique @db.VarChar(120)
+  name         String           @db.VarChar(120)
+  description  String           @default("") @db.VarChar(1000)
+  category     TemplateCategory @default(other)
+  isSystem     Boolean          @default(false) @map("is_system")
+  workspaceId  String?          @map("workspace_id") @db.Uuid
+  createdById  String?          @map("created_by") @db.Uuid
+  /// A complete `SceneDocument`.
+  document     Json
+  elementCount Int              @default(0) @map("element_count")
+  createdAt    DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime         @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  workspace Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  createdBy User?      @relation(fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([isSystem, category])
+  @@index([workspaceId])
+  @@map("templates")
+}
+
+// ───────────────────────────────── sharing ─────────────────────────────────
+
+/// Board shared with an email address that has no (verified) account yet. Converted into a
+/// `board_members` row when that address is verified; deleted afterwards.
+model Share {
+  id          String    @id @default(uuid()) @db.Uuid
+  boardId     String    @map("board_id") @db.Uuid
+  email       String    @db.VarChar(254)
+  role        BoardRole @default(EDITOR)
+  message     String?   @db.VarChar(500)
+  invitedById String    @map("invited_by") @db.Uuid
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  board     Board @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  invitedBy User  @relation(fields: [invitedById], references: [id], onDelete: Cascade)
+
+  @@unique([boardId, email])
+  @@index([email])
+  @@map("shares")
+}
+
+model ShareLink {
+  id              String        @id @default(uuid()) @db.Uuid
+  boardId         String        @map("board_id") @db.Uuid
+  role            ShareLinkRole @default(VIEWER)
+  /// SHA-256 (hex) of the token, used for lookups.
+  tokenHash       String        @unique @map("token_hash") @db.Char(64)
+  /// AES-256-GCM encrypted token (key derived from SESSION_SECRET) so owners can copy it again.
+  tokenCiphertext String        @map("token_ciphertext")
+  createdById     String        @map("created_by") @db.Uuid
+  expiresAt       DateTime?     @map("expires_at") @db.Timestamptz(3)
+  revokedAt       DateTime?     @map("revoked_at") @db.Timestamptz(3)
+  lastUsedAt      DateTime?     @map("last_used_at") @db.Timestamptz(3)
+  createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime      @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  board     Board @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  createdBy User  @relation(fields: [createdById], references: [id], onDelete: Cascade)
+
+  @@index([boardId, revokedAt])
+  @@map("share_links")
+}
+
+// ───────────────────────────────── notifications ─────────────────────────────────
+
+model Notification {
+  id        String           @id @default(uuid()) @db.Uuid
+  userId    String           @map("user_id") @db.Uuid
+  type      NotificationType
+  actorId   String?          @map("actor_id") @db.Uuid
+  title     String           @db.VarChar(200)
+  body      String           @db.VarChar(1000)
+  link      String?          @db.VarChar(1024)
+  data      Json?
+  readAt    DateTime?        @map("read_at") @db.Timestamptz(3)
+  createdAt DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime         @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  user  User  @relation("NotificationRecipient", fields: [userId], references: [id], onDelete: Cascade)
+  actor User? @relation("NotificationActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([userId, readAt])
+  @@map("notifications")
+}

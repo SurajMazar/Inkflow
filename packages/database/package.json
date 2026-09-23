@@ -22,7 +22,8 @@
   },
   "files": [
     "dist",
-    "prisma"
+    "prisma",
+    "scripts"
   ],
   "prisma": {
     "schema": "prisma/schema.prisma"
@@ -31,18 +32,16 @@
     "build": "prisma generate && tsup",
     "dev": "tsup --watch --no-clean",
     "generate": "prisma generate",
-    "migrate:dev": "prisma migrate dev",
-    "migrate:deploy": "prisma migrate deploy",
-    "migrate:reset": "prisma migrate reset --force --skip-seed",
-    "migrate:status": "prisma migrate status",
-    "studio": "prisma studio",
+    "migrate:dev": "node scripts/prisma.mjs migrate dev",
+    "migrate:deploy": "node scripts/prisma.mjs migrate deploy",
+    "migrate:reset": "node scripts/prisma.mjs migrate reset --force --skip-seed",
+    "migrate:status": "node scripts/prisma.mjs migrate status",
+    "studio": "node scripts/prisma.mjs studio",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "@prisma/client": "^6.19.0"
-  },
-  "devDependencies": {
+    "@prisma/client": "^6.19.0",
     "prisma": "^6.19.0"
   }
 }

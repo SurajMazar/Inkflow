@@ -1,0 +1,14 @@
+{
+  "name": "Inkflow",
+  "short_name": "Inkflow",
+  "description": "A fast, collaborative whiteboard for sketching, diagramming and thinking together.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#4f46e5",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}

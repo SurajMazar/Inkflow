@@ -1,7 +1,6 @@
 import type { CommentDto } from '@inkflow/shared';
 import { cn } from '@inkflow/ui';
 import { MessageSquarePlus } from 'lucide-react';
-import * as React from 'react';
 import { useBoardSession, useEditorState } from '../hooks/editor-context';
 import { useEditorUi } from '../hooks/ui-store';
 import { anchorWorldPosition, revealComment, useBoardComments } from '../panels/comments/use-comments';

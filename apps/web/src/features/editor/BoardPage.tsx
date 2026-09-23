@@ -73,14 +73,24 @@ async function loadBoard(boardId: string, shareToken: string | null): Promise<Lo
         };
         return {
           status: 'ready',
-          detail: { board, document: cached.document, seq: cached.seq, viaShareLink: !!shareToken },
+          detail: {
+            board,
+            document: { ...cached.document, appState: { ...cached.document.appState } },
+            seq: cached.seq,
+            viaShareLink: !!shareToken,
+          },
           document: parsed.document,
           offline: true,
         };
       }
     }
     const { title, description } = describeApiError(error, 'This board could not be opened');
-    return { status: 'error', title, description, code: error instanceof ApiError ? error.code : null };
+    return {
+      status: 'error',
+      title,
+      description: description ?? 'Please try again.',
+      code: error instanceof ApiError ? error.code : null,
+    };
   }
 }
 

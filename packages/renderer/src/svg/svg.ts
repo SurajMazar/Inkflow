@@ -23,10 +23,12 @@ const XML_ESCAPES: Record<string, string> = {
 
 /** Escapes text and attribute values (also strips characters that are invalid in XML 1.0). */
 export function escapeXml(value: string): string {
-  return value
-    // eslint-disable-next-line no-control-regex
-    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F￾￿]/g, '')
-    .replace(/[&<>"']/g, (c) => XML_ESCAPES[c]!);
+  return (
+    value
+      // eslint-disable-next-line no-control-regex
+      .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F￾￿]/g, '')
+      .replace(/[&<>"']/g, (c) => XML_ESCAPES[c]!)
+  );
 }
 
 const SAFE_COLOR = /^[#a-zA-Z0-9(),.%\s-]{1,64}$/;

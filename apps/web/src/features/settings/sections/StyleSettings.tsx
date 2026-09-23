@@ -57,7 +57,12 @@ function ColorSwatches({
 }) {
   const custom = !colors.includes(value);
   return (
-    <div className="flex flex-wrap items-center gap-1.5" role="radiogroup" aria-label={label} id={id}>
+    <div
+      className="flex flex-wrap items-center gap-1.5"
+      role="radiogroup"
+      aria-label={label}
+      id={id}
+    >
       {colors.map((color) => {
         const selected = value.toLowerCase() === color.toLowerCase();
         return (
@@ -84,7 +89,15 @@ function ColorSwatches({
             }
           >
             {selected ? (
-              <Check className={cn('size-3.5', color === '#1e1e1e' || color === '#6741d9' || color === '#1971c2' ? 'text-white' : 'text-zinc-900')} aria-hidden />
+              <Check
+                className={cn(
+                  'size-3.5',
+                  color === '#1e1e1e' || color === '#6741d9' || color === '#1971c2'
+                    ? 'text-white'
+                    : 'text-zinc-900',
+                )}
+                aria-hidden
+              />
             ) : null}
           </button>
         );
@@ -113,7 +126,8 @@ function ColorSwatches({
 export function StyleSettings() {
   const { preferences, save } = useSavePreferences();
   const styles = preferences.defaultStyles;
-  const update = (patch: Partial<DefaultStyles>) => void save({ defaultStyles: patch }, 'Default style saved');
+  const update = (patch: Partial<DefaultStyles>) =>
+    void save({ defaultStyles: patch }, 'Default style saved');
 
   return (
     <div className="grid gap-8">
@@ -124,7 +138,12 @@ export function StyleSettings() {
           <button
             type="button"
             className="text-[13px] text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
-            onClick={() => void save({ defaultStyles: DEFAULT_USER_PREFERENCES.defaultStyles }, 'Default styles reset')}
+            onClick={() =>
+              void save(
+                { defaultStyles: DEFAULT_USER_PREFERENCES.defaultStyles },
+                'Default styles reset',
+              )
+            }
             data-testid="styles-reset"
           >
             Reset to defaults
@@ -135,7 +154,15 @@ export function StyleSettings() {
           <StylePreview styles={styles} />
         </div>
         <SettingRow label="Stroke color">
-          {({ id }) => <ColorSwatches id={id} label="Stroke color" colors={STROKE_COLORS} value={styles.strokeColor} onChange={(strokeColor) => update({ strokeColor })} />}
+          {({ id }) => (
+            <ColorSwatches
+              id={id}
+              label="Stroke color"
+              colors={STROKE_COLORS}
+              value={styles.strokeColor}
+              onChange={(strokeColor) => update({ strokeColor })}
+            />
+          )}
         </SettingRow>
         <SettingRow label="Background">
           {({ id }) => (
@@ -164,8 +191,17 @@ export function StyleSettings() {
                 { value: 2, label: 'Bold' },
                 { value: 4, label: 'Extra bold' },
               ].map((option) => (
-                <ToggleGroupItem key={option.value} value={String(option.value)} aria-label={option.label} className="px-3">
-                  <span className="block w-6 rounded-full bg-current" style={{ height: option.value + 0.5 }} aria-hidden />
+                <ToggleGroupItem
+                  key={option.value}
+                  value={String(option.value)}
+                  aria-label={option.label}
+                  className="px-3"
+                >
+                  <span
+                    className="block w-6 rounded-full bg-current"
+                    style={{ height: option.value + 0.5 }}
+                    aria-hidden
+                  />
                 </ToggleGroupItem>
               ))}
             </ToggleGroup>
@@ -196,7 +232,10 @@ export function StyleSettings() {
         </SettingRow>
         <SettingRow label="Font">
           {(props) => (
-            <Select value={styles.fontFamily} onValueChange={(fontFamily) => update({ fontFamily })}>
+            <Select
+              value={styles.fontFamily}
+              onValueChange={(fontFamily) => update({ fontFamily })}
+            >
               <SelectTrigger {...props} className="w-44" aria-label="Font family">
                 <SelectValue />
               </SelectTrigger>
@@ -227,7 +266,12 @@ export function StyleSettings() {
                 { value: 28, label: 'L' },
                 { value: 36, label: 'XL' },
               ].map((option) => (
-                <ToggleGroupItem key={option.value} value={String(option.value)} aria-label={`${option.value}px`} className="min-w-10 px-2">
+                <ToggleGroupItem
+                  key={option.value}
+                  value={String(option.value)}
+                  aria-label={`${option.value}px`}
+                  className="min-w-10 px-2"
+                >
                   {option.label}
                 </ToggleGroupItem>
               ))}
@@ -241,7 +285,11 @@ export function StyleSettings() {
 
 function StylePreview({ styles }: { styles: DefaultStyles }) {
   return (
-    <div className="flex items-center justify-center gap-6 rounded-lg bg-background py-4 dark:bg-muted/30" aria-label="Style preview" role="img">
+    <div
+      className="flex items-center justify-center gap-6 rounded-lg bg-background py-4 dark:bg-muted/30"
+      aria-label="Style preview"
+      role="img"
+    >
       <svg width="140" height="72" viewBox="0 0 140 72" aria-hidden>
         <rect
           x="6"
@@ -256,7 +304,11 @@ function StylePreview({ styles }: { styles: DefaultStyles }) {
         />
       </svg>
       <span
-        style={{ fontFamily: fontCss(styles.fontFamily), fontSize: Math.min(styles.fontSize, 36), color: styles.strokeColor }}
+        style={{
+          fontFamily: fontCss(styles.fontFamily),
+          fontSize: Math.min(styles.fontSize, 36),
+          color: styles.strokeColor,
+        }}
         className="dark:[filter:invert(0.93)_hue-rotate(180deg)]"
       >
         Aa Inkflow

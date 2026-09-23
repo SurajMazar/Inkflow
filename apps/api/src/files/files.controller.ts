@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Post, Res, StreamableFile, UploadedFile, UseInterceptors } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Res,
+  StreamableFile,
+  UploadedFile,
+  UseInterceptors,
+} from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBody, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
@@ -9,7 +18,8 @@ import { IdParam } from '../common/validation';
 import { FilesService } from './files.service';
 
 /** Headers for serving user-uploaded content: never sniffed, never scripted, cacheable per id. */
-export const FILE_CONTENT_CSP = "default-src 'none'; img-src data:; style-src 'unsafe-inline'; sandbox";
+export const FILE_CONTENT_CSP =
+  "default-src 'none'; img-src data:; style-src 'unsafe-inline'; sandbox";
 
 export function contentDisposition(name: string): string {
   const ascii = name.replace(/[^\x20-\x7e]/g, '_').replace(/["\\]/g, '_');
@@ -23,7 +33,11 @@ export class FilesController {
 
   @AllowShareToken()
   @Post()
-  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: MAX_UPLOAD_BYTES, files: 1, fields: 10, fieldSize: 1024 } }))
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: { fileSize: MAX_UPLOAD_BYTES, files: 1, fields: 10, fieldSize: 1024 },
+    }),
+  )
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {
@@ -32,7 +46,11 @@ export class FilesController {
       properties: {
         file: { type: 'string', format: 'binary' },
         boardId: { type: 'string', format: 'uuid' },
-        fileId: { type: 'string', format: 'uuid', description: 'Optional client-generated id (idempotent retries)' },
+        fileId: {
+          type: 'string',
+          format: 'uuid',
+          description: 'Optional client-generated id (idempotent retries)',
+        },
       },
     },
   })
@@ -42,9 +60,15 @@ export class FilesController {
     @UploadedFile() file: Express.Multer.File | undefined,
     @Body() body: Record<string, unknown> | undefined,
   ): Promise<FileDto> {
-    if (!file) throw Errors.validation('A file is required', [{ path: ['file'], message: 'Required', code: 'invalid_type' }]);
+    if (!file)
+      throw Errors.validation('A file is required', [
+        { path: ['file'], message: 'Required', code: 'invalid_type' },
+      ]);
     const boardId = typeof body?.boardId === 'string' ? body.boardId : '';
-    if (!boardId) throw Errors.validation('boardId is required', [{ path: ['boardId'], message: 'Required', code: 'invalid_type' }]);
+    if (!boardId)
+      throw Errors.validation('boardId is required', [
+        { path: ['boardId'], message: 'Required', code: 'invalid_type' },
+      ]);
     const fileId = typeof body?.fileId === 'string' ? body.fileId : null;
     return this.files.upload(principal, {
       boardId,
@@ -58,7 +82,10 @@ export class FilesController {
   @AllowShareToken()
   @Get(':id')
   @ApiOperation({ summary: 'File metadata' })
-  get(@CurrentPrincipal() principal: Principal, @IdParam('id', 'File') id: string): Promise<FileDto> {
+  get(
+    @CurrentPrincipal() principal: Principal,
+    @IdParam('id', 'File') id: string,
+  ): Promise<FileDto> {
     return this.files.get(principal, id);
   }
 
@@ -76,6 +103,9 @@ export class FilesController {
     res.setHeader('Content-Security-Policy', FILE_CONTENT_CSP);
     res.setHeader('Cache-Control', 'private, max-age=31536000, immutable');
     res.setHeader('Content-Disposition', contentDisposition(file.originalName));
-    return new StreamableFile(object.body, { type: file.mimeType, length: object.contentLength ?? file.size });
+    return new StreamableFile(object.body, {
+      type: file.mimeType,
+      length: object.contentLength ?? file.size,
+    });
   }
 }

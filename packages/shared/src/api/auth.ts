@@ -87,7 +87,11 @@ export const userPreferencesSchema = z
       size: z.number().int().min(4).max(200),
     }),
     snapping: z.object({ toGrid: z.boolean(), toObjects: z.boolean(), angle: z.boolean() }),
-    canvas: z.object({ zoomWithWheel: z.boolean(), showMinimap: z.boolean(), penMode: z.boolean() }),
+    canvas: z.object({
+      zoomWithWheel: z.boolean(),
+      showMinimap: z.boolean(),
+      penMode: z.boolean(),
+    }),
     defaultStyles: z.object({
       strokeColor: z.string().max(32),
       backgroundColor: z.string().max(32),

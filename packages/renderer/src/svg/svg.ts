@@ -1,4 +1,9 @@
-import { FONT_FAMILIES, getFontString, type FrameElement, type SceneElement } from '@inkflow/elements';
+import {
+  FONT_FAMILIES,
+  getFontString,
+  type FrameElement,
+  type SceneElement,
+} from '@inkflow/elements';
 import { rectToBounds, type Path } from '@inkflow/geometry';
 import { frameTitleHeight } from '../canvas/scene';
 import { FRAME_NAME_COLOR, FRAME_NAME_FONT_SIZE, FRAME_NAME_GAP } from '../canvas/draw';
@@ -8,12 +13,20 @@ import type { DrawLayer, ImageLayer, ShapeLayer, TextLayer } from '../drawable/t
 import { planRender } from '../plan';
 import type { SvgRenderOptions } from '../types';
 
-const XML_ESCAPES: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+const XML_ESCAPES: Record<string, string> = {
+  '&': '&amp;',
+  '<': '&lt;',
+  '>': '&gt;',
+  '"': '&quot;',
+  "'": '&#39;',
+};
 
 /** Escapes text and attribute values (also strips characters that are invalid in XML 1.0). */
 export function escapeXml(value: string): string {
   // eslint-disable-next-line no-control-regex
-  return value.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F￾￿]/g, '').replace(/[&<>"']/g, (c) => XML_ESCAPES[c]!);
+  return value
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F￾￿]/g, '')
+    .replace(/[&<>"']/g, (c) => XML_ESCAPES[c]!);
 }
 
 const SAFE_COLOR = /^[#a-zA-Z0-9(),.%\s-]{1,64}$/;
@@ -47,7 +60,8 @@ export function pathData(path: Path): string {
   return out;
 }
 
-const SAFE_IMAGE_URL = /^(data:image\/(png|jpe?g|gif|webp|avif|bmp|svg\+xml)(;[a-z0-9=.+-]+)*(;base64)?,[a-z0-9+/=%._~:-]*$|https?:\/\/[^\s"'<>]+$)/i;
+const SAFE_IMAGE_URL =
+  /^(data:image\/(png|jpe?g|gif|webp|avif|bmp|svg\+xml)(;[a-z0-9=.+-]+)*(;base64)?,[a-z0-9+/=%._~:-]*$|https?:\/\/[^\s"'<>]+$)/i;
 
 class SvgWriter {
   private counter = 0;
@@ -84,8 +98,11 @@ class SvgWriter {
           out += this.image(layer);
           break;
         case 'group': {
-          const clip = layer.clip ? ` clip-path="url(#${this.clip(pathData(layer.clip.path), layer.clip.rule)})"` : '';
-          const alpha = layer.alpha !== undefined && layer.alpha < 1 ? ` opacity="${num(layer.alpha)}"` : '';
+          const clip = layer.clip
+            ? ` clip-path="url(#${this.clip(pathData(layer.clip.path), layer.clip.rule)})"`
+            : '';
+          const alpha =
+            layer.alpha !== undefined && layer.alpha < 1 ? ` opacity="${num(layer.alpha)}"` : '';
           out += `<g${clip}${alpha}>${this.layers(layer.children)}</g>`;
           break;
         }
@@ -112,7 +129,8 @@ class SvgWriter {
         out += `<path d="${d}" fill="none" stroke="${escapeXml(color(s.color))}" stroke-width="${num(s.width)}" stroke-linecap="${s.cap}" stroke-linejoin="${s.join}"${dash}/>`;
       }
     }
-    if (layer.alpha !== undefined && layer.alpha < 1 && out) return `<g opacity="${num(layer.alpha)}">${out}</g>`;
+    if (layer.alpha !== undefined && layer.alpha < 1 && out)
+      return `<g opacity="${num(layer.alpha)}">${out}</g>`;
     return out;
   }
 
@@ -134,13 +152,22 @@ class SvgWriter {
       let d = '';
       for (const run of layer.runs) {
         if (run.width <= 0) continue;
-        const left = layer.align === 'center' ? run.x - run.width / 2 : layer.align === 'right' ? run.x - run.width : run.x;
-        const y = run.y + (layer.decoration === 'underline' ? layer.fontSize * 0.45 : layer.fontSize * 0.05);
+        const left =
+          layer.align === 'center'
+            ? run.x - run.width / 2
+            : layer.align === 'right'
+              ? run.x - run.width
+              : run.x;
+        const y =
+          run.y +
+          (layer.decoration === 'underline' ? layer.fontSize * 0.45 : layer.fontSize * 0.05);
         d += `M${num(left)} ${num(y)}L${num(left + run.width)} ${num(y)}`;
       }
-      if (d) out += `<path d="${d}" fill="none" stroke="${escapeXml(color(layer.color))}" stroke-width="${num(Math.max(1, layer.fontSize / 16))}"/>`;
+      if (d)
+        out += `<path d="${d}" fill="none" stroke="${escapeXml(color(layer.color))}" stroke-width="${num(Math.max(1, layer.fontSize / 16))}"/>`;
     }
-    if (layer.alpha !== undefined && layer.alpha < 1 && out) return `<g opacity="${num(layer.alpha)}">${out}</g>`;
+    if (layer.alpha !== undefined && layer.alpha < 1 && out)
+      return `<g opacity="${num(layer.alpha)}">${out}</g>`;
     return out;
   }
 
@@ -158,13 +185,16 @@ class SvgWriter {
     const sy = crop.height > 0 ? h / crop.height : 1;
     const ix = x - crop.x * sx;
     const iy = y - crop.y * sy;
-    const clip = this.clip(pathData([
-      { type: 'M', x, y },
-      { type: 'L', x: x + w, y },
-      { type: 'L', x: x + w, y: y + h },
-      { type: 'L', x, y: y + h },
-      { type: 'Z' },
-    ]), 'nonzero');
+    const clip = this.clip(
+      pathData([
+        { type: 'M', x, y },
+        { type: 'L', x: x + w, y },
+        { type: 'L', x: x + w, y: y + h },
+        { type: 'L', x, y: y + h },
+        { type: 'Z' },
+      ]),
+      'nonzero',
+    );
     const flip =
       layer.flipX || layer.flipY
         ? ` transform="translate(${num(layer.flipX ? 2 * x + w : 0)} ${num(layer.flipY ? 2 * y + h : 0)}) scale(${layer.flipX ? -1 : 1} ${layer.flipY ? -1 : 1})"`
@@ -187,7 +217,12 @@ function elementTransform(el: SceneElement): string {
 
 function frameName(frame: FrameElement, scale: number): string {
   const fontSize = FRAME_NAME_FONT_SIZE / Math.max(1e-3, scale);
-  const font = getFontString({ fontFamily: 'sans', fontSize, fontWeight: 'normal', fontStyle: 'normal' });
+  const font = getFontString({
+    fontFamily: 'sans',
+    fontSize,
+    fontWeight: 'normal',
+    fontStyle: 'normal',
+  });
   const text = truncateText(frame.name, font, frame.width);
   if (!text) return '';
   return (
@@ -196,14 +231,16 @@ function frameName(frame: FrameElement, scale: number): string {
   );
 }
 
-const FONT_DATA_URL = /^data:(font\/[a-z0-9.+-]+|application\/(font-[a-z0-9.+-]+|x-font-[a-z0-9.+-]+|octet-stream|vnd\.ms-fontobject))(;[a-z0-9=.+-]+)*;base64,[a-z0-9+/=]+$/i;
+const FONT_DATA_URL =
+  /^data:(font\/[a-z0-9.+-]+|application\/(font-[a-z0-9.+-]+|x-font-[a-z0-9.+-]+|octet-stream|vnd\.ms-fontobject))(;[a-z0-9=.+-]+)*;base64,[a-z0-9+/=]+$/i;
 
 function fontFaceCss(faces: NonNullable<SvgRenderOptions['fontFaces']>): string {
   let css = '';
   for (const f of faces) {
     const family = f.family.replace(/["'<>&;{}\\]/g, '').trim();
     if (!family || !FONT_DATA_URL.test(f.dataUrl)) continue;
-    const weight = f.weight && /^[a-z0-9 ]{1,20}$/i.test(f.weight) ? `font-weight:${f.weight};` : '';
+    const weight =
+      f.weight && /^[a-z0-9 ]{1,20}$/i.test(f.weight) ? `font-weight:${f.weight};` : '';
     const style = f.style && /^[a-z ]{1,20}$/i.test(f.style) ? `font-style:${f.style};` : '';
     css += `@font-face{font-family:"${family}";src:url(${f.dataUrl});${weight}${style}font-display:block;}`;
   }
@@ -215,7 +252,10 @@ function fontFaceCss(faces: NonNullable<SvgRenderOptions['fontFaces']>): string 
  * canvas renderer as `<path>`s, text as `<text>`, images as `<image href=data:…>`, clip paths for
  * frames/crops/knockouts, `<g transform>` for rotation and flips. All user text is escaped.
  */
-export function renderSceneToSvg(elements: readonly SceneElement[], options: SvgRenderOptions): string {
+export function renderSceneToSvg(
+  elements: readonly SceneElement[],
+  options: SvgRenderOptions,
+): string {
   const { bounds, scale } = options;
   const prefix = (options.idPrefix ?? 'ink').replace(/[^a-zA-Z0-9_-]/g, '') || 'ink';
   const dark = options.theme === 'dark';

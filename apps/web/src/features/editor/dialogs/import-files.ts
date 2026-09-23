@@ -20,7 +20,13 @@ const DATA_URL_RE = /^data:(image\/(?:png|jpeg|webp|gif|svg\+xml));base64,([A-Za
 
 /** Result of reading one file: an element set to insert, or an image to insert as a picture. */
 export type ReadImportResult =
-  | { type: 'elements'; kind: ImportKind; elements: SceneElement[]; files: Record<string, FileMetadata>; issues: string[] }
+  | {
+      type: 'elements';
+      kind: ImportKind;
+      elements: SceneElement[];
+      files: Record<string, FileMetadata>;
+      issues: string[];
+    }
   | { type: 'image' };
 
 /** `Blob.text()` with a FileReader fallback (older browsers, jsdom). */
@@ -98,7 +104,13 @@ export async function readImportFile(file: File): Promise<ReadImportResult> {
       if (embedded) return fromParsed('inkflow', importNativeJson(embedded));
       const res = importSvgAsElements(text);
       if (res.elements.length === 0) return { type: 'image' };
-      return { type: 'elements', kind, elements: res.elements, files: {}, issues: res.issues.map(formatIssue) };
+      return {
+        type: 'elements',
+        kind,
+        elements: res.elements,
+        files: {},
+        issues: res.issues.map(formatIssue),
+      };
     }
     case 'image': {
       if (isPng(file, head)) {
@@ -109,11 +121,22 @@ export async function readImportFile(file: File): Promise<ReadImportResult> {
     }
     case 'mermaid': {
       const res = importMermaid(await readText(file));
-      if (res.elements.length === 0) throw new Error(res.issues.map(formatIssue)[0] ?? 'No diagram could be read from this text.');
-      return { type: 'elements', kind, elements: res.elements, files: {}, issues: res.issues.map(formatIssue) };
+      if (res.elements.length === 0)
+        throw new Error(
+          res.issues.map(formatIssue)[0] ?? 'No diagram could be read from this text.',
+        );
+      return {
+        type: 'elements',
+        kind,
+        elements: res.elements,
+        files: {},
+        issues: res.issues.map(formatIssue),
+      };
     }
     default:
-      throw new Error('This file type is not supported. Try .inkflow, .excalidraw, .svg, .png, .jpg or Mermaid (.mmd).');
+      throw new Error(
+        'This file type is not supported. Try .inkflow, .excalidraw, .svg, .png, .jpg or Mermaid (.mmd).',
+      );
   }
 }
 
@@ -172,7 +195,8 @@ function prepareImageFiles(
       continue;
     }
     const meta = files[fileId];
-    const allowedMime = meta && (ALLOWED_IMAGE_MIME_TYPES as readonly string[]).includes(meta.mimeType);
+    const allowedMime =
+      meta && (ALLOWED_IMAGE_MIME_TYPES as readonly string[]).includes(meta.mimeType);
     if (meta && allowedMime && meta.url.startsWith('data:')) {
       const blob = dataUrlToBlob(meta.url);
       if (!blob) {
@@ -182,7 +206,11 @@ function prepareImageFiles(
       }
       const id = newFileId();
       editor.registerFile({ ...meta, id, size: blob.size });
-      uploads.push({ fileId: id, blob, name: `image-${id.slice(0, 8)}.${blob.type.split('/')[1]?.replace('svg+xml', 'svg') ?? 'png'}` });
+      uploads.push({
+        fileId: id,
+        blob,
+        name: `image-${id.slice(0, 8)}.${blob.type.split('/')[1]?.replace('svg+xml', 'svg') ?? 'png'}`,
+      });
       remap.set(fileId, id);
     } else if (meta && allowedMime && isSameOriginFileUrl(meta.url)) {
       editor.registerFile(meta);
@@ -196,7 +224,9 @@ function prepareImageFiles(
     if (el.type !== 'image' || !el.fileId) return el;
     const mapped = remap.get(el.fileId);
     if (mapped === undefined || mapped === el.fileId) return el;
-    return mapped === null ? { ...el, status: 'error' as const } : { ...el, fileId: mapped, status: 'pending' as const };
+    return mapped === null
+      ? { ...el, status: 'error' as const }
+      : { ...el, fileId: mapped, status: 'pending' as const };
   });
   return { elements: out, uploads, dropped };
 }
@@ -211,7 +241,12 @@ async function uploadImported(editor: Editor, uploads: PendingUpload[]): Promise
         .filter((e) => e.type === 'image' && e.fileId === fileId)
         .map((e) => e.id);
       const setStatus = (status: 'saved' | 'error') =>
-        editor.mutate('Image uploaded', (tx) => ids.filter((id) => editor.getElement(id)).forEach((id) => tx.update(id, { status })), { history: false });
+        editor.mutate(
+          'Image uploaded',
+          (tx) =>
+            ids.filter((id) => editor.getElement(id)).forEach((id) => tx.update(id, { status })),
+          { history: false },
+        );
       try {
         const meta = await upload(new File([blob], name, { type: blob.type }), fileId);
         editor.registerFile(meta);
@@ -227,7 +262,9 @@ async function uploadImported(editor: Editor, uploads: PendingUpload[]): Promise
 function describeIssues(issues: string[]): string | undefined {
   if (issues.length === 0) return undefined;
   const first = issues[0]!;
-  return issues.length === 1 ? `1 item was skipped: ${first}` : `${issues.length} items were skipped, e.g. ${first}`;
+  return issues.length === 1
+    ? `1 item was skipped: ${first}`
+    : `${issues.length} items were skipped, e.g. ${first}`;
 }
 
 /**
@@ -235,10 +272,16 @@ function describeIssues(issues: string[]): string | undefined {
  * are inserted as new elements centered at `at` (or the viewport center) and selected; plain
  * images are inserted and uploaded. Reports the result in a toast.
  */
-export async function importFilesIntoEditor(editor: Editor, files: File[], at?: Point): Promise<void> {
+export async function importFilesIntoEditor(
+  editor: Editor,
+  files: File[],
+  at?: Point,
+): Promise<void> {
   if (files.length === 0) return;
   if (editor.isReadOnly) {
-    notify.error('You can only view this board', { description: 'Ask an owner for edit access to import files.' });
+    notify.error('You can only view this board', {
+      description: 'Ask an owner for edit access to import files.',
+    });
     return;
   }
   const center = at ?? viewportCenterWorld(editor);
@@ -254,7 +297,9 @@ export async function importFilesIntoEditor(editor: Editor, files: File[], at?: 
     try {
       result = await readImportFile(file);
     } catch (error) {
-      notify.error(`Couldn't import ${file.name}`, { description: error instanceof Error ? error.message : undefined });
+      notify.error(`Couldn't import ${file.name}`, {
+        description: error instanceof Error ? error.message : undefined,
+      });
       continue;
     }
     if (result.type === 'image') {
@@ -262,7 +307,9 @@ export async function importFilesIntoEditor(editor: Editor, files: File[], at?: 
       continue;
     }
     if (result.elements.length === 0) {
-      notify.error(`Nothing to import from ${file.name}`, { description: describeIssues(result.issues) ?? 'The file contains no elements.' });
+      notify.error(`Nothing to import from ${file.name}`, {
+        description: describeIssues(result.issues) ?? 'The file contains no elements.',
+      });
       continue;
     }
     const prepared = prepareImageFiles(editor, result.elements, result.files);
@@ -275,15 +322,25 @@ export async function importFilesIntoEditor(editor: Editor, files: File[], at?: 
     createdIds.push(...created.map((e) => e.id));
     uploads.push(...prepared.uploads);
     issues.push(...result.issues);
-    if (prepared.dropped) issues.push(`${prepared.dropped} linked image${prepared.dropped === 1 ? '' : 's'} could not be imported`);
+    if (prepared.dropped)
+      issues.push(
+        `${prepared.dropped} linked image${prepared.dropped === 1 ? '' : 's'} could not be imported`,
+      );
     imported++;
   }
 
   if (createdIds.length) {
     editor.setState({ selectedIds: createdIds, editingGroupId: null });
-    const what = imported === 1 ? `${createdIds.length} elements` : `${imported} files (${createdIds.length} elements)`;
+    const what =
+      imported === 1
+        ? `${createdIds.length} elements`
+        : `${imported} files (${createdIds.length} elements)`;
     notify.success(`Imported ${what}`, { description: describeIssues(issues) });
   }
-  if (images.length) await editor.insertImageFiles(images, createdIds.length ? { x: center.x + imported * step, y: center.y + imported * step } : at);
+  if (images.length)
+    await editor.insertImageFiles(
+      images,
+      createdIds.length ? { x: center.x + imported * step, y: center.y + imported * step } : at,
+    );
   if (uploads.length) await uploadImported(editor, uploads);
 }

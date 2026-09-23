@@ -13,7 +13,10 @@ export function CanvasSettings() {
 
   return (
     <div className="grid gap-8">
-      <SettingsSection title="Grid" description="Defaults for new boards and your view of existing ones.">
+      <SettingsSection
+        title="Grid"
+        description="Defaults for new boards and your view of existing ones."
+      >
         <SwitchRow
           label="Show grid"
           checked={grid.enabled}
@@ -54,9 +57,14 @@ export function CanvasSettings() {
                 step={1}
                 value={[gridSize]}
                 onValueChange={([value]) => value !== undefined && setGridSize(value)}
-                onValueCommit={([value]) => value !== undefined && void save({ grid: { size: value } })}
+                onValueCommit={([value]) =>
+                  value !== undefined && void save({ grid: { size: value } })
+                }
               />
-              <span className="w-10 text-right text-sm tabular-nums text-muted-foreground" aria-hidden>
+              <span
+                className="w-10 text-right text-sm tabular-nums text-muted-foreground"
+                aria-hidden
+              >
                 {gridSize}px
               </span>
             </div>

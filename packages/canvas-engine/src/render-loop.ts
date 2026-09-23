@@ -54,7 +54,8 @@ export class RenderLoop {
       const edit = state.textEdit;
       if (edit?.kind === 'text') skipIds.add(edit.elementId);
       const viewportKey = `${viewport.x}:${viewport.y}:${viewport.zoom}`;
-      const panning = viewportKey !== this.lastViewportKey && this.editor.state.interaction === 'panning';
+      const panning =
+        viewportKey !== this.lastViewportKey && this.editor.state.interaction === 'panning';
       this.lastViewportKey = viewportKey;
       const stats = this.staticRenderer.render(visible, {
         viewport,

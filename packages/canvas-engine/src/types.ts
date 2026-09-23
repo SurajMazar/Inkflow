@@ -7,6 +7,7 @@ import type {
   FontFamily,
   FontStyle,
   FontWeight,
+  SceneElement,
   Roundness,
   StrokeStyle,
   TextAlign,
@@ -172,7 +173,13 @@ export interface EditorState {
   frameOrder: string[];
 }
 
-export type ModifierState = { shift: boolean; alt: boolean; mod: boolean; ctrl: boolean; meta: boolean };
+export type ModifierState = {
+  shift: boolean;
+  alt: boolean;
+  mod: boolean;
+  ctrl: boolean;
+  meta: boolean;
+};
 
 export interface CanvasPointerEvent extends ModifierState {
   pointerId: number;
@@ -203,7 +210,7 @@ export interface EditorHost {
    * Converts external clipboard text (SVG markup, Mermaid, Excalidraw JSON…) into elements.
    * Return null to fall back to inserting plain text.
    */
-  transformPastedText?(text: string): Promise<import('@inkflow/elements').SceneElement[] | null>;
+  transformPastedText?(text: string): Promise<SceneElement[] | null>;
   /** Reports errors that the UI should surface. */
   onError?(error: unknown, context: string): void;
 }

@@ -56,12 +56,16 @@ function codePointToString(cp: number): string {
  */
 export function decodeXmlEntities(value: string): string {
   if (!value.includes('&')) return value;
-  return value.replace(/&(#[xX][0-9a-fA-F]{1,8}|#[0-9]{1,10}|[A-Za-z][A-Za-z0-9]{0,31});?/g, (match, body: string) => {
-    if (body.startsWith('#x') || body.startsWith('#X')) return codePointToString(parseInt(body.slice(2), 16));
-    if (body.startsWith('#')) return codePointToString(parseInt(body.slice(1), 10));
-    const named = NAMED_ENTITIES[body];
-    return named !== undefined && match.endsWith(';') ? named : match;
-  });
+  return value.replace(
+    /&(#[xX][0-9a-fA-F]{1,8}|#[0-9]{1,10}|[A-Za-z][A-Za-z0-9]{0,31});?/g,
+    (match, body: string) => {
+      if (body.startsWith('#x') || body.startsWith('#X'))
+        return codePointToString(parseInt(body.slice(2), 16));
+      if (body.startsWith('#')) return codePointToString(parseInt(body.slice(1), 10));
+      const named = NAMED_ENTITIES[body];
+      return named !== undefined && match.endsWith(';') ? named : match;
+    },
+  );
 }
 
 export function escapeXmlText(value: string): string {
@@ -69,7 +73,11 @@ export function escapeXmlText(value: string): string {
 }
 
 export function escapeXmlAttribute(value: string): string {
-  return escapeXmlText(value).replace(/"/g, '&quot;').replace(/\r/g, '&#13;').replace(/\n/g, '&#10;').replace(/\t/g, '&#9;');
+  return escapeXmlText(value)
+    .replace(/"/g, '&quot;')
+    .replace(/\r/g, '&#13;')
+    .replace(/\n/g, '&#10;')
+    .replace(/\t/g, '&#9;');
 }
 
 const NAME_START = /[A-Za-z_:]/;
@@ -240,7 +248,12 @@ export function parseXml(text: string): XmlNode[] {
   for (const token of tokens) {
     switch (token.kind) {
       case 'start': {
-        const el: XmlElement = { kind: 'element', name: token.name, attrs: token.attrs, children: [] };
+        const el: XmlElement = {
+          kind: 'element',
+          name: token.name,
+          attrs: token.attrs,
+          children: [],
+        };
         stack[stack.length - 1]!.children.push(el);
         if (!token.selfClosing) {
           if (stack.length > MAX_XML_DEPTH) throw new Error('SVG markup is nested too deeply');
@@ -290,7 +303,16 @@ export function parseNumberList(value: string): number[] {
   return (value.match(NUMBER_RE) ?? []).map(Number).filter((v) => Number.isFinite(v));
 }
 
-const ABSOLUTE_UNITS: Record<string, number> = { '': 1, px: 1, pt: 4 / 3, pc: 16, mm: 96 / 25.4, cm: 96 / 2.54, in: 96, q: 96 / 101.6 };
+const ABSOLUTE_UNITS: Record<string, number> = {
+  '': 1,
+  px: 1,
+  pt: 4 / 3,
+  pc: 16,
+  mm: 96 / 25.4,
+  cm: 96 / 2.54,
+  in: 96,
+  q: 96 / 101.6,
+};
 
 /**
  * Parses an SVG length into user units (px). `em`/`ex` resolve against `fontSize`;

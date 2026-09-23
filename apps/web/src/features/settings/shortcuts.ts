@@ -17,7 +17,18 @@ export interface KeyEventLike {
   shiftKey: boolean;
 }
 
-const MODIFIER_KEYS = new Set(['Shift', 'Control', 'Alt', 'Meta', 'OS', 'AltGraph', 'CapsLock', 'Fn', 'Hyper', 'Super']);
+const MODIFIER_KEYS = new Set([
+  'Shift',
+  'Control',
+  'Alt',
+  'Meta',
+  'OS',
+  'AltGraph',
+  'CapsLock',
+  'Fn',
+  'Hyper',
+  'Super',
+]);
 
 const CODE_KEYS: Record<string, string> = {
   BracketLeft: '[',
@@ -126,11 +137,16 @@ export function parseCombo(combo: string, platform: Platform): ParsedCombo {
 /** Canonical form used to compare combos (`?` ≡ `Shift+/`, `Ctrl` ≡ `Mod` off macOS). */
 export function normalizeCombo(combo: string, platform: Platform): string {
   const p = parseCombo(combo, platform);
-  return [p.ctrl && 'Ctrl', p.alt && 'Alt', p.shift && 'Shift', p.mod && 'Mod', p.key].filter(Boolean).join('+');
+  return [p.ctrl && 'Ctrl', p.alt && 'Alt', p.shift && 'Shift', p.mod && 'Mod', p.key]
+    .filter(Boolean)
+    .join('+');
 }
 
 /** Keys bound to an action after applying overrides. */
-export function effectiveKeys(definition: ShortcutDefinition, overrides: Record<string, string>): string[] {
+export function effectiveKeys(
+  definition: ShortcutDefinition,
+  overrides: Record<string, string>,
+): string[] {
   const override = overrides[definition.id];
   return override ? [override] : definition.keys;
 }
@@ -145,12 +161,23 @@ export function findConflicts(
 ): ShortcutDefinition[] {
   const wanted = normalizeCombo(combo, platform);
   return definitions.filter(
-    (d) => d.id !== actionId && effectiveKeys(d, overrides).some((k) => normalizeCombo(k, platform) === wanted),
+    (d) =>
+      d.id !== actionId &&
+      effectiveKeys(d, overrides).some((k) => normalizeCombo(k, platform) === wanted),
   );
 }
 
 /** Combos the browser or OS reserves; binding them is allowed but will likely not work. */
-const RESERVED = ['Mod+W', 'Mod+T', 'Mod+N', 'Mod+Q', 'Shift+Mod+N', 'Shift+Mod+T', 'Shift+Mod+W', 'Mod+Tab'];
+const RESERVED = [
+  'Mod+W',
+  'Mod+T',
+  'Mod+N',
+  'Mod+Q',
+  'Shift+Mod+N',
+  'Shift+Mod+T',
+  'Shift+Mod+W',
+  'Mod+Tab',
+];
 
 export function isReservedCombo(combo: string, platform: Platform): boolean {
   const normalized = normalizeCombo(combo, platform);
@@ -166,13 +193,17 @@ export function setOverride(
 ): Record<string, string> {
   const next = { ...overrides };
   const isDefault =
-    definition.keys.length === 1 && normalizeCombo(definition.keys[0]!, platform) === normalizeCombo(combo, platform);
+    definition.keys.length === 1 &&
+    normalizeCombo(definition.keys[0]!, platform) === normalizeCombo(combo, platform);
   if (isDefault) delete next[definition.id];
   else next[definition.id] = combo;
   return next;
 }
 
-export function resetOverride(overrides: Record<string, string>, actionId: string): Record<string, string> {
+export function resetOverride(
+  overrides: Record<string, string>,
+  actionId: string,
+): Record<string, string> {
   const next = { ...overrides };
   delete next[actionId];
   return next;

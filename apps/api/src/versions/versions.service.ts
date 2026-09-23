@@ -3,7 +3,12 @@ import { Injectable, Logger, type OnApplicationShutdown } from '@nestjs/common';
 import { Prisma, type BoardVersion, type VersionKind } from '@inkflow/database';
 import type { SceneElement } from '@inkflow/elements';
 import { parseDocument, sanitizeAppState, type SceneDocument } from '@inkflow/scene';
-import { randomInteger, type BoardVersionDetailDto, type BoardVersionDto, type VersionComparisonDto } from '@inkflow/shared';
+import {
+  randomInteger,
+  type BoardVersionDetailDto,
+  type BoardVersionDto,
+  type VersionComparisonDto,
+} from '@inkflow/shared';
 import { AccessService } from '../access/access.service';
 import { RealtimeService } from '../collaboration/realtime.service';
 import { AppConfig } from '../config/app-config';
@@ -62,7 +67,10 @@ function stableStringify(value: unknown): string {
 }
 
 /** Diff of live elements between two documents. */
-export function compareDocuments(from: SceneDocument, to: SceneDocument): Omit<VersionComparisonDto, 'fromVersionId' | 'toVersionId'> {
+export function compareDocuments(
+  from: SceneDocument,
+  to: SceneDocument,
+): Omit<VersionComparisonDto, 'fromVersionId' | 'toVersionId'> {
   const a = new Map(from.elements.filter((e) => !e.isDeleted).map((e) => [e.id, e]));
   const b = new Map(to.elements.filter((e) => !e.isDeleted).map((e) => [e.id, e]));
   const added: string[] = [];
@@ -125,8 +133,18 @@ export class VersionsService implements OnApplicationShutdown {
     return version.id;
   }
 
-  private async lockBoard(tx: Tx, boardId: string): Promise<{ ops_since_version: number; last_version_at: Date | null; created_at: Date }> {
-    const rows = await tx.$queryRaw<{ ops_since_version: number; last_version_at: Date | null; created_at: Date; deleted_at: Date | null }[]>`
+  private async lockBoard(
+    tx: Tx,
+    boardId: string,
+  ): Promise<{ ops_since_version: number; last_version_at: Date | null; created_at: Date }> {
+    const rows = await tx.$queryRaw<
+      {
+        ops_since_version: number;
+        last_version_at: Date | null;
+        created_at: Date;
+        deleted_at: Date | null;
+      }[]
+    >`
       SELECT ops_since_version, last_version_at, created_at, deleted_at FROM boards WHERE id = ${boardId}::uuid FOR UPDATE`;
     const row = rows[0];
     if (!row || row.deleted_at) throw Errors.notFound('Board');
@@ -139,7 +157,12 @@ export class VersionsService implements OnApplicationShutdown {
       try {
         return await this.prisma.$transaction(fn, { timeout: 60_000, maxWait: 10_000 });
       } catch (err) {
-        if (attempt < 3 && err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') continue;
+        if (
+          attempt < 3 &&
+          err instanceof Prisma.PrismaClientKnownRequestError &&
+          err.code === 'P2002'
+        )
+          continue;
         throw err;
       }
     }
@@ -147,7 +170,10 @@ export class VersionsService implements OnApplicationShutdown {
 
   // ───────────── automatic versions ─────────────
 
-  shouldAutoVersion(row: { ops_since_version: number; last_version_at: Date | null; created_at: Date }, now = Date.now()): boolean {
+  shouldAutoVersion(
+    row: { ops_since_version: number; last_version_at: Date | null; created_at: Date },
+    now = Date.now(),
+  ): boolean {
     if (row.ops_since_version <= 0) return false;
     if (row.ops_since_version >= this.config.env.AUTO_VERSION_EVERY_OPS) return true;
     const since = (row.last_version_at ?? row.created_at).getTime();
@@ -159,7 +185,9 @@ export class VersionsService implements OnApplicationShutdown {
     if (this.shuttingDown || this.inFlight.has(boardId)) return;
     const task = this.createAutoVersionIfDue(boardId)
       .then(() => undefined)
-      .catch((err: Error) => this.logger.warn(`Automatic version of board ${boardId} failed: ${err.message}`))
+      .catch((err: Error) =>
+        this.logger.warn(`Automatic version of board ${boardId} failed: ${err.message}`),
+      )
       .finally(() => this.inFlight.delete(boardId));
     this.inFlight.set(boardId, task);
   }
@@ -171,7 +199,13 @@ export class VersionsService implements OnApplicationShutdown {
       select: { opsSinceVersion: true, lastVersionAt: true, createdAt: true, deletedAt: true },
     });
     if (!quick || quick.deletedAt) return null;
-    if (!this.shouldAutoVersion({ ops_since_version: quick.opsSinceVersion, last_version_at: quick.lastVersionAt, created_at: quick.createdAt })) {
+    if (
+      !this.shouldAutoVersion({
+        ops_since_version: quick.opsSinceVersion,
+        last_version_at: quick.lastVersionAt,
+        created_at: quick.createdAt,
+      })
+    ) {
       return null;
     }
     return this.withVersionTx(async (tx) => {
@@ -199,16 +233,25 @@ export class VersionsService implements OnApplicationShutdown {
     return rows.map(toVersionDto);
   }
 
-  async create(principal: Principal, boardId: string, label: string | undefined): Promise<BoardVersionDto> {
+  async create(
+    principal: Principal,
+    boardId: string,
+    label: string | undefined,
+  ): Promise<BoardVersionDto> {
     const access = await this.access.requireBoard(boardId, principal, 'EDITOR');
     const id = await this.withVersionTx(async (tx) => {
       await this.lockBoard(tx, boardId);
       return this.insertVersion(tx, boardId, 'MANUAL', label ?? null, access.userId);
     });
-    return toVersionDto(await this.prisma.boardVersion.findUniqueOrThrow({ where: { id }, select: summarySelect }));
+    return toVersionDto(
+      await this.prisma.boardVersion.findUniqueOrThrow({ where: { id }, select: summarySelect }),
+    );
   }
 
-  private async findVersion(boardId: string, versionId: string): Promise<BoardVersion & { createdBy: PublicUserRow | null }> {
+  private async findVersion(
+    boardId: string,
+    versionId: string,
+  ): Promise<BoardVersion & { createdBy: PublicUserRow | null }> {
     const version = await this.prisma.boardVersion.findFirst({
       where: { id: versionId, boardId },
       include: { createdBy: { select: publicUserSelect } },
@@ -221,13 +264,22 @@ export class VersionsService implements OnApplicationShutdown {
     return parseDocument(version.snapshot).document;
   }
 
-  async get(principal: Principal, boardId: string, versionId: string): Promise<BoardVersionDetailDto> {
+  async get(
+    principal: Principal,
+    boardId: string,
+    versionId: string,
+  ): Promise<BoardVersionDetailDto> {
     await this.access.requireBoard(boardId, principal, 'VIEWER');
     const version = await this.findVersion(boardId, versionId);
     return { ...toVersionDto(version), document: toSerializedDocument(this.snapshotOf(version)) };
   }
 
-  async compare(principal: Principal, boardId: string, versionId: string, to: string): Promise<VersionComparisonDto> {
+  async compare(
+    principal: Principal,
+    boardId: string,
+    versionId: string,
+    to: string,
+  ): Promise<VersionComparisonDto> {
     await this.access.requireBoard(boardId, principal, 'VIEWER');
     const from = this.snapshotOf(await this.findVersion(boardId, versionId));
     let target: SceneDocument;
@@ -247,13 +299,23 @@ export class VersionsService implements OnApplicationShutdown {
    * snapshot (tombstones extra elements, upserts the rest with bumped versions, bumps seq), then asks
    * collaborators to resync. Returns the backup version.
    */
-  async restore(principal: Principal, boardId: string, versionId: string): Promise<BoardVersionDto> {
+  async restore(
+    principal: Principal,
+    boardId: string,
+    versionId: string,
+  ): Promise<BoardVersionDto> {
     const access = await this.access.requireBoard(boardId, principal, 'EDITOR');
     const version = await this.findVersion(boardId, versionId);
     const snapshot = this.snapshotOf(version);
     const backupId = await this.withVersionTx(async (tx) => {
       await this.lockBoard(tx, boardId);
-      const backup = await this.insertVersion(tx, boardId, 'RESTORE_BACKUP', `Before restoring version ${version.number}`, access.userId);
+      const backup = await this.insertVersion(
+        tx,
+        boardId,
+        'RESTORE_BACKUP',
+        `Before restoring version ${version.number}`,
+        access.userId,
+      );
       const current = await this.documents.loadElements(tx, boardId, { includeDeleted: true });
       const currentById = new Map(current.map((el) => [el.id, el]));
       const target = new Map(snapshot.elements.filter((e) => !e.isDeleted).map((e) => [e.id, e]));
@@ -261,18 +323,34 @@ export class VersionsService implements OnApplicationShutdown {
       const writes: SceneElement[] = [];
       for (const el of current) {
         if (!el.isDeleted && !target.has(el.id)) {
-          writes.push({ ...el, isDeleted: true, version: el.version + 1, versionNonce: randomInteger(), updated: now });
+          writes.push({
+            ...el,
+            isDeleted: true,
+            version: el.version + 1,
+            versionNonce: randomInteger(),
+            updated: now,
+          });
         }
       }
       for (const el of target.values()) {
         const existing = currentById.get(el.id);
         if (existing && !existing.isDeleted && sameContent(existing, el)) continue;
         const nextVersion = Math.max(existing?.version ?? 0, el.version) + 1;
-        writes.push({ ...el, isDeleted: false, version: nextVersion, versionNonce: randomInteger(), updated: now });
+        writes.push({
+          ...el,
+          isDeleted: false,
+          version: nextVersion,
+          versionNonce: randomInteger(),
+          updated: now,
+        });
       }
-      const boardRow = await tx.board.findUniqueOrThrow({ where: { id: boardId }, select: { seq: true } });
+      const boardRow = await tx.board.findUniqueOrThrow({
+        where: { id: boardId },
+        select: { seq: true },
+      });
       const seq = boardRow.seq + 1n;
-      if (writes.length > 0) await this.documents.upsertElements(tx, boardId, writes, access.userId);
+      if (writes.length > 0)
+        await this.documents.upsertElements(tx, boardId, writes, access.userId);
       await this.documents.rebuildFileReferences(tx, boardId);
       await tx.boardOperation.create({
         data: {
@@ -282,7 +360,11 @@ export class VersionsService implements OnApplicationShutdown {
           opId: `restore:${versionId}:${randomUUID()}`,
           userId: access.userId,
           type: 'RESTORE_VERSION',
-          payload: { versionId, versionNumber: version.number, backupVersionId: backup } as Prisma.InputJsonValue,
+          payload: {
+            versionId,
+            versionNumber: version.number,
+            backupVersionId: backup,
+          } as Prisma.InputJsonValue,
           elementIds: writes.map((el) => el.id),
         },
       });
@@ -300,6 +382,11 @@ export class VersionsService implements OnApplicationShutdown {
     });
     await this.realtime.requestResync(boardId, 'version-restored');
     await this.realtime.emitEvent(boardId, { kind: 'version-restored', versionId });
-    return toVersionDto(await this.prisma.boardVersion.findUniqueOrThrow({ where: { id: backupId }, select: summarySelect }));
+    return toVersionDto(
+      await this.prisma.boardVersion.findUniqueOrThrow({
+        where: { id: backupId },
+        select: summarySelect,
+      }),
+    );
   }
 }

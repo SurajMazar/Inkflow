@@ -15,7 +15,11 @@ import { textBlock } from './text';
 import type { DrawLayer, ShapeLayer } from './types';
 
 /** Paints op sets with the element's stroke/fill styles. */
-export function paintSets(el: SceneElement, sets: DrawOpSet[], fillColor: string | null = null): ShapeLayer {
+export function paintSets(
+  el: SceneElement,
+  sets: DrawOpSet[],
+  fillColor: string | null = null,
+): ShapeLayer {
   const bg = fillColor ?? (isFilled(el) ? el.backgroundColor : null);
   return {
     kind: 'shape',
@@ -91,7 +95,10 @@ export function shapeLabelBox(el: ShapeElement): Rect {
   switch (el.type) {
     case 'ellipse': {
       const k = Math.SQRT1_2;
-      return inset({ x: (w * (1 - k)) / 2, y: (h * (1 - k)) / 2, width: w * k, height: h * k }, p / 2);
+      return inset(
+        { x: (w * (1 - k)) / 2, y: (h * (1 - k)) / 2, width: w * k, height: h * k },
+        p / 2,
+      );
     }
     case 'diamond':
       return inset({ x: w / 4, y: h / 4, width: w / 2, height: h / 2 }, p / 4);
@@ -101,7 +108,10 @@ export function shapeLabelBox(el: ShapeElement): Rect {
     }
     case 'polygon': {
       const k = 0.7;
-      return inset({ x: (w * (1 - k)) / 2, y: (h * (1 - k)) / 2, width: w * k, height: h * k }, p / 4);
+      return inset(
+        { x: (w * (1 - k)) / 2, y: (h * (1 - k)) / 2, width: w * k, height: h * k },
+        p / 4,
+      );
     }
     case 'star': {
       const k = Math.max(0.3, el.innerRatio) * 0.85;
@@ -113,7 +123,11 @@ export function shapeLabelBox(el: ShapeElement): Rect {
 }
 
 /** Label layers (wrapped to the label box) for shapes and nodes. */
-export function shapeLabelLayers(label: ShapeLabel | null, strokeColor: string, box: Rect): DrawLayer[] {
+export function shapeLabelLayers(
+  label: ShapeLabel | null,
+  strokeColor: string,
+  box: Rect,
+): DrawLayer[] {
   if (!label || label.text.length === 0) return [];
   const { layer } = textBlock({
     text: label.text,

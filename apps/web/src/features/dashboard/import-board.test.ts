@@ -29,8 +29,16 @@ describe('readBoardFile', () => {
   });
 
   it('rejects files without readable shapes', async () => {
-    const doc = { type: 'inkflow', version: 2, elements: [{ type: 'unknown-thing' }], appState: {}, files: {} };
-    await expect(readBoardFile(file('weird.inkflow', JSON.stringify(doc)))).rejects.toThrow(/couldn't read any shapes/i);
+    const doc = {
+      type: 'inkflow',
+      version: 2,
+      elements: [{ type: 'unknown-thing' }],
+      appState: {},
+      files: {},
+    };
+    await expect(readBoardFile(file('weird.inkflow', JSON.stringify(doc)))).rejects.toThrow(
+      /couldn't read any shapes/i,
+    );
   });
 
   it('converts Excalidraw scenes', async () => {

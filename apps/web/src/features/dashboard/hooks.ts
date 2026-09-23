@@ -54,17 +54,23 @@ export function useProjectMutations(workspaceId: string) {
   const queryClient = useQueryClient();
   const key = queryKeys.workspaces.projects(workspaceId);
   const create = useMutation({
-    mutationFn: (body: { name: string; description?: string }) => api.projects.create(workspaceId, body),
+    mutationFn: (body: { name: string; description?: string }) =>
+      api.projects.create(workspaceId, body),
     onSuccess: (project) => {
-      queryClient.setQueryData<ProjectDto[]>(key, (list) => (list ? [...list, project] : [project]));
+      queryClient.setQueryData<ProjectDto[]>(key, (list) =>
+        list ? [...list, project] : [project],
+      );
       notify.success(`Created project ${project.name}`);
     },
     onError: (error) => toastApiError(error, "Couldn't create the project"),
   });
   const rename = useMutation({
-    mutationFn: ({ projectId, name }: { projectId: string; name: string }) => api.projects.update(projectId, { name }),
+    mutationFn: ({ projectId, name }: { projectId: string; name: string }) =>
+      api.projects.update(projectId, { name }),
     onSuccess: (project) => {
-      queryClient.setQueryData<ProjectDto[]>(key, (list) => list?.map((p) => (p.id === project.id ? project : p)));
+      queryClient.setQueryData<ProjectDto[]>(key, (list) =>
+        list?.map((p) => (p.id === project.id ? project : p)),
+      );
       notify.success('Project renamed');
     },
     onError: (error) => toastApiError(error, "Couldn't rename the project"),
@@ -72,7 +78,9 @@ export function useProjectMutations(workspaceId: string) {
   const remove = useMutation({
     mutationFn: (projectId: string) => api.projects.remove(projectId),
     onSuccess: (_ok, projectId) => {
-      queryClient.setQueryData<ProjectDto[]>(key, (list) => list?.filter((p) => p.id !== projectId));
+      queryClient.setQueryData<ProjectDto[]>(key, (list) =>
+        list?.filter((p) => p.id !== projectId),
+      );
       void queryClient.invalidateQueries({ queryKey: queryKeys.boards.all });
       void queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.folders(workspaceId) });
       notify.success('Project deleted', { description: 'Its boards were moved to the trash.' });
@@ -94,10 +102,19 @@ export function useFolderMutations(workspaceId: string) {
     onError: (error) => toastApiError(error, "Couldn't create the folder"),
   });
   const update = useMutation({
-    mutationFn: ({ folderId, name, parentId }: { folderId: string; name?: string; parentId?: string | null }) =>
-      api.folders.update(folderId, { name, parentId }),
+    mutationFn: ({
+      folderId,
+      name,
+      parentId,
+    }: {
+      folderId: string;
+      name?: string;
+      parentId?: string | null;
+    }) => api.folders.update(folderId, { name, parentId }),
     onSuccess: (folder) => {
-      queryClient.setQueryData<FolderDto[]>(key, (list) => list?.map((f) => (f.id === folder.id ? folder : f)));
+      queryClient.setQueryData<FolderDto[]>(key, (list) =>
+        list?.map((f) => (f.id === folder.id ? folder : f)),
+      );
       notify.success('Folder updated');
     },
     onError: (error) => toastApiError(error, "Couldn't update the folder"),
@@ -116,10 +133,17 @@ export function useFolderMutations(workspaceId: string) {
 
 /* ───────────────────────────── board mutations ───────────────────────────── */
 
-function adjustWorkspaceBoardCount(queryClient: ReturnType<typeof useQueryClient>, workspaceId: string, delta: number) {
-  const update = (w: WorkspaceDto) => (w.id === workspaceId ? { ...w, boardCount: Math.max(0, w.boardCount + delta) } : w);
+function adjustWorkspaceBoardCount(
+  queryClient: ReturnType<typeof useQueryClient>,
+  workspaceId: string,
+  delta: number,
+) {
+  const update = (w: WorkspaceDto) =>
+    w.id === workspaceId ? { ...w, boardCount: Math.max(0, w.boardCount + delta) } : w;
   queryClient.setQueryData<WorkspaceDto[]>(queryKeys.workspaces.list, (list) => list?.map(update));
-  queryClient.setQueryData<WorkspaceDto>(queryKeys.workspaces.detail(workspaceId), (w) => (w ? update(w) : w));
+  queryClient.setQueryData<WorkspaceDto>(queryKeys.workspaces.detail(workspaceId), (w) =>
+    w ? update(w) : w,
+  );
 }
 
 /** Every dashboard board action, with optimistic cache updates and toasts. */
@@ -140,7 +164,8 @@ export function useBoardMutations() {
   });
 
   const rename = useMutation({
-    mutationFn: ({ board, title }: { board: BoardSummaryDto; title: string }) => api.boards.update(board.id, { title }),
+    mutationFn: ({ board, title }: { board: BoardSummaryDto; title: string }) =>
+      api.boards.update(board.id, { title }),
     onSuccess: (updated) => {
       patchCachedBoard(queryClient, updated.id, updated);
       notify.success('Board renamed');
@@ -159,14 +184,22 @@ export function useBoardMutations() {
     onSettled: () => {
       void queryClient.invalidateQueries({
         queryKey: queryKeys.boards.lists,
-        predicate: (q) => (q.queryKey[2] as { filter?: string } | undefined)?.filter === 'favorites',
+        predicate: (q) =>
+          (q.queryKey[2] as { filter?: string } | undefined)?.filter === 'favorites',
       });
     },
   });
 
   const move = useMutation({
-    mutationFn: ({ board, projectId, folderId }: { board: BoardSummaryDto; projectId: string | null; folderId: string | null }) =>
-      api.boards.update(board.id, { projectId, folderId }),
+    mutationFn: ({
+      board,
+      projectId,
+      folderId,
+    }: {
+      board: BoardSummaryDto;
+      projectId: string | null;
+      folderId: string | null;
+    }) => api.boards.update(board.id, { projectId, folderId }),
     onSuccess: (updated) => {
       patchCachedBoard(queryClient, updated.id, updated);
       void invalidateLists();
@@ -193,7 +226,10 @@ export function useBoardMutations() {
     mutationFn: (board: BoardSummaryDto) => api.boards.restore(board.id),
     onMutate: (board) => {
       queryClient.setQueriesData<BoardSummaryDto[]>(
-        { queryKey: queryKeys.boards.lists, predicate: (q) => (q.queryKey[2] as { filter?: string } | undefined)?.filter === 'trash' },
+        {
+          queryKey: queryKeys.boards.lists,
+          predicate: (q) => (q.queryKey[2] as { filter?: string } | undefined)?.filter === 'trash',
+        },
         (list) => list?.filter((b) => b.id !== board.id),
       );
     },
@@ -247,10 +283,24 @@ export function useBoardMutations() {
   const emptyTrash = useMutation({
     mutationFn: (workspaceId: string) => api.boards.emptyTrash(workspaceId),
     onSuccess: ({ deleted }) =>
-      notify.success(deleted === 0 ? 'Trash is already empty' : `Deleted ${deleted} board${deleted === 1 ? '' : 's'} permanently`),
+      notify.success(
+        deleted === 0
+          ? 'Trash is already empty'
+          : `Deleted ${deleted} board${deleted === 1 ? '' : 's'} permanently`,
+      ),
     onError: (error) => toastApiError(error, "Couldn't empty the trash"),
     onSettled: () => void invalidateLists(),
   });
 
-  return { create, rename, toggleFavorite, move, duplicate, trash, restore, deleteForever, emptyTrash };
+  return {
+    create,
+    rename,
+    toggleFavorite,
+    move,
+    duplicate,
+    trash,
+    restore,
+    deleteForever,
+    emptyTrash,
+  };
 }

@@ -112,9 +112,11 @@ export class InteractiveRenderer {
     for (const p of state.snapPoints) d.snapCross(p);
     for (const port of state.ports) d.port(port.point, port.active);
     if (state.eraserTrail.length > 1) d.fadingTrail(state.eraserTrail, palette.eraser, 3, 7, null);
-    if (state.laserTrail.length > 1) d.fadingTrail(state.laserTrail, palette.laser, 2, 5, palette.laserCore);
+    if (state.laserTrail.length > 1)
+      d.fadingTrail(state.laserTrail, palette.laser, 2, 5, palette.laserCore);
     for (const pin of state.commentPins) d.commentPin(pin);
-    for (const cursor of state.remoteCursors) d.remoteCursor(cursor.x, cursor.y, cursor.color, cursor.name, cursor.active);
+    for (const cursor of state.remoteCursors)
+      d.remoteCursor(cursor.x, cursor.y, cursor.color, cursor.name, cursor.active);
     ctx.setTransform(1, 0, 0, 1, 0, 0);
   }
 
@@ -150,7 +152,14 @@ class OverlayDrawer {
     if (closed) ctx.closePath();
   }
 
-  polygon(points: readonly Point[], color: string, width: number, dash: number[] | null, alpha = 1, closed = true): void {
+  polygon(
+    points: readonly Point[],
+    color: string,
+    width: number,
+    dash: number[] | null,
+    alpha = 1,
+    closed = true,
+  ): void {
     if (points.length < 2) return;
     const ctx = this.ctx;
     ctx.save();
@@ -253,9 +262,18 @@ class OverlayDrawer {
   linearEditor(editor: NonNullable<InteractiveRenderState['linearEditor']>): void {
     this.polygon(editor.points, this.accent, 1, [2, 3], 0.6, false);
     const selected = new Set(editor.selectedIndices);
-    editor.midpoints.forEach((p, i) => this.handle({ id: `mid-${i}`, kind: 'midpoint', x: p.x, y: p.y, angle: 0 }));
+    editor.midpoints.forEach((p, i) =>
+      this.handle({ id: `mid-${i}`, kind: 'midpoint', x: p.x, y: p.y, angle: 0 }),
+    );
     editor.points.forEach((p, i) =>
-      this.handle({ id: `pt-${i}`, kind: 'point', x: p.x, y: p.y, angle: 0, active: selected.has(i) }),
+      this.handle({
+        id: `pt-${i}`,
+        kind: 'point',
+        x: p.x,
+        y: p.y,
+        angle: 0,
+        active: selected.has(i),
+      }),
     );
   }
 
@@ -332,7 +350,13 @@ class OverlayDrawer {
   }
 
   /** Polyline whose older segments fade out and get thinner (eraser, laser pointer). */
-  fadingTrail(points: readonly Point[], color: string, minWidth: number, maxWidth: number, core: string | null): void {
+  fadingTrail(
+    points: readonly Point[],
+    color: string,
+    minWidth: number,
+    maxWidth: number,
+    core: string | null,
+  ): void {
     const ctx = this.ctx;
     const n = points.length;
     ctx.save();
@@ -363,7 +387,11 @@ class OverlayDrawer {
     const ctx = this.ctx;
     const c = this.s(pin);
     const r = pin.active ? 13 : 11;
-    const color = pin.resolved ? this.palette.pinResolved : pin.active ? this.accent : this.palette.pinOpen;
+    const color = pin.resolved
+      ? this.palette.pinResolved
+      : pin.active
+        ? this.accent
+        : this.palette.pinOpen;
     // Speech bubble whose tail points at the pinned location (bubble above-right of the point).
     const bx = c.x + r;
     const by = c.y - r;

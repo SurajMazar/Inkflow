@@ -2,7 +2,12 @@ import { getElementBounds } from '@inkflow/elements';
 import type { Bounds, Point } from '@inkflow/geometry';
 import type { InteractiveRenderState } from '@inkflow/renderer';
 import type { Editor } from '../editor';
-import { SNAP_THRESHOLD_PX, snapPointToGrid, snapPointToObjects, type SnapGuides } from '../snapping';
+import {
+  SNAP_THRESHOLD_PX,
+  snapPointToGrid,
+  snapPointToObjects,
+  type SnapGuides,
+} from '../snapping';
 import type { CanvasPointerEvent, ToolType } from '../types';
 import { visibleWorldBounds } from '../viewport';
 
@@ -65,7 +70,11 @@ export abstract class BaseTool implements Tool {
 }
 
 /** Bounds of visible, unselected elements used as snapping targets. */
-export function snapCandidates(editor: Editor, exclude: ReadonlySet<string>, limit = 400): Bounds[] {
+export function snapCandidates(
+  editor: Editor,
+  exclude: ReadonlySet<string>,
+  limit = 400,
+): Bounds[] {
   const visible = editor.scene.queryBounds(visibleWorldBounds(editor.state.viewport));
   const out: Bounds[] = [];
   for (const el of visible) {
@@ -90,9 +99,17 @@ export function snapDrawingPoint(
   const { snapping, grid, viewport } = editor.state;
   if (snapping.toGrid) return { point: snapPointToGrid(p, grid.size), lines: [], points: [] };
   if (snapping.toObjects !== invert) {
-    return snapPointToObjects(p, snapCandidates(editor, exclude), SNAP_THRESHOLD_PX / viewport.zoom);
+    return snapPointToObjects(
+      p,
+      snapCandidates(editor, exclude),
+      SNAP_THRESHOLD_PX / viewport.zoom,
+    );
   }
   return { point: p, lines: [], points: [] };
 }
 
-export const DRAG_THRESHOLD_PX: Record<CanvasPointerEvent['pointerType'], number> = { mouse: 3, pen: 4, touch: 7 };
+export const DRAG_THRESHOLD_PX: Record<CanvasPointerEvent['pointerType'], number> = {
+  mouse: 3,
+  pen: 4,
+  touch: 7,
+};

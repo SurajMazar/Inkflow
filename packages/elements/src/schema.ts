@@ -114,7 +114,12 @@ export const elementSchema = z.discriminatedUnion('type', [
   z.object({ ...baseShape, ...labelled, type: z.literal('ellipse') }),
   z.object({ ...baseShape, ...labelled, type: z.literal('diamond') }),
   z.object({ ...baseShape, ...labelled, type: z.literal('triangle') }),
-  z.object({ ...baseShape, ...labelled, type: z.literal('polygon'), sides: z.number().int().min(3).max(64) }),
+  z.object({
+    ...baseShape,
+    ...labelled,
+    type: z.literal('polygon'),
+    sides: z.number().int().min(3).max(64),
+  }),
   z.object({
     ...baseShape,
     ...labelled,
@@ -166,7 +171,12 @@ export const elementSchema = z.discriminatedUnion('type', [
     crop: z.object({ x: size, y: size, width: size, height: size }).nullable(),
     lockAspectRatio: z.boolean(),
   }),
-  z.object({ ...baseShape, type: z.literal('frame'), name: z.string().max(200), clip: z.boolean() }),
+  z.object({
+    ...baseShape,
+    type: z.literal('frame'),
+    name: z.string().max(200),
+    clip: z.boolean(),
+  }),
   z.object({
     ...baseShape,
     ...labelled,
@@ -175,7 +185,11 @@ export const elementSchema = z.discriminatedUnion('type', [
     icon: z.string().max(64).nullable(),
     metadata: z.record(z.string().max(100), z.string().max(2000)),
     ports: z.array(portSchema).max(64).nullable(),
-    customPath: z.string().max(20_000).regex(/^[MmLlHhVvCcSsQqTtAaZz0-9eE.,\s+-]*$/).nullable(),
+    customPath: z
+      .string()
+      .max(20_000)
+      .regex(/^[MmLlHhVvCcSsQqTtAaZz0-9eE.,\s+-]*$/)
+      .nullable(),
   }),
   z.object({
     ...baseShape,
@@ -238,8 +252,7 @@ export const elementSchema = z.discriminatedUnion('type', [
 ]);
 
 export type ElementValidationResult =
-  | { success: true; element: SceneElement }
-  | { success: false; error: string };
+  { success: true; element: SceneElement } | { success: false; error: string };
 
 /** Validates an untrusted element (imports, network payloads). */
 export function validateElement(value: unknown): ElementValidationResult {

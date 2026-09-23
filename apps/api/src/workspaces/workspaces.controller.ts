@@ -35,13 +35,19 @@ export class WorkspacesController {
   @Post()
   @ApiZodBody(createWorkspaceSchema)
   @ApiOperation({ summary: 'Create a workspace' })
-  create(@CurrentUser() user: AuthInfo, @ZBody(createWorkspaceSchema) body: CreateWorkspaceRequest): Promise<WorkspaceDto> {
+  create(
+    @CurrentUser() user: AuthInfo,
+    @ZBody(createWorkspaceSchema) body: CreateWorkspaceRequest,
+  ): Promise<WorkspaceDto> {
     return this.workspaces.create(user.userId, body);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get a workspace' })
-  get(@CurrentUser() user: AuthInfo, @IdParam('id', 'Workspace') id: string): Promise<WorkspaceDto> {
+  get(
+    @CurrentUser() user: AuthInfo,
+    @IdParam('id', 'Workspace') id: string,
+  ): Promise<WorkspaceDto> {
     return this.workspaces.get(user.userId, id);
   }
 
@@ -58,14 +64,20 @@ export class WorkspacesController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a workspace and all its boards (OWNER)' })
-  async remove(@CurrentUser() user: AuthInfo, @IdParam('id', 'Workspace') id: string): Promise<OkResponse> {
+  async remove(
+    @CurrentUser() user: AuthInfo,
+    @IdParam('id', 'Workspace') id: string,
+  ): Promise<OkResponse> {
     await this.workspaces.remove(user.userId, id);
     return { ok: true };
   }
 
   @Get(':id/members')
   @ApiOperation({ summary: 'Workspace members' })
-  members(@CurrentUser() user: AuthInfo, @IdParam('id', 'Workspace') id: string): Promise<WorkspaceMemberDto[]> {
+  members(
+    @CurrentUser() user: AuthInfo,
+    @IdParam('id', 'Workspace') id: string,
+  ): Promise<WorkspaceMemberDto[]> {
     return this.workspaces.members(user.userId, id);
   }
 
@@ -94,7 +106,10 @@ export class WorkspacesController {
 
   @Get(':id/invitations')
   @ApiOperation({ summary: 'Pending invitations (ADMIN+)' })
-  invitations(@CurrentUser() user: AuthInfo, @IdParam('id', 'Workspace') id: string): Promise<WorkspaceInvitationDto[]> {
+  invitations(
+    @CurrentUser() user: AuthInfo,
+    @IdParam('id', 'Workspace') id: string,
+  ): Promise<WorkspaceInvitationDto[]> {
     return this.workspaces.invitations(user.userId, id);
   }
 

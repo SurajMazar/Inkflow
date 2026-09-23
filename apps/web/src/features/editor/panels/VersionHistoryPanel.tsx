@@ -27,7 +27,11 @@ import { notify, toastApiError } from '@/features/notifications/notify';
 import { useBoardSession, useEditorState } from '../hooks/editor-context';
 import { ScenePreview } from './ScenePreview';
 
-const KIND_LABEL: Record<VersionKind, string> = { AUTO: 'Auto', MANUAL: 'Manual', RESTORE_BACKUP: 'Backup' };
+const KIND_LABEL: Record<VersionKind, string> = {
+  AUTO: 'Auto',
+  MANUAL: 'Manual',
+  RESTORE_BACKUP: 'Backup',
+};
 
 function VersionPreview({ version }: { version: BoardVersionDto }) {
   const { boardId, shareToken } = useBoardSession();
@@ -58,19 +62,27 @@ function VersionPreview({ version }: { version: BoardVersionDto }) {
   }, [shareToken]);
   React.useEffect(() => {
     if (!parsed || !images) return;
-    for (const el of parsed.elements) if (el.type === 'image' && el.fileId) images.ensure(el.fileId);
+    for (const el of parsed.elements)
+      if (el.type === 'image' && el.fileId) images.ensure(el.fileId);
   }, [parsed, images]);
 
   if (detail.isPending) {
     return (
-      <div className="flex h-40 items-center justify-center rounded-md border bg-muted/30" role="status">
+      <div
+        className="flex h-40 items-center justify-center rounded-md border bg-muted/30"
+        role="status"
+      >
         <Spinner />
         <span className="sr-only">Loading preview…</span>
       </div>
     );
   }
   if (detail.isError || !parsed) {
-    return <div className="rounded-md border p-3 text-xs text-muted-foreground">The preview could not be loaded.</div>;
+    return (
+      <div className="rounded-md border p-3 text-xs text-muted-foreground">
+        The preview could not be loaded.
+      </div>
+    );
   }
   return (
     <ScenePreview
@@ -89,26 +101,45 @@ function VersionPreview({ version }: { version: BoardVersionDto }) {
   );
 }
 
-function CompareResult({ result, onHighlight }: { result: VersionComparisonDto; onHighlight(ids: string[]): void }) {
+function CompareResult({
+  result,
+  onHighlight,
+}: {
+  result: VersionComparisonDto;
+  onHighlight(ids: string[]): void;
+}) {
   const { editor } = useBoardSession();
   const highlightable = [...result.added, ...result.modified].filter((id) => editor.getElement(id));
   const none = result.added.length + result.removed.length + result.modified.length === 0;
   return (
-    <div className="space-y-2 rounded-md border bg-muted/30 p-2.5 text-xs" data-testid="version-compare-result">
+    <div
+      className="space-y-2 rounded-md border bg-muted/30 p-2.5 text-xs"
+      data-testid="version-compare-result"
+    >
       {none ? (
         <p className="text-muted-foreground">No differences from the current board.</p>
       ) : (
         <p>
-          Since this version: <span className="font-medium text-emerald-700 dark:text-emerald-400">{result.added.length} added</span>
+          Since this version:{' '}
+          <span className="font-medium text-emerald-700 dark:text-emerald-400">
+            {result.added.length} added
+          </span>
           {' · '}
           <span className="font-medium text-destructive">{result.removed.length} removed</span>
           {' · '}
-          <span className="font-medium text-amber-700 dark:text-amber-400">{result.modified.length} modified</span>
+          <span className="font-medium text-amber-700 dark:text-amber-400">
+            {result.modified.length} modified
+          </span>
           <span className="text-muted-foreground"> · {result.unchangedCount} unchanged</span>
         </p>
       )}
       {highlightable.length > 0 && (
-        <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => onHighlight(highlightable)}>
+        <Button
+          size="sm"
+          variant="outline"
+          className="h-7 text-xs"
+          onClick={() => onHighlight(highlightable)}
+        >
           Highlight {pluralize(highlightable.length, 'change')} on canvas
         </Button>
       )}
@@ -135,18 +166,28 @@ function VersionRow({
   });
   const title = version.label ?? `Version ${version.number}`;
   return (
-    <li className="space-y-2 border-b px-3 py-3" data-testid="version-row" data-version-id={version.id}>
+    <li
+      className="space-y-2 border-b px-3 py-3"
+      data-testid="version-row"
+      data-version-id={version.id}
+    >
       <div className="flex items-start gap-2">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
             <span className="truncate text-sm font-medium" title={title}>
               {title}
             </span>
-            <Badge variant={version.kind === 'MANUAL' ? 'subtle' : 'outline'} className="text-[10px]">
+            <Badge
+              variant={version.kind === 'MANUAL' ? 'subtle' : 'outline'}
+              className="text-[10px]"
+            >
               {KIND_LABEL[version.kind]}
             </Badge>
           </div>
-          <div className="mt-0.5 truncate text-xs text-muted-foreground" title={formatDateTime(version.createdAt)}>
+          <div
+            className="mt-0.5 truncate text-xs text-muted-foreground"
+            title={formatDateTime(version.createdAt)}
+          >
             {version.createdBy ? `${version.createdBy.name} · ` : ''}
             {formatRelativeTime(version.createdAt)} · {pluralize(version.elementCount, 'element')}
           </div>
@@ -170,7 +211,12 @@ function VersionRow({
           onClick={() => compare.mutate()}
           data-testid="version-compare"
         >
-          {compare.isPending ? <Spinner className="size-3.5" /> : <GitCompare className="size-3.5" />} Compare
+          {compare.isPending ? (
+            <Spinner className="size-3.5" />
+          ) : (
+            <GitCompare className="size-3.5" />
+          )}{' '}
+          Compare
         </Button>
         {canEdit && (
           <Button
@@ -206,7 +252,8 @@ export function VersionHistoryPanel() {
   const invalidate = () => qc.invalidateQueries({ queryKey: queryKeys.boards.versions(boardId) });
 
   const save = useMutation({
-    mutationFn: () => api.versions.create(boardId, label.trim() ? { label: label.trim() } : {}, { shareToken }),
+    mutationFn: () =>
+      api.versions.create(boardId, label.trim() ? { label: label.trim() } : {}, { shareToken }),
     onSuccess: (v) => {
       setLabel('');
       notify.success(`Saved ${v.label ?? `version ${v.number}`}`);
@@ -216,7 +263,8 @@ export function VersionHistoryPanel() {
   });
 
   const restore = useMutation({
-    mutationFn: (version: BoardVersionDto) => api.versions.restore(boardId, version.id, { shareToken }),
+    mutationFn: (version: BoardVersionDto) =>
+      api.versions.restore(boardId, version.id, { shareToken }),
     onSuccess: async (_backup, version) => {
       await session.reload();
       notify.success(`Restored ${version.label ?? `version ${version.number}`}`, {
@@ -283,12 +331,25 @@ export function VersionHistoryPanel() {
             className="m-3"
             icon={<History />}
             title="No versions yet"
-            description={canEdit ? 'Save a version to capture the current state of the board.' : 'Versions are saved automatically while people edit.'}
+            description={
+              canEdit
+                ? 'Save a version to capture the current state of the board.'
+                : 'Versions are saved automatically while people edit.'
+            }
           />
         ) : (
-          <ul className={cn(restore.isPending && 'pointer-events-none opacity-60')} aria-busy={restore.isPending}>
+          <ul
+            className={cn(restore.isPending && 'pointer-events-none opacity-60')}
+            aria-busy={restore.isPending}
+          >
             {versions.data.map((v) => (
-              <VersionRow key={v.id} version={v} canEdit={canEdit} onRestore={setRestoreTarget} onHighlight={highlight} />
+              <VersionRow
+                key={v.id}
+                version={v}
+                canEdit={canEdit}
+                onRestore={setRestoreTarget}
+                onHighlight={highlight}
+              />
             ))}
           </ul>
         )}
@@ -299,8 +360,9 @@ export function VersionHistoryPanel() {
           <AlertDialogHeader>
             <AlertDialogTitle>Restore this version?</AlertDialogTitle>
             <AlertDialogDescription>
-              The board will be replaced with “{restoreTarget?.label ?? `Version ${restoreTarget?.number ?? ''}`}” for everyone. The current state
-              is saved as a backup version first, so you can undo this later.
+              The board will be replaced with “
+              {restoreTarget?.label ?? `Version ${restoreTarget?.number ?? ''}`}” for everyone. The
+              current state is saved as a backup version first, so you can undo this later.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

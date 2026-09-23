@@ -43,7 +43,10 @@ export function usePreferences(): PreferencesApi {
     getAnonymousPreferences,
     getAnonymousPreferences,
   );
-  const accountPrefs = React.useMemo(() => (user ? normalizePreferences(user.preferences) : null), [user]);
+  const accountPrefs = React.useMemo(
+    () => (user ? normalizePreferences(user.preferences) : null),
+    [user],
+  );
   const preferences = accountPrefs ?? anonymous;
 
   const updatePreferences = React.useCallback(
@@ -58,11 +61,14 @@ export function usePreferences(): PreferencesApi {
       const { next, body } = applyPreferencesPatch(current, patch);
       if (Object.keys(body).length === 0) return true;
       const seq = ++mutationSeq;
-      queryClient.setQueryData<UserDto | null>(queryKeys.auth.me, (u) => (u ? { ...u, preferences: next } : u));
+      queryClient.setQueryData<UserDto | null>(queryKeys.auth.me, (u) =>
+        u ? { ...u, preferences: next } : u,
+      );
       setPending((n) => n + 1);
       try {
         const updated = await api.users.updateMe({ preferences: body });
-        if (seq === mutationSeq) queryClient.setQueryData<UserDto | null>(queryKeys.auth.me, updated);
+        if (seq === mutationSeq)
+          queryClient.setQueryData<UserDto | null>(queryKeys.auth.me, updated);
         return true;
       } catch (error) {
         if (seq === mutationSeq) {
@@ -79,5 +85,10 @@ export function usePreferences(): PreferencesApi {
     [queryClient],
   );
 
-  return { preferences, updatePreferences, isSaving: pending > 0, source: user ? 'account' : 'local' };
+  return {
+    preferences,
+    updatePreferences,
+    isSaving: pending > 0,
+    source: user ? 'account' : 'local',
+  };
 }

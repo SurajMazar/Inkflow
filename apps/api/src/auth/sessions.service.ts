@@ -63,7 +63,13 @@ export class SessionsService {
       },
     });
     await this.prisma.user.update({ where: { id: userId }, data: { lastLoginAt: new Date() } });
-    return { userId, familyId, refreshToken, expiresAt, accessToken: this.tokens.signAccessToken(userId, familyId) };
+    return {
+      userId,
+      familyId,
+      refreshToken,
+      expiresAt,
+      accessToken: this.tokens.signAccessToken(userId, familyId),
+    };
   }
 
   /** Exchanges a refresh token for a new one (rotation with reuse detection). */
@@ -72,13 +78,16 @@ export class SessionsService {
     const tokenHash = sha256Hex(refreshToken);
     const now = new Date();
     const result = await this.prisma.$transaction(async (tx) => {
-      const rows = await tx.$queryRaw<{ id: string }[]>`SELECT id FROM sessions WHERE token_hash = ${tokenHash} FOR UPDATE`;
+      const rows = await tx.$queryRaw<
+        { id: string }[]
+      >`SELECT id FROM sessions WHERE token_hash = ${tokenHash} FOR UPDATE`;
       if (rows.length === 0) return { status: 'invalid' as const };
       const current = await tx.session.findUniqueOrThrow({ where: { id: rows[0]!.id } });
       if (!safeEqual(current.tokenHash, tokenHash)) return { status: 'invalid' as const };
       if (current.revokedAt || current.expiresAt <= now) return { status: 'invalid' as const };
       if (current.rotatedAt) {
-        if (now.getTime() - current.rotatedAt.getTime() <= this.rotationGraceMs) return { status: 'race' as const };
+        if (now.getTime() - current.rotatedAt.getTime() <= this.rotationGraceMs)
+          return { status: 'race' as const };
         await tx.session.updateMany({
           where: { familyId: current.familyId, revokedAt: null },
           data: { revokedAt: now, revokedReason: 'refresh-token-reuse' },
@@ -87,7 +96,10 @@ export class SessionsService {
       }
       const nextToken = randomToken(32);
       const expiresAt = this.refreshExpiry();
-      await tx.session.update({ where: { id: current.id }, data: { rotatedAt: now, lastUsedAt: now } });
+      await tx.session.update({
+        where: { id: current.id },
+        data: { rotatedAt: now, lastUsedAt: now },
+      });
       await tx.session.create({
         data: {
           userId: current.userId,
@@ -112,7 +124,9 @@ export class SessionsService {
       };
     });
     if (result.status === 'reused') {
-      this.logger.warn(`Refresh token reuse detected for user ${result.userId}; session family revoked`);
+      this.logger.warn(
+        `Refresh token reuse detected for user ${result.userId}; session family revoked`,
+      );
       await this.tokens.markSessionsRevoked([result.familyId]);
       return { status: 'reused' };
     }
@@ -141,7 +155,11 @@ export class SessionsService {
   /** Revokes every session of a user, optionally keeping one family (the caller's). */
   async revokeAllForUser(userId: string, reason: string, exceptFamilyId?: string): Promise<void> {
     const families = await this.prisma.session.findMany({
-      where: { userId, revokedAt: null, ...(exceptFamilyId ? { familyId: { not: exceptFamilyId } } : {}) },
+      where: {
+        userId,
+        revokedAt: null,
+        ...(exceptFamilyId ? { familyId: { not: exceptFamilyId } } : {}),
+      },
       select: { familyId: true },
       distinct: ['familyId'],
     });

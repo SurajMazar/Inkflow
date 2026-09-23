@@ -78,8 +78,16 @@ const meta = {
 
 /** Structural validation of untrusted operations (element contents are validated on apply). */
 export const operationSchema = z.discriminatedUnion('type', [
-  z.object({ ...meta, type: z.literal('CREATE_ELEMENT'), element: z.record(z.string(), z.unknown()) }),
-  z.object({ ...meta, type: z.literal('CREATE_CONNECTION'), element: z.record(z.string(), z.unknown()) }),
+  z.object({
+    ...meta,
+    type: z.literal('CREATE_ELEMENT'),
+    element: z.record(z.string(), z.unknown()),
+  }),
+  z.object({
+    ...meta,
+    type: z.literal('CREATE_CONNECTION'),
+    element: z.record(z.string(), z.unknown()),
+  }),
   z.object({ ...meta, type: z.literal('UPDATE_ELEMENT'), elementId: id, patch }),
   z.object({ ...meta, type: z.literal('MOVE_ELEMENT'), elementId: id, x: finite, y: finite }),
   z.object({
@@ -92,11 +100,28 @@ export const operationSchema = z.discriminatedUnion('type', [
     height: finite.min(0),
     patch,
   }),
-  z.object({ ...meta, type: z.literal('ROTATE_ELEMENT'), elementId: id, angle: finite, x: finite, y: finite }),
+  z.object({
+    ...meta,
+    type: z.literal('ROTATE_ELEMENT'),
+    elementId: id,
+    angle: finite,
+    x: finite,
+    y: finite,
+  }),
   z.object({ ...meta, type: z.literal('DELETE_ELEMENT'), elementId: id }),
   z.object({ ...meta, type: z.literal('DELETE_CONNECTION'), elementId: id }),
-  z.object({ ...meta, type: z.literal('GROUP_ELEMENTS'), elementIds: z.array(id).min(1).max(10_000), groupId: id }),
-  z.object({ ...meta, type: z.literal('UNGROUP_ELEMENTS'), elementIds: z.array(id).min(1).max(10_000), groupId: id }),
+  z.object({
+    ...meta,
+    type: z.literal('GROUP_ELEMENTS'),
+    elementIds: z.array(id).min(1).max(10_000),
+    groupId: id,
+  }),
+  z.object({
+    ...meta,
+    type: z.literal('UNGROUP_ELEMENTS'),
+    elementIds: z.array(id).min(1).max(10_000),
+    groupId: id,
+  }),
 ]);
 
 /** Element ids an operation touches. */
@@ -129,7 +154,7 @@ function hashString(s: string): number {
     h ^= s.charCodeAt(i);
     h = Math.imul(h, 16777619);
   }
-  return (h >>> 1) || 1;
+  return h >>> 1 || 1;
 }
 
 export interface ApplyResult {
@@ -169,7 +194,12 @@ export function applyOperation(
     if (options.validate) {
       for (const el of els) {
         const res = validateElement(el);
-        if (!res.success) return { elements: [], rejected: `Invalid element ${el.id}: ${res.error}`, conflicted: false };
+        if (!res.success)
+          return {
+            elements: [],
+            rejected: `Invalid element ${el.id}: ${res.error}`,
+            conflicted: false,
+          };
       }
     }
     const conflicted = targetsConflict(getElement, op);
@@ -181,11 +211,19 @@ export function applyOperation(
     case 'CREATE_CONNECTION': {
       const incoming = op.element;
       if (op.type === 'CREATE_CONNECTION' && !isBindingElement(incoming)) {
-        return { elements: [], rejected: 'CREATE_CONNECTION requires an arrow or connector', conflicted: false };
+        return {
+          elements: [],
+          rejected: 'CREATE_CONNECTION requires an arrow or connector',
+          conflicted: false,
+        };
       }
       const current = getElement(incoming.id);
       if (current && current.type !== incoming.type) {
-        return { elements: [], rejected: `Element ${incoming.id} already exists with another type`, conflicted: false };
+        return {
+          elements: [],
+          rejected: `Element ${incoming.id} already exists with another type`,
+          conflicted: false,
+        };
       }
       return check([finalize(current, { ...incoming, isDeleted: false })]);
     }
@@ -200,7 +238,12 @@ export function applyOperation(
     case 'RESIZE_ELEMENT':
     case 'ROTATE_ELEMENT': {
       const current = getElement(op.elementId);
-      if (!current) return { elements: [], rejected: `Element ${op.elementId} does not exist`, conflicted: false };
+      if (!current)
+        return {
+          elements: [],
+          rejected: `Element ${op.elementId} does not exist`,
+          conflicted: false,
+        };
       let p: ElementPatch;
       if (op.type === 'UPDATE_ELEMENT') p = sanitizePatch(op.patch);
       else if (op.type === 'MOVE_ELEMENT') p = { x: op.x, y: op.y };
@@ -220,7 +263,8 @@ export function applyOperation(
         const has = current.groupIds.includes(op.groupId);
         let groupIds = current.groupIds;
         if (op.type === 'GROUP_ELEMENTS' && !has) groupIds = [...current.groupIds, op.groupId];
-        if (op.type === 'UNGROUP_ELEMENTS' && has) groupIds = current.groupIds.filter((g) => g !== op.groupId);
+        if (op.type === 'UNGROUP_ELEMENTS' && has)
+          groupIds = current.groupIds.filter((g) => g !== op.groupId);
         if (groupIds !== current.groupIds) out.push(finalize(current, { ...current, groupIds }));
       }
       return check(out);
@@ -228,7 +272,10 @@ export function applyOperation(
   }
 }
 
-function targetsConflict(getElement: (id: string) => SceneElement | undefined, op: Operation): boolean {
+function targetsConflict(
+  getElement: (id: string) => SceneElement | undefined,
+  op: Operation,
+): boolean {
   if (op.baseVersion === null) return false;
   return operationTargets(op).some((id) => {
     const el = getElement(id);
@@ -243,7 +290,10 @@ const RESIZE_EXTRA_KEYS = new Set(['points', 'fontSize', 'crop', 'flipX', 'flipY
 type MetaFactory = (baseVersion: number | null) => OperationMeta;
 
 /** Converts the net effect of a committed transaction into semantic collaboration operations. */
-export function changesToOperations(changes: readonly ElementChange[], makeMeta: MetaFactory): Operation[] {
+export function changesToOperations(
+  changes: readonly ElementChange[],
+  makeMeta: MetaFactory,
+): Operation[] {
   const ops: Operation[] = [];
   const groupAdds = new Map<string, string[]>();
   const groupRemoves = new Map<string, string[]>();
@@ -251,7 +301,10 @@ export function changesToOperations(changes: readonly ElementChange[], makeMeta:
   for (const { before, after } of changes) {
     const baseVersion = before ? before.version : null;
     if (!before || (before.isDeleted && !after.isDeleted)) {
-      const type = isBindingElement(after) && after.type === 'connector' ? 'CREATE_CONNECTION' : 'CREATE_ELEMENT';
+      const type =
+        isBindingElement(after) && after.type === 'connector'
+          ? 'CREATE_CONNECTION'
+          : 'CREATE_ELEMENT';
       ops.push({ ...makeMeta(baseVersion), type, element: after });
       continue;
     }
@@ -269,7 +322,8 @@ export function changesToOperations(changes: readonly ElementChange[], makeMeta:
     if (changed.length === 1 && changed[0] === 'groupIds') {
       const added = after.groupIds.filter((g) => !before.groupIds.includes(g));
       const removed = before.groupIds.filter((g) => !after.groupIds.includes(g));
-      const appendedOnly = added.length === 1 && removed.length === 0 && after.groupIds.at(-1) === added[0];
+      const appendedOnly =
+        added.length === 1 && removed.length === 0 && after.groupIds.at(-1) === added[0];
       if (appendedOnly) {
         groupAdds.set(added[0]!, [...(groupAdds.get(added[0]!) ?? []), after.id]);
         continue;
@@ -280,7 +334,13 @@ export function changesToOperations(changes: readonly ElementChange[], makeMeta:
       }
     }
     if (changed.every((k) => MOVE_KEYS.has(k))) {
-      ops.push({ ...makeMeta(baseVersion), type: 'MOVE_ELEMENT', elementId: after.id, x: after.x, y: after.y });
+      ops.push({
+        ...makeMeta(baseVersion),
+        type: 'MOVE_ELEMENT',
+        elementId: after.id,
+        x: after.x,
+        y: after.y,
+      });
       continue;
     }
     if (changed.includes('angle') && changed.every((k) => ROTATE_KEYS.has(k))) {
@@ -295,9 +355,15 @@ export function changesToOperations(changes: readonly ElementChange[], makeMeta:
       continue;
     }
     const sizeChanged = changed.includes('width') || changed.includes('height');
-    if (sizeChanged && changed.every((k) => MOVE_KEYS.has(k) || k === 'width' || k === 'height' || RESIZE_EXTRA_KEYS.has(k))) {
+    if (
+      sizeChanged &&
+      changed.every(
+        (k) => MOVE_KEYS.has(k) || k === 'width' || k === 'height' || RESIZE_EXTRA_KEYS.has(k),
+      )
+    ) {
       const extra: Record<string, unknown> = {};
-      for (const k of changed) if (RESIZE_EXTRA_KEYS.has(k)) extra[k] = (after as unknown as Record<string, unknown>)[k];
+      for (const k of changed)
+        if (RESIZE_EXTRA_KEYS.has(k)) extra[k] = (after as unknown as Record<string, unknown>)[k];
       ops.push({
         ...makeMeta(baseVersion),
         type: 'RESIZE_ELEMENT',
@@ -312,7 +378,12 @@ export function changesToOperations(changes: readonly ElementChange[], makeMeta:
     }
     const p: Record<string, unknown> = {};
     for (const k of changed) p[k] = (after as unknown as Record<string, unknown>)[k];
-    ops.push({ ...makeMeta(baseVersion), type: 'UPDATE_ELEMENT', elementId: after.id, patch: p as ElementPatch });
+    ops.push({
+      ...makeMeta(baseVersion),
+      type: 'UPDATE_ELEMENT',
+      elementId: after.id,
+      patch: p as ElementPatch,
+    });
   }
   for (const [groupId, elementIds] of groupAdds) {
     ops.push({ ...makeMeta(null), type: 'GROUP_ELEMENTS', elementIds, groupId });

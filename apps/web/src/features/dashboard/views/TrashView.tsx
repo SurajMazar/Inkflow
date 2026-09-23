@@ -43,7 +43,12 @@ export function TrashView() {
         description="Restore boards or delete them permanently."
         actions={
           items.length > 0 ? (
-            <Button variant="outline" size="sm" onClick={() => setConfirmEmpty(true)} data-testid="trash-empty">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setConfirmEmpty(true)}
+              data-testid="trash-empty"
+            >
               <Trash2 aria-hidden />
               Empty trash
             </Button>
@@ -59,14 +64,26 @@ export function TrashView() {
       ) : boards.isError ? (
         <div className="rounded-xl border border-dashed p-8 text-center text-sm" role="alert">
           Couldn't load the trash.{' '}
-          <button type="button" className="font-medium underline underline-offset-4" onClick={() => void boards.refetch()}>
+          <button
+            type="button"
+            className="font-medium underline underline-offset-4"
+            onClick={() => void boards.refetch()}
+          >
             Retry
           </button>
         </div>
       ) : items.length === 0 ? (
-        <EmptyState icon={<Trash2 />} title="Trash is empty" description="Boards you delete stay here until you remove them permanently." />
+        <EmptyState
+          icon={<Trash2 />}
+          title="Trash is empty"
+          description="Boards you delete stay here until you remove them permanently."
+        />
       ) : (
-        <ul className="divide-y overflow-hidden rounded-xl border" aria-label="Boards in the trash" data-testid="trash-list">
+        <ul
+          className="divide-y overflow-hidden rounded-xl border"
+          aria-label="Boards in the trash"
+          data-testid="trash-list"
+        >
           {items.map((board) => {
             const manageable = canManageBoard(board.role);
             return (
@@ -83,7 +100,10 @@ export function TrashView() {
                   <p className="truncate text-sm font-medium">{board.title}</p>
                   <p className="truncate text-xs text-muted-foreground">
                     Deleted{' '}
-                    <time dateTime={board.deletedAt ?? undefined} title={formatDateTime(board.deletedAt)}>
+                    <time
+                      dateTime={board.deletedAt ?? undefined}
+                      title={formatDateTime(board.deletedAt)}
+                    >
                       {formatRelativeTime(board.deletedAt ?? board.updatedAt)}
                     </time>{' '}
                     · {board.owner.name}
@@ -121,7 +141,10 @@ export function TrashView() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete “{confirmBoard?.title}” forever?</AlertDialogTitle>
-            <AlertDialogDescription>The board, its versions and comments will be permanently deleted. This can't be undone.</AlertDialogDescription>
+            <AlertDialogDescription>
+              The board, its versions and comments will be permanently deleted. This can't be
+              undone.
+            </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
@@ -152,7 +175,9 @@ export function TrashView() {
             <Button
               variant="destructive"
               disabled={emptyTrash.isPending}
-              onClick={() => emptyTrash.mutate(workspace.id, { onSettled: () => setConfirmEmpty(false) })}
+              onClick={() =>
+                emptyTrash.mutate(workspace.id, { onSettled: () => setConfirmEmpty(false) })
+              }
               data-testid="trash-empty-confirm"
             >
               {emptyTrash.isPending ? <Spinner className="text-current" label={null} /> : null}

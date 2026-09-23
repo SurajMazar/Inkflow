@@ -32,7 +32,10 @@ export function NewBoardDialog({ workspaceId }: { workspaceId: string }) {
         {newBoard.open ? (
           <NewBoardForm
             workspaceId={workspaceId}
-            initialLocation={{ projectId: newBoard.defaults.projectId ?? null, folderId: newBoard.defaults.folderId ?? null }}
+            initialLocation={{
+              projectId: newBoard.defaults.projectId ?? null,
+              folderId: newBoard.defaults.folderId ?? null,
+            }}
             initialTemplateId={newBoard.defaults.templateId ?? null}
             onDone={closeNewBoard}
           />
@@ -124,7 +127,13 @@ function NewBoardForm({
             className="grid max-h-56 grid-cols-1 gap-2 overflow-y-auto p-0.5 sm:grid-cols-2"
             aria-label="Template"
           >
-            <TemplateOption value="blank" selected={templateId === 'blank'} title="Blank board" subtitle="Empty canvas" icon={<FilePlus2 aria-hidden />} />
+            <TemplateOption
+              value="blank"
+              selected={templateId === 'blank'}
+              title="Blank board"
+              subtitle="Empty canvas"
+              icon={<FilePlus2 aria-hidden />}
+            />
             {(templates.data ?? []).map((template: TemplateSummaryDto) => (
               <TemplateOption
                 key={template.id}
@@ -178,7 +187,13 @@ function TemplateOption({
         selected && 'border-primary/60 bg-brand-subtle/60',
       )}
     >
-      <RadioGroupItem id={id} value={value} aria-label={title} className="sr-only" data-testid={`new-board-template-${value}`} />
+      <RadioGroupItem
+        id={id}
+        value={value}
+        aria-label={title}
+        className="sr-only"
+        data-testid={`new-board-template-${value}`}
+      />
       <span
         className={cn(
           'flex size-8 shrink-0 items-center justify-center rounded-md border bg-background text-muted-foreground [&_svg]:size-4',

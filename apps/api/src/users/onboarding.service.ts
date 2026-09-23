@@ -34,7 +34,10 @@ export class OnboardingService {
     await this.prisma.$transaction(async (tx) => {
       const shares = await tx.share.findMany({
         where: { email: normalized, board: { deletedAt: null } },
-        include: { board: { select: { id: true, title: true, ownerId: true } }, invitedBy: { select: { name: true } } },
+        include: {
+          board: { select: { id: true, title: true, ownerId: true } },
+          invitedBy: { select: { name: true } },
+        },
       });
       for (const share of shares) {
         if (share.board.ownerId !== userId) {
@@ -43,7 +46,12 @@ export class OnboardingService {
           });
           if (!existing) {
             await tx.boardMember.create({
-              data: { boardId: share.boardId, userId, role: share.role, addedById: share.invitedById },
+              data: {
+                boardId: share.boardId,
+                userId,
+                role: share.role,
+                addedById: share.invitedById,
+              },
             });
           } else if (!boardRoleAtLeast(existing.role, share.role)) {
             await tx.boardMember.update({
@@ -58,24 +66,32 @@ export class OnboardingService {
             type: 'BOARD_SHARED',
             actorId: share.invitedById,
             title: `${share.invitedBy.name} shared “${share.board.title}” with you`,
-            body: share.message ?? `You can now ${share.role === 'VIEWER' ? 'view' : 'edit'} this board.`,
+            body:
+              share.message ??
+              `You can now ${share.role === 'VIEWER' ? 'view' : 'edit'} this board.`,
             link,
             data: { boardId: share.boardId },
           });
         }
       }
-      if (shares.length > 0) await tx.share.deleteMany({ where: { id: { in: shares.map((s) => s.id) } } });
+      if (shares.length > 0)
+        await tx.share.deleteMany({ where: { id: { in: shares.map((s) => s.id) } } });
 
       const invitations = await tx.workspaceInvitation.findMany({
         where: { email: normalized, expiresAt: { gt: new Date() } },
-        include: { workspace: { select: { id: true, name: true } }, invitedBy: { select: { name: true } } },
+        include: {
+          workspace: { select: { id: true, name: true } },
+          invitedBy: { select: { name: true } },
+        },
       });
       for (const inv of invitations) {
         const existing = await tx.workspaceMember.findUnique({
           where: { workspaceId_userId: { workspaceId: inv.workspaceId, userId } },
         });
         if (!existing) {
-          await tx.workspaceMember.create({ data: { workspaceId: inv.workspaceId, userId, role: inv.role } });
+          await tx.workspaceMember.create({
+            data: { workspaceId: inv.workspaceId, userId, role: inv.role },
+          });
           notifications.push({
             userId,
             type: 'WORKSPACE_INVITE',
@@ -88,24 +104,44 @@ export class OnboardingService {
         }
       }
       if (invitations.length > 0) {
-        await tx.workspaceInvitation.deleteMany({ where: { id: { in: invitations.map((i) => i.id) } } });
+        await tx.workspaceInvitation.deleteMany({
+          where: { id: { in: invitations.map((i) => i.id) } },
+        });
       }
     });
     if (notifications.length > 0) {
-      await this.notifications.notify(notifications).catch((err: Error) => this.logger.warn(err.message));
+      await this.notifications
+        .notify(notifications)
+        .catch((err: Error) => this.logger.warn(err.message));
     }
-    for (const boardId of changedBoards) void this.realtime.emitEvent(boardId, { kind: 'permissions-changed' });
+    for (const boardId of changedBoards)
+      void this.realtime.emitEvent(boardId, { kind: 'permissions-changed' });
   }
 
   /** Emails for a board shared with an address (existing verified account or not). */
-  boardSharedMail(input: { inviterName: string; boardTitle: string; boardId: string; role: string; message?: string | null; existingUser: boolean; email: string }) {
+  boardSharedMail(input: {
+    inviterName: string;
+    boardTitle: string;
+    boardId: string;
+    role: string;
+    message?: string | null;
+    existingUser: boolean;
+    email: string;
+  }) {
     const url = input.existingUser
       ? this.config.webLink(`/b/${input.boardId}`)
-      : this.config.webLink(`/register?email=${encodeURIComponent(input.email)}&next=${encodeURIComponent(`/b/${input.boardId}`)}`);
+      : this.config.webLink(
+          `/register?email=${encodeURIComponent(input.email)}&next=${encodeURIComponent(`/b/${input.boardId}`)}`,
+        );
     return { ...boardSharedEmail({ ...input, url }), link: url };
   }
 
-  workspaceInviteMail(input: { inviterName: string; workspaceName: string; url: string; existingUser: boolean }) {
+  workspaceInviteMail(input: {
+    inviterName: string;
+    workspaceName: string;
+    url: string;
+    existingUser: boolean;
+  }) {
     return { ...workspaceInviteEmail(input), link: input.url };
   }
 }

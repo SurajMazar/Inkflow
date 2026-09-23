@@ -26,7 +26,10 @@ export function EditorShell() {
   const chrome = !presenting;
 
   return (
-    <div className="fixed inset-0 overflow-hidden bg-background text-foreground" data-testid="editor-root">
+    <div
+      className="fixed inset-0 overflow-hidden bg-background text-foreground"
+      data-testid="editor-root"
+    >
       <main className="absolute inset-0" aria-label="Whiteboard canvas">
         <CanvasView />
         <TextEditorOverlay />
@@ -42,7 +45,8 @@ export function EditorShell() {
                 role="status"
                 className="pointer-events-auto mx-auto mt-2 w-fit rounded-md border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-100"
               >
-                You are viewing a copy saved on this device. Changes sync when the connection returns.
+                You are viewing a copy saved on this device. Changes sync when the connection
+                returns.
               </div>
             )}
           </header>
@@ -51,7 +55,9 @@ export function EditorShell() {
             <div
               className={cn(
                 'pointer-events-none absolute z-20',
-                compact ? 'inset-x-0 bottom-14 flex justify-center px-2' : 'left-3 top-1/2 -translate-y-1/2',
+                compact
+                  ? 'inset-x-0 bottom-14 flex justify-center px-2'
+                  : 'left-3 top-1/2 -translate-y-1/2',
               )}
             >
               <Toolbar orientation={compact ? 'horizontal' : 'vertical'} />

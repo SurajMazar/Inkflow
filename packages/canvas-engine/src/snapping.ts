@@ -29,7 +29,8 @@ function bestAxisMatch(moving: number[], targets: number[][], threshold: number)
     for (const list of targets) {
       for (const t of list) {
         const d = t - m;
-        if (Math.abs(d) <= threshold && (!best || Math.abs(d) < Math.abs(best.delta))) best = { delta: d, value: t };
+        if (Math.abs(d) <= threshold && (!best || Math.abs(d) < Math.abs(best.delta)))
+          best = { delta: d, value: t };
       }
     }
   }
@@ -40,7 +41,11 @@ function bestAxisMatch(moving: number[], targets: number[][], threshold: number)
  * Snaps a moving selection's edges and center to the edges/centers of candidate bounds.
  * Returns the offset to apply and alignment guides spanning the aligned elements.
  */
-export function snapBoundsToObjects(moving: Bounds, candidates: readonly Bounds[], threshold: number): SnapResult {
+export function snapBoundsToObjects(
+  moving: Bounds,
+  candidates: readonly Bounds[],
+  threshold: number,
+): SnapResult {
   if (candidates.length === 0) return { dx: 0, dy: 0, lines: [], points: [] };
   const mx = xs(moving);
   const my = ys(moving);
@@ -48,7 +53,12 @@ export function snapBoundsToObjects(moving: Bounds, candidates: readonly Bounds[
   const by = bestAxisMatch(my, candidates.map(ys), threshold);
   const dx = bx?.delta ?? 0;
   const dy = by?.delta ?? 0;
-  const snapped: Bounds = { minX: moving.minX + dx, minY: moving.minY + dy, maxX: moving.maxX + dx, maxY: moving.maxY + dy };
+  const snapped: Bounds = {
+    minX: moving.minX + dx,
+    minY: moving.minY + dy,
+    maxX: moving.maxX + dx,
+    maxY: moving.maxY + dy,
+  };
   const lines: { from: Point; to: Point }[] = [];
   const points: Point[] = [];
   const eps = 0.01;
@@ -98,8 +108,16 @@ export function snapPointToGrid(p: Point, gridSize: number): Point {
 }
 
 /** Snaps a single point to candidate edges/centers (used while drawing and resizing). */
-export function snapPointToObjects(p: Point, candidates: readonly Bounds[], threshold: number): { point: Point } & SnapGuides {
-  const res = snapBoundsToObjects({ minX: p.x, minY: p.y, maxX: p.x, maxY: p.y }, candidates, threshold);
+export function snapPointToObjects(
+  p: Point,
+  candidates: readonly Bounds[],
+  threshold: number,
+): { point: Point } & SnapGuides {
+  const res = snapBoundsToObjects(
+    { minX: p.x, minY: p.y, maxX: p.x, maxY: p.y },
+    candidates,
+    threshold,
+  );
   return { point: { x: p.x + res.dx, y: p.y + res.dy }, lines: res.lines, points: res.points };
 }
 

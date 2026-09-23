@@ -164,9 +164,15 @@ export function serializeDocument(
   files: Record<string, FileMetadata>,
   options: { includeDeleted?: boolean; source?: string } = {},
 ): SceneDocument {
-  const list = (options.includeDeleted ? [...elements] : elements.filter((e) => !e.isDeleted)).sort(compareOrder);
-  const usedFiles = new Set(list.flatMap((e) => (e.type === 'image' && e.fileId ? [e.fileId] : [])));
-  const filteredFiles = Object.fromEntries(Object.entries(files).filter(([id]) => usedFiles.has(id)));
+  const list = (options.includeDeleted ? [...elements] : elements.filter((e) => !e.isDeleted)).sort(
+    compareOrder,
+  );
+  const usedFiles = new Set(
+    list.flatMap((e) => (e.type === 'image' && e.fileId ? [e.fileId] : [])),
+  );
+  const filteredFiles = Object.fromEntries(
+    Object.entries(files).filter(([id]) => usedFiles.has(id)),
+  );
   return {
     type: 'inkflow',
     version: CURRENT_DOCUMENT_VERSION,

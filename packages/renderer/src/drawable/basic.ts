@@ -29,7 +29,14 @@ export function freedrawLayers(el: FreedrawElement): DrawLayer[] {
         el.points.map((p) => ({ x: p[0], y: p[1] })),
         true,
       );
-      layers.push({ kind: 'shape', sets: [{ type: 'fill', path: center }], stroke: null, fill: el.backgroundColor, sketch: null, fillRule: 'nonzero' });
+      layers.push({
+        kind: 'shape',
+        sets: [{ type: 'fill', path: center }],
+        stroke: null,
+        fill: el.backgroundColor,
+        sketch: null,
+        fillRule: 'nonzero',
+      });
     }
   }
   const outline = getFreedrawOutline(el.points, {
@@ -60,8 +67,21 @@ export function textLayers(el: TextElement): DrawLayer[] {
   const wrapWidth = el.autoResize ? null : Math.max(el.width, minTextWidth(el));
   if (isFilled(el)) {
     const pad = Math.max(2, el.fontSize * 0.2);
-    const bgPath = roundedRectPath(-pad, -pad, el.width + pad * 2, el.height + pad * 2, Math.min(6, pad * 1.5));
-    layers.push({ kind: 'shape', sets: [{ type: 'fill', path: bgPath }], stroke: null, fill: el.backgroundColor, sketch: null, fillRule: 'nonzero' });
+    const bgPath = roundedRectPath(
+      -pad,
+      -pad,
+      el.width + pad * 2,
+      el.height + pad * 2,
+      Math.min(6, pad * 1.5),
+    );
+    layers.push({
+      kind: 'shape',
+      sets: [{ type: 'fill', path: bgPath }],
+      stroke: null,
+      fill: el.backgroundColor,
+      sketch: null,
+      fillRule: 'nonzero',
+    });
   }
   if (el.text.length === 0) return layers;
   const layout = layoutText(el.text, el, wrapWidth);

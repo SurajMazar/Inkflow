@@ -20,7 +20,12 @@ import {
   Spinner,
   UserAvatar,
 } from '@inkflow/ui';
-import { workspaceRoleAtLeast, type WorkspaceDto, type WorkspaceMemberDto, type WorkspaceRole } from '@inkflow/shared';
+import {
+  workspaceRoleAtLeast,
+  type WorkspaceDto,
+  type WorkspaceMemberDto,
+  type WorkspaceRole,
+} from '@inkflow/shared';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { formatDate, formatRelativeTime, formatRole, pluralize } from '@/lib/format';
 import { useDocumentTitle } from '@/lib/use-document-title';
@@ -56,7 +61,9 @@ export function WorkspaceSettingsPage() {
     <div className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-8">
       <header className="mb-8">
         <h1 className="text-xl font-semibold tracking-tight">Workspace settings</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Manage the name, members and invitations of this workspace.</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Manage the name, members and invitations of this workspace.
+        </p>
       </header>
       {!workspace ? (
         <div className="grid gap-4" aria-busy="true">
@@ -67,7 +74,9 @@ export function WorkspaceSettingsPage() {
         <div className="grid gap-10">
           <GeneralSection workspace={workspace} />
           <MembersSection workspace={workspace} />
-          {workspaceRoleAtLeast(workspace.role, 'ADMIN') ? <InvitationsSection workspace={workspace} /> : null}
+          {workspaceRoleAtLeast(workspace.role, 'ADMIN') ? (
+            <InvitationsSection workspace={workspace} />
+          ) : null}
           <DangerZone workspace={workspace} />
         </div>
       )}
@@ -95,7 +104,9 @@ function Section({
           <h2 id={labelledBy} className="text-base font-semibold">
             {title}
           </h2>
-          {description ? <p className="mt-0.5 text-sm text-muted-foreground">{description}</p> : null}
+          {description ? (
+            <p className="mt-0.5 text-sm text-muted-foreground">{description}</p>
+          ) : null}
         </div>
         {action}
       </div>
@@ -141,11 +152,16 @@ function GeneralSection({ workspace }: { workspace: WorkspaceDto }) {
         </FormField>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="text-[13px] text-muted-foreground">
-            {pluralize(workspace.memberCount, 'member')} · {pluralize(workspace.boardCount, 'board')} · created{' '}
-            {formatDate(workspace.createdAt)}
+            {pluralize(workspace.memberCount, 'member')} ·{' '}
+            {pluralize(workspace.boardCount, 'board')} · created {formatDate(workspace.createdAt)}
           </p>
           {canEdit ? (
-            <Button type="submit" size="sm" disabled={!dirty || update.isPending} data-testid="workspace-name-save">
+            <Button
+              type="submit"
+              size="sm"
+              disabled={!dirty || update.isPending}
+              data-testid="workspace-name-save"
+            >
               {update.isPending ? <Spinner className="text-current" label={null} /> : null}
               Save
             </Button>
@@ -166,7 +182,9 @@ function MembersSection({ workspace }: { workspace: WorkspaceDto }) {
   const assignable = assignableWorkspaceRoles(workspace.role);
   const sorted = React.useMemo(() => {
     const rank: Record<WorkspaceRole, number> = { OWNER: 0, ADMIN: 1, MEMBER: 2 };
-    return [...(members.data ?? [])].sort((a, b) => rank[a.role] - rank[b.role] || a.user.name.localeCompare(b.user.name));
+    return [...(members.data ?? [])].sort(
+      (a, b) => rank[a.role] - rank[b.role] || a.user.name.localeCompare(b.user.name),
+    );
   }, [members.data]);
 
   return (
@@ -198,32 +216,56 @@ function MembersSection({ workspace }: { workspace: WorkspaceDto }) {
               const isMe = member.user.id === user?.id;
               const manageable = !isMe && canManageMember(workspace.role, member.role);
               return (
-                <li key={member.user.id} className="flex flex-wrap items-center gap-3 px-4 py-3" data-testid="workspace-member">
-                  <UserAvatar name={member.user.name} src={member.user.avatarUrl} className="size-8" />
+                <li
+                  key={member.user.id}
+                  className="flex flex-wrap items-center gap-3 px-4 py-3"
+                  data-testid="workspace-member"
+                >
+                  <UserAvatar
+                    name={member.user.name}
+                    src={member.user.avatarUrl}
+                    className="size-8"
+                  />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium">
                       {member.user.name}
-                      {isMe ? <span className="font-normal text-muted-foreground"> (you)</span> : null}
+                      {isMe ? (
+                        <span className="font-normal text-muted-foreground"> (you)</span>
+                      ) : null}
                     </p>
-                    <p className="truncate text-[13px] text-muted-foreground">{member.user.email}</p>
+                    <p className="truncate text-[13px] text-muted-foreground">
+                      {member.user.email}
+                    </p>
                   </div>
-                  <span className="hidden text-[13px] text-muted-foreground sm:inline">Joined {formatDate(member.joinedAt)}</span>
+                  <span className="hidden text-[13px] text-muted-foreground sm:inline">
+                    Joined {formatDate(member.joinedAt)}
+                  </span>
                   {manageable && assignable.length > 0 ? (
                     <NativeSelect
                       aria-label={`Role for ${member.user.name}`}
                       value={member.role}
                       disabled={updateRole.isPending}
-                      onChange={(e) => updateRole.mutate({ userId: member.user.id, role: e.target.value as WorkspaceRole })}
+                      onChange={(e) =>
+                        updateRole.mutate({
+                          userId: member.user.id,
+                          role: e.target.value as WorkspaceRole,
+                        })
+                      }
                       className="h-8 text-[13px]"
                     >
-                      {(assignable.includes(member.role) ? assignable : [member.role, ...assignable]).map((role) => (
+                      {(assignable.includes(member.role)
+                        ? assignable
+                        : [member.role, ...assignable]
+                      ).map((role) => (
                         <option key={role} value={role}>
                           {formatRole(role)}
                         </option>
                       ))}
                     </NativeSelect>
                   ) : (
-                    <Badge variant={member.role === 'OWNER' ? 'subtle' : 'outline'}>{formatRole(member.role)}</Badge>
+                    <Badge variant={member.role === 'OWNER' ? 'subtle' : 'outline'}>
+                      {formatRole(member.role)}
+                    </Badge>
                   )}
                   {manageable ? (
                     <SimpleTooltip content="Remove from workspace">
@@ -257,7 +299,8 @@ function MembersSection({ workspace }: { workspace: WorkspaceDto }) {
           <AlertDialogHeader>
             <AlertDialogTitle>Remove {removing?.user.name}?</AlertDialogTitle>
             <AlertDialogDescription>
-              They'll lose access to this workspace and its boards, unless a board was shared with them directly.
+              They'll lose access to this workspace and its boards, unless a board was shared with
+              them directly.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -265,7 +308,9 @@ function MembersSection({ workspace }: { workspace: WorkspaceDto }) {
             <Button
               variant="destructive"
               disabled={remove.isPending}
-              onClick={() => removing && remove.mutate(removing.user.id, { onSettled: () => setRemoving(null) })}
+              onClick={() =>
+                removing && remove.mutate(removing.user.id, { onSettled: () => setRemoving(null) })
+              }
             >
               Remove
             </Button>
@@ -280,22 +325,36 @@ function InvitationsSection({ workspace }: { workspace: WorkspaceDto }) {
   const invitations = useWorkspaceInvitations(workspace.id, true);
   const { revokeInvitation } = useWorkspaceMemberMutations(workspace.id);
   return (
-    <Section title="Pending invitations" labelledBy="ws-invitations" description="Invitations that haven't been accepted yet.">
+    <Section
+      title="Pending invitations"
+      labelledBy="ws-invitations"
+      description="Invitations that haven't been accepted yet."
+    >
       {invitations.isPending ? (
         <Skeleton className="h-16 w-full rounded-xl" />
       ) : !invitations.data || invitations.data.length === 0 ? (
-        <EmptyState size="sm" icon={<MailPlus />} title="No pending invitations" description="Invite teammates by email from the Members section." />
+        <EmptyState
+          size="sm"
+          icon={<MailPlus />}
+          title="No pending invitations"
+          description="Invite teammates by email from the Members section."
+        />
       ) : (
         <ul className="divide-y overflow-hidden rounded-xl border" aria-label="Pending invitations">
           {invitations.data.map((invitation) => (
-            <li key={invitation.id} className="flex flex-wrap items-center gap-3 px-4 py-3" data-testid="workspace-invitation">
+            <li
+              key={invitation.id}
+              className="flex flex-wrap items-center gap-3 px-4 py-3"
+              data-testid="workspace-invitation"
+            >
               <div className="flex size-8 items-center justify-center rounded-full bg-muted text-muted-foreground">
                 <MailPlus className="size-4" aria-hidden />
               </div>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium">{invitation.email}</p>
                 <p className="truncate text-[13px] text-muted-foreground">
-                  Invited by {invitation.invitedBy.name} · expires {formatRelativeTime(invitation.expiresAt)}
+                  Invited by {invitation.invitedBy.name} · expires{' '}
+                  {formatRelativeTime(invitation.expiresAt)}
                 </p>
               </div>
               <Badge variant="outline">{formatRole(invitation.role)}</Badge>
@@ -335,10 +394,18 @@ function DangerZone({ workspace }: { workspace: WorkspaceDto }) {
           <div>
             <p className="text-sm font-medium">Leave workspace</p>
             <p className="text-[13px] text-muted-foreground">
-              {soleOwner ? 'Transfer ownership to another member before leaving.' : "You'll lose access to its boards."}
+              {soleOwner
+                ? 'Transfer ownership to another member before leaving.'
+                : "You'll lose access to its boards."}
             </p>
           </div>
-          <Button variant="outline" size="sm" disabled={soleOwner} onClick={() => setConfirmLeave(true)} data-testid="workspace-leave">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={soleOwner}
+            onClick={() => setConfirmLeave(true)}
+            data-testid="workspace-leave"
+          >
             <LogOut aria-hidden />
             Leave
           </Button>
@@ -347,9 +414,16 @@ function DangerZone({ workspace }: { workspace: WorkspaceDto }) {
           <div className="flex flex-wrap items-center justify-between gap-3 p-4">
             <div>
               <p className="text-sm font-medium">Delete workspace</p>
-              <p className="text-[13px] text-muted-foreground">Permanently deletes all projects, folders and boards.</p>
+              <p className="text-[13px] text-muted-foreground">
+                Permanently deletes all projects, folders and boards.
+              </p>
             </div>
-            <Button variant="destructive" size="sm" onClick={() => setConfirmDelete(true)} data-testid="workspace-delete">
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => setConfirmDelete(true)}
+              data-testid="workspace-delete"
+            >
               <Trash2 aria-hidden />
               Delete
             </Button>
@@ -361,14 +435,18 @@ function DangerZone({ workspace }: { workspace: WorkspaceDto }) {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Leave {workspace.name}?</AlertDialogTitle>
-            <AlertDialogDescription>You'll need a new invitation to join again.</AlertDialogDescription>
+            <AlertDialogDescription>
+              You'll need a new invitation to join again.
+            </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <Button
               variant="destructive"
               disabled={leave.isPending || !user}
-              onClick={() => user && leave.mutate(user.id, { onSuccess: () => navigate('/', { replace: true }) })}
+              onClick={() =>
+                user && leave.mutate(user.id, { onSuccess: () => navigate('/', { replace: true }) })
+              }
             >
               Leave workspace
             </Button>
@@ -387,18 +465,34 @@ function DangerZone({ workspace }: { workspace: WorkspaceDto }) {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete {workspace.name}?</AlertDialogTitle>
             <AlertDialogDescription>
-              This permanently deletes the workspace with {pluralize(workspace.boardCount, 'board')}. This can't be undone.
+              This permanently deletes the workspace with {pluralize(workspace.boardCount, 'board')}
+              . This can't be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <FormField label={<span>Type <span className="font-semibold">{workspace.name}</span> to confirm</span>}>
-            <Input value={typed} onChange={(e) => setTyped(e.target.value)} autoComplete="off" data-testid="workspace-delete-confirm-input" />
+          <FormField
+            label={
+              <span>
+                Type <span className="font-semibold">{workspace.name}</span> to confirm
+              </span>
+            }
+          >
+            <Input
+              value={typed}
+              onChange={(e) => setTyped(e.target.value)}
+              autoComplete="off"
+              data-testid="workspace-delete-confirm-input"
+            />
           </FormField>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <Button
               variant="destructive"
               disabled={typed.trim() !== workspace.name || deleteWorkspace.isPending}
-              onClick={() => deleteWorkspace.mutate(undefined, { onSuccess: () => navigate('/', { replace: true }) })}
+              onClick={() =>
+                deleteWorkspace.mutate(undefined, {
+                  onSuccess: () => navigate('/', { replace: true }),
+                })
+              }
               data-testid="workspace-delete-confirm"
             >
               {deleteWorkspace.isPending ? <Spinner className="text-current" label={null} /> : null}

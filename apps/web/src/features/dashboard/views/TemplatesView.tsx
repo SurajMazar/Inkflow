@@ -14,7 +14,11 @@ import {
   ToggleGroup,
   ToggleGroupItem,
 } from '@inkflow/ui';
-import { workspaceRoleAtLeast, type TemplateCategory, type TemplateSummaryDto } from '@inkflow/shared';
+import {
+  workspaceRoleAtLeast,
+  type TemplateCategory,
+  type TemplateSummaryDto,
+} from '@inkflow/shared';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { queryKeys } from '@/lib/query-keys';
@@ -38,8 +42,9 @@ export function TemplatesView() {
   const remove = useMutation({
     mutationFn: (template: TemplateSummaryDto) => api.templates.remove(template.id),
     onSuccess: (_ok, template) => {
-      queryClient.setQueryData<TemplateSummaryDto[]>(queryKeys.templates.list(workspace.id), (list) =>
-        list?.filter((t) => t.id !== template.id),
+      queryClient.setQueryData<TemplateSummaryDto[]>(
+        queryKeys.templates.list(workspace.id),
+        (list) => list?.filter((t) => t.id !== template.id),
       );
       notify.success('Template deleted');
     },
@@ -60,9 +65,15 @@ export function TemplatesView() {
 
   return (
     <ViewContainer>
-      <ViewHeader title="Templates" description="Start from a proven structure — every template is fully editable." />
+      <ViewHeader
+        title="Templates"
+        description="Start from a proven structure — every template is fully editable."
+      />
       {templates.isPending ? (
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-4" aria-busy="true">
+        <div
+          className="grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-4"
+          aria-busy="true"
+        >
           {Array.from({ length: 6 }, (_, i) => (
             <Skeleton key={i} className="aspect-[4/3] rounded-xl" />
           ))}
@@ -70,12 +81,20 @@ export function TemplatesView() {
       ) : templates.isError ? (
         <div className="rounded-xl border border-dashed p-8 text-center text-sm" role="alert">
           Couldn't load templates.{' '}
-          <button type="button" className="font-medium underline underline-offset-4" onClick={() => void templates.refetch()}>
+          <button
+            type="button"
+            className="font-medium underline underline-offset-4"
+            onClick={() => void templates.refetch()}
+          >
             Retry
           </button>
         </div>
       ) : groups.length === 0 ? (
-        <EmptyState icon={<LayoutTemplate />} title="No templates available" description="Templates saved in this workspace will appear here." />
+        <EmptyState
+          icon={<LayoutTemplate />}
+          title="No templates available"
+          description="Templates saved in this workspace will appear here."
+        />
       ) : (
         <>
           <ToggleGroup
@@ -97,8 +116,15 @@ export function TemplatesView() {
             ))}
           </ToggleGroup>
           {visibleGroups.map((group) => (
-            <section key={group.category} aria-labelledby={`tpl-${group.category}`} className="grid gap-3">
-              <h2 id={`tpl-${group.category}`} className="text-sm font-medium text-muted-foreground">
+            <section
+              key={group.category}
+              aria-labelledby={`tpl-${group.category}`}
+              className="grid gap-3"
+            >
+              <h2
+                id={`tpl-${group.category}`}
+                className="text-sm font-medium text-muted-foreground"
+              >
                 {templateCategoryLabel(group.category)}
               </h2>
               <div className="grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-4">
@@ -120,7 +146,9 @@ export function TemplatesView() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete template “{deleting?.name}”?</AlertDialogTitle>
-            <AlertDialogDescription>Boards created from it are not affected.</AlertDialogDescription>
+            <AlertDialogDescription>
+              Boards created from it are not affected.
+            </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>

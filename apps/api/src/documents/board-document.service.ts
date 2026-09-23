@@ -19,7 +19,9 @@ export function fileContentUrl(fileId: string): string {
   return `/api/files/${fileId}/content`;
 }
 
-export function toFileMetadata(file: Pick<FileRow, 'id' | 'mimeType' | 'width' | 'height' | 'size' | 'createdAt'>): FileMetadata {
+export function toFileMetadata(
+  file: Pick<FileRow, 'id' | 'mimeType' | 'width' | 'height' | 'size' | 'createdAt'>,
+): FileMetadata {
   return {
     id: file.id,
     mimeType: file.mimeType,
@@ -46,7 +48,8 @@ export function hasNulChar(value: unknown, depth = 0): boolean {
   if (typeof value === 'string') return value.includes('\u0000');
   if (Array.isArray(value)) return value.some((v) => hasNulChar(v, depth + 1));
   if (value && typeof value === 'object') {
-    for (const [k, v] of Object.entries(value)) if (k.includes('\u0000') || hasNulChar(v, depth + 1)) return true;
+    for (const [k, v] of Object.entries(value))
+      if (k.includes('\u0000') || hasNulChar(v, depth + 1)) return true;
   }
   return false;
 }
@@ -63,7 +66,11 @@ export class BoardDocumentService {
   constructor(readonly prisma: PrismaService) {}
 
   /** Elements of a board in z-order (`z_index COLLATE "C", element_id`). */
-  async loadElements(db: Db, boardId: string, options: { includeDeleted?: boolean } = {}): Promise<SceneElement[]> {
+  async loadElements(
+    db: Db,
+    boardId: string,
+    options: { includeDeleted?: boolean } = {},
+  ): Promise<SceneElement[]> {
     const rows = options.includeDeleted
       ? await db.$queryRaw<{ data: SceneElement }[]>`
           SELECT data FROM board_elements WHERE board_id = ${boardId}::uuid
@@ -84,7 +91,10 @@ export class BoardDocumentService {
   }
 
   async snapshot(db: Db, boardId: string): Promise<BoardSnapshot> {
-    const board = await db.board.findUniqueOrThrow({ where: { id: boardId }, select: { appState: true, seq: true } });
+    const board = await db.board.findUniqueOrThrow({
+      where: { id: boardId },
+      select: { appState: true, seq: true },
+    });
     const elements = await this.loadElements(db, boardId);
     const files = await this.referencedFiles(db, boardId);
     const document = serializeDocument(elements, sanitizeAppState(board.appState), files);
@@ -92,7 +102,12 @@ export class BoardDocumentService {
   }
 
   /** Upserts final element states (bulk). */
-  async upsertElements(db: Db, boardId: string, elements: SceneElement[], userId: string | null): Promise<void> {
+  async upsertElements(
+    db: Db,
+    boardId: string,
+    elements: SceneElement[],
+    userId: string | null,
+  ): Promise<void> {
     for (let i = 0; i < elements.length; i += INSERT_CHUNK) {
       const rows = elements.slice(i, i + INSERT_CHUNK).map((el) => ({
         element_id: el.id,
@@ -130,7 +145,9 @@ export class BoardDocumentService {
   async syncFileReferences(db: Db, boardId: string, elements: SceneElement[]): Promise<void> {
     const images = elements.filter((el) => el.type === 'image');
     if (images.length === 0) return;
-    await db.fileReference.deleteMany({ where: { boardId, elementId: { in: images.map((el) => el.id) } } });
+    await db.fileReference.deleteMany({
+      where: { boardId, elementId: { in: images.map((el) => el.id) } },
+    });
     const wanted = images
       .filter((el) => !el.isDeleted)
       .map((el) => ({ elementId: el.id, fileId: imageFileId(el) }))
@@ -141,7 +158,9 @@ export class BoardDocumentService {
       select: { id: true },
     });
     const ok = new Set(existing.map((f) => f.id));
-    const data = wanted.filter((w) => ok.has(w.fileId)).map((w) => ({ boardId, elementId: w.elementId, fileId: w.fileId }));
+    const data = wanted
+      .filter((w) => ok.has(w.fileId))
+      .map((w) => ({ boardId, elementId: w.elementId, fileId: w.fileId }));
     if (data.length > 0) await db.fileReference.createMany({ data, skipDuplicates: true });
   }
 

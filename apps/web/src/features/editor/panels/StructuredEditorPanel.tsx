@@ -14,10 +14,25 @@ import * as React from 'react';
 import { ColorPicker } from '../components/ColorPicker';
 import { useBoardSession, useEditorState, useSelectedElements } from '../hooks/editor-context';
 import { CommitInput } from './CommitInput';
-import { isStructuredElement, moveItem, sequencePatch, tableColumnOps, tablePatch, umlPatch, type StructuredElement } from './structured-ops';
+import {
+  isStructuredElement,
+  moveItem,
+  sequencePatch,
+  tableColumnOps,
+  tablePatch,
+  umlPatch,
+  type StructuredElement,
+} from './structured-ops';
 
 const HEADER_COLORS = ['#e7f5ff', '#ebfbee', '#fff9db', '#fff4e6', '#f3f0ff', '#f1f3f5'] as const;
-const PARTICIPANT_KINDS: SequenceParticipantKind[] = ['participant', 'actor', 'database', 'boundary', 'control', 'entity'];
+const PARTICIPANT_KINDS: SequenceParticipantKind[] = [
+  'participant',
+  'actor',
+  'database',
+  'boundary',
+  'control',
+  'entity',
+];
 const MESSAGE_KINDS: { value: SequenceMessageKind; label: string }[] = [
   { value: 'sync', label: 'Sync →' },
   { value: 'async', label: 'Async ⇢' },
@@ -28,7 +43,19 @@ const MESSAGE_KINDS: { value: SequenceMessageKind; label: string }[] = [
 
 type Apply = (patch: ElementPatch, label: string) => void;
 
-function IconButton({ label, onClick, disabled, children, testId }: { label: string; onClick(): void; disabled?: boolean; children: React.ReactNode; testId?: string }) {
+function IconButton({
+  label,
+  onClick,
+  disabled,
+  children,
+  testId,
+}: {
+  label: string;
+  onClick(): void;
+  disabled?: boolean;
+  children: React.ReactNode;
+  testId?: string;
+}) {
   return (
     <button
       type="button"
@@ -44,13 +71,35 @@ function IconButton({ label, onClick, disabled, children, testId }: { label: str
   );
 }
 
-function ReorderButtons({ index, count, name, onMove, onRemove, disabled }: { index: number; count: number; name: string; onMove(delta: number): void; onRemove(): void; disabled: boolean }) {
+function ReorderButtons({
+  index,
+  count,
+  name,
+  onMove,
+  onRemove,
+  disabled,
+}: {
+  index: number;
+  count: number;
+  name: string;
+  onMove(delta: number): void;
+  onRemove(): void;
+  disabled: boolean;
+}) {
   return (
     <div className="flex shrink-0">
-      <IconButton label={`Move ${name} up`} disabled={disabled || index === 0} onClick={() => onMove(-1)}>
+      <IconButton
+        label={`Move ${name} up`}
+        disabled={disabled || index === 0}
+        onClick={() => onMove(-1)}
+      >
         <ArrowUp className="size-3.5" />
       </IconButton>
-      <IconButton label={`Move ${name} down`} disabled={disabled || index === count - 1} onClick={() => onMove(1)}>
+      <IconButton
+        label={`Move ${name} down`}
+        disabled={disabled || index === count - 1}
+        onClick={() => onMove(1)}
+      >
         <ArrowDown className="size-3.5" />
       </IconButton>
       <IconButton label={`Remove ${name}`} disabled={disabled} onClick={onRemove}>
@@ -60,11 +109,21 @@ function ReorderButtons({ index, count, name, onMove, onRemove, disabled }: { in
   );
 }
 
-function Section({ title, action, children }: { title: string; action?: React.ReactNode; children: React.ReactNode }) {
+function Section({
+  title,
+  action,
+  children,
+}: {
+  title: string;
+  action?: React.ReactNode;
+  children: React.ReactNode;
+}) {
   return (
     <section className="space-y-2 border-b p-3" aria-label={title}>
       <div className="flex items-center justify-between">
-        <h3 className="text-[11px] font-medium tracking-wide text-muted-foreground uppercase">{title}</h3>
+        <h3 className="text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+          {title}
+        </h3>
         {action}
       </div>
       {children}
@@ -81,10 +140,31 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-function FlagToggle({ label, short, checked, onChange, disabled }: { label: string; short: string; checked: boolean; onChange(v: boolean): void; disabled: boolean }) {
+function FlagToggle({
+  label,
+  short,
+  checked,
+  onChange,
+  disabled,
+}: {
+  label: string;
+  short: string;
+  checked: boolean;
+  onChange(v: boolean): void;
+  disabled: boolean;
+}) {
   return (
-    <label className={cn('flex items-center gap-1 text-[11px]', disabled && 'opacity-50')} title={label}>
-      <Checkbox checked={checked} onCheckedChange={(v) => onChange(v === true)} disabled={disabled} aria-label={label} className="size-3.5" />
+    <label
+      className={cn('flex items-center gap-1 text-[11px]', disabled && 'opacity-50')}
+      title={label}
+    >
+      <Checkbox
+        checked={checked}
+        onCheckedChange={(v) => onChange(v === true)}
+        disabled={disabled}
+        aria-label={label}
+        className="size-3.5"
+      />
       {short}
     </label>
   );
@@ -92,8 +172,21 @@ function FlagToggle({ label, short, checked, onChange, disabled }: { label: stri
 
 // ───────────── table ─────────────
 
-function ColumnEditor({ el, col, index, apply, disabled }: { el: TableElement; col: TableColumn; index: number; apply: Apply; disabled: boolean }) {
-  const update = (patch: Partial<Omit<TableColumn, 'id'>>, label = 'Edit column') => apply(tableColumnOps.update(el, col.id, patch), label);
+function ColumnEditor({
+  el,
+  col,
+  index,
+  apply,
+  disabled,
+}: {
+  el: TableElement;
+  col: TableColumn;
+  index: number;
+  apply: Apply;
+  disabled: boolean;
+}) {
+  const update = (patch: Partial<Omit<TableColumn, 'id'>>, label = 'Edit column') =>
+    apply(tableColumnOps.update(el, col.id, patch), label);
   return (
     <li className="space-y-1.5 rounded-md border p-2" data-testid="table-column">
       <div className="flex items-center gap-1">
@@ -126,10 +219,34 @@ function ColumnEditor({ el, col, index, apply, disabled }: { el: TableElement; c
         />
       </div>
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-        <FlagToggle label="Primary key" short="PK" checked={col.primaryKey} disabled={disabled} onChange={(v) => update({ primaryKey: v })} />
-        <FlagToggle label="Foreign key" short="FK" checked={col.foreignKey} disabled={disabled} onChange={(v) => update({ foreignKey: v })} />
-        <FlagToggle label="Nullable" short="Null" checked={col.nullable} disabled={disabled || col.primaryKey} onChange={(v) => update({ nullable: v })} />
-        <FlagToggle label="Unique" short="Unique" checked={col.unique} disabled={disabled} onChange={(v) => update({ unique: v })} />
+        <FlagToggle
+          label="Primary key"
+          short="PK"
+          checked={col.primaryKey}
+          disabled={disabled}
+          onChange={(v) => update({ primaryKey: v })}
+        />
+        <FlagToggle
+          label="Foreign key"
+          short="FK"
+          checked={col.foreignKey}
+          disabled={disabled}
+          onChange={(v) => update({ foreignKey: v })}
+        />
+        <FlagToggle
+          label="Nullable"
+          short="Null"
+          checked={col.nullable}
+          disabled={disabled || col.primaryKey}
+          onChange={(v) => update({ nullable: v })}
+        />
+        <FlagToggle
+          label="Unique"
+          short="Unique"
+          checked={col.unique}
+          disabled={disabled}
+          onChange={(v) => update({ unique: v })}
+        />
       </div>
       {col.foreignKey && (
         <CommitInput
@@ -145,7 +262,15 @@ function ColumnEditor({ el, col, index, apply, disabled }: { el: TableElement; c
   );
 }
 
-function TableEditor({ el, apply, disabled }: { el: TableElement; apply: Apply; disabled: boolean }) {
+function TableEditor({
+  el,
+  apply,
+  disabled,
+}: {
+  el: TableElement;
+  apply: Apply;
+  disabled: boolean;
+}) {
   return (
     <>
       <Section title="Table">
@@ -159,14 +284,27 @@ function TableEditor({ el, apply, disabled }: { el: TableElement; apply: Apply; 
           />
         </Field>
         {!disabled && (
-          <ColorPicker label="Header color" value={el.headerColor} quick={HEADER_COLORS} onChange={(headerColor) => apply(tablePatch(el, { headerColor }), 'Change header color')} />
+          <ColorPicker
+            label="Header color"
+            value={el.headerColor}
+            quick={HEADER_COLORS}
+            onChange={(headerColor) =>
+              apply(tablePatch(el, { headerColor }), 'Change header color')
+            }
+          />
         )}
       </Section>
       <Section
         title={`Columns (${el.columns.length})`}
         action={
           !disabled && (
-            <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={() => apply(tableColumnOps.add(el), 'Add column')} data-testid="table-add-column">
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-6 px-2 text-xs"
+              onClick={() => apply(tableColumnOps.add(el), 'Add column')}
+              data-testid="table-add-column"
+            >
               <Plus className="size-3.5" /> Add
             </Button>
           )
@@ -177,7 +315,14 @@ function TableEditor({ el, apply, disabled }: { el: TableElement; apply: Apply; 
         ) : (
           <ul className="space-y-2">
             {el.columns.map((col, i) => (
-              <ColumnEditor key={col.id} el={el} col={col} index={i} apply={apply} disabled={disabled} />
+              <ColumnEditor
+                key={col.id}
+                el={el}
+                col={col}
+                index={i}
+                apply={apply}
+                disabled={disabled}
+              />
             ))}
           </ul>
         )}
@@ -208,7 +353,12 @@ function StringListEditor({
       title={`${title} (${items.length})`}
       action={
         !disabled && (
-          <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={() => onChange([...items, placeholder], `Add ${itemLabel}`)}>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-6 px-2 text-xs"
+            onClick={() => onChange([...items, placeholder], `Add ${itemLabel}`)}
+          >
             <Plus className="size-3.5" /> Add
           </Button>
         )
@@ -222,7 +372,12 @@ function StringListEditor({
             <li key={i} className="flex items-center gap-1">
               <CommitInput
                 value={item}
-                onCommit={(v) => onChange(items.map((x, j) => (j === i ? v : x)), `Edit ${itemLabel}`)}
+                onCommit={(v) =>
+                  onChange(
+                    items.map((x, j) => (j === i ? v : x)),
+                    `Edit ${itemLabel}`,
+                  )
+                }
                 normalize={(v) => v.trim() || null}
                 aria-label={`${itemLabel} ${i + 1}`}
                 disabled={disabled}
@@ -234,7 +389,12 @@ function StringListEditor({
                 name={`${itemLabel} ${i + 1}`}
                 disabled={disabled}
                 onMove={(d) => onChange(moveItem(items, i, d), `Reorder ${itemLabel}s`)}
-                onRemove={() => onChange(items.filter((_, j) => j !== i), `Remove ${itemLabel}`)}
+                onRemove={() =>
+                  onChange(
+                    items.filter((_, j) => j !== i),
+                    `Remove ${itemLabel}`,
+                  )
+                }
               />
             </li>
           ))}
@@ -244,23 +404,47 @@ function StringListEditor({
   );
 }
 
-function UmlClassEditor({ el, apply, disabled }: { el: UmlClassElement; apply: Apply; disabled: boolean }) {
+function UmlClassEditor({
+  el,
+  apply,
+  disabled,
+}: {
+  el: UmlClassElement;
+  apply: Apply;
+  disabled: boolean;
+}) {
   return (
     <>
       <Section title="Class">
         <Field label="Name">
-          <CommitInput value={el.name} onCommit={(name) => apply(umlPatch(el, { name }), 'Rename class')} normalize={(v) => v.trim() || null} disabled={disabled} />
+          <CommitInput
+            value={el.name}
+            onCommit={(name) => apply(umlPatch(el, { name }), 'Rename class')}
+            normalize={(v) => v.trim() || null}
+            disabled={disabled}
+          />
         </Field>
         <Field label="Stereotype">
           <CommitInput
             value={el.stereotype ?? ''}
-            onCommit={(v) => apply(umlPatch(el, { stereotype: v.replace(/^«|»$/g, '').trim() || null }), 'Change stereotype')}
+            onCommit={(v) =>
+              apply(
+                umlPatch(el, { stereotype: v.replace(/^«|»$/g, '').trim() || null }),
+                'Change stereotype',
+              )
+            }
             placeholder="e.g. interface, entity"
             disabled={disabled}
           />
         </Field>
         <label className="flex items-center gap-2 text-xs">
-          <Checkbox checked={el.isAbstract} disabled={disabled} onCheckedChange={(v) => apply(umlPatch(el, { isAbstract: v === true }), 'Toggle abstract')} />
+          <Checkbox
+            checked={el.isAbstract}
+            disabled={disabled}
+            onCheckedChange={(v) =>
+              apply(umlPatch(el, { isAbstract: v === true }), 'Toggle abstract')
+            }
+          />
           Abstract class
         </label>
       </Section>
@@ -286,9 +470,28 @@ function UmlClassEditor({ el, apply, disabled }: { el: UmlClassElement; apply: A
 
 // ───────────── sequence ─────────────
 
-function ParticipantSelect({ el, value, onChange, label, disabled }: { el: SequenceElement; value: string; onChange(id: string): void; label: string; disabled: boolean }) {
+function ParticipantSelect({
+  el,
+  value,
+  onChange,
+  label,
+  disabled,
+}: {
+  el: SequenceElement;
+  value: string;
+  onChange(id: string): void;
+  label: string;
+  disabled: boolean;
+}) {
   return (
-    <NativeSelect value={value} onChange={(e) => onChange(e.target.value)} aria-label={label} disabled={disabled} className="h-7 px-2 pr-7 text-xs" wrapperClassName="min-w-0 flex-1">
+    <NativeSelect
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      aria-label={label}
+      disabled={disabled}
+      className="h-7 px-2 pr-7 text-xs"
+      wrapperClassName="min-w-0 flex-1"
+    >
       {el.participants.map((p) => (
         <option key={p.id} value={p.id}>
           {p.name || '(unnamed)'}
@@ -298,7 +501,15 @@ function ParticipantSelect({ el, value, onChange, label, disabled }: { el: Seque
   );
 }
 
-function SequenceEditor({ el, apply, disabled }: { el: SequenceElement; apply: Apply; disabled: boolean }) {
+function SequenceEditor({
+  el,
+  apply,
+  disabled,
+}: {
+  el: SequenceElement;
+  apply: Apply;
+  disabled: boolean;
+}) {
   const set = (next: SequenceElement, label: string) => apply(sequencePatch(next), label);
   const canAddMessage = el.participants.length > 0;
   return (
@@ -312,7 +523,12 @@ function SequenceEditor({ el, apply, disabled }: { el: SequenceElement; apply: A
               variant="ghost"
               className="h-6 px-2 text-xs"
               data-testid="sequence-add-participant"
-              onClick={() => set(sequenceOps.addParticipant(el, `Participant ${el.participants.length + 1}`), 'Add participant')}
+              onClick={() =>
+                set(
+                  sequenceOps.addParticipant(el, `Participant ${el.participants.length + 1}`),
+                  'Add participant',
+                )
+              }
             >
               <Plus className="size-3.5" /> Add
             </Button>
@@ -324,14 +540,25 @@ function SequenceEditor({ el, apply, disabled }: { el: SequenceElement; apply: A
             <li key={p.id} className="flex items-center gap-1" data-testid="sequence-participant">
               <CommitInput
                 value={p.name}
-                onCommit={(name) => set(sequenceOps.renameParticipant(el, p.id, name), 'Rename participant')}
+                onCommit={(name) =>
+                  set(sequenceOps.renameParticipant(el, p.id, name), 'Rename participant')
+                }
                 normalize={(v) => v.trim() || null}
                 aria-label={`Participant ${i + 1} name`}
                 disabled={disabled}
               />
               <NativeSelect
                 value={p.kind}
-                onChange={(e) => set(sequenceOps.setParticipantKind(el, p.id, e.target.value as SequenceParticipantKind), 'Change participant kind')}
+                onChange={(e) =>
+                  set(
+                    sequenceOps.setParticipantKind(
+                      el,
+                      p.id,
+                      e.target.value as SequenceParticipantKind,
+                    ),
+                    'Change participant kind',
+                  )
+                }
                 aria-label={`Participant ${i + 1} kind`}
                 disabled={disabled}
                 className="h-7 px-2 pr-7 text-xs"
@@ -348,7 +575,9 @@ function SequenceEditor({ el, apply, disabled }: { el: SequenceElement; apply: A
                 count={el.participants.length}
                 name={p.name}
                 disabled={disabled}
-                onMove={(d) => set(sequenceOps.moveParticipant(el, p.id, i + d), 'Reorder participants')}
+                onMove={(d) =>
+                  set(sequenceOps.moveParticipant(el, p.id, i + d), 'Reorder participants')
+                }
                 onRemove={() => set(sequenceOps.removeParticipant(el, p.id), 'Remove participant')}
               />
             </li>
@@ -381,19 +610,43 @@ function SequenceEditor({ el, apply, disabled }: { el: SequenceElement; apply: A
         ) : (
           <ol className="space-y-2">
             {el.messages.map((m, i) => (
-              <li key={m.id} className="space-y-1 rounded-md border p-2" data-testid="sequence-message">
+              <li
+                key={m.id}
+                className="space-y-1 rounded-md border p-2"
+                data-testid="sequence-message"
+              >
                 <div className="flex items-center gap-1">
-                  <span className="w-4 shrink-0 text-[11px] tabular-nums text-muted-foreground">{i + 1}</span>
-                  <ParticipantSelect el={el} value={m.from} label={`Message ${i + 1} from`} disabled={disabled} onChange={(from) => set(sequenceOps.updateMessage(el, m.id, { from }), 'Change message')} />
+                  <span className="w-4 shrink-0 text-[11px] tabular-nums text-muted-foreground">
+                    {i + 1}
+                  </span>
+                  <ParticipantSelect
+                    el={el}
+                    value={m.from}
+                    label={`Message ${i + 1} from`}
+                    disabled={disabled}
+                    onChange={(from) =>
+                      set(sequenceOps.updateMessage(el, m.id, { from }), 'Change message')
+                    }
+                  />
                   <span className="text-xs text-muted-foreground" aria-hidden>
                     →
                   </span>
-                  <ParticipantSelect el={el} value={m.to} label={`Message ${i + 1} to`} disabled={disabled} onChange={(to) => set(sequenceOps.updateMessage(el, m.id, { to }), 'Change message')} />
+                  <ParticipantSelect
+                    el={el}
+                    value={m.to}
+                    label={`Message ${i + 1} to`}
+                    disabled={disabled}
+                    onChange={(to) =>
+                      set(sequenceOps.updateMessage(el, m.id, { to }), 'Change message')
+                    }
+                  />
                 </div>
                 <div className="flex items-center gap-1">
                   <CommitInput
                     value={m.label}
-                    onCommit={(label) => set(sequenceOps.updateMessage(el, m.id, { label }), 'Edit message')}
+                    onCommit={(label) =>
+                      set(sequenceOps.updateMessage(el, m.id, { label }), 'Edit message')
+                    }
                     aria-label={`Message ${i + 1} label`}
                     placeholder="label"
                     disabled={disabled}
@@ -401,7 +654,14 @@ function SequenceEditor({ el, apply, disabled }: { el: SequenceElement; apply: A
                   />
                   <NativeSelect
                     value={m.kind}
-                    onChange={(e) => set(sequenceOps.updateMessage(el, m.id, { kind: e.target.value as SequenceMessageKind }), 'Change message kind')}
+                    onChange={(e) =>
+                      set(
+                        sequenceOps.updateMessage(el, m.id, {
+                          kind: e.target.value as SequenceMessageKind,
+                        }),
+                        'Change message kind',
+                      )
+                    }
                     aria-label={`Message ${i + 1} kind`}
                     disabled={disabled}
                     className="h-7 px-2 pr-7 text-xs"
@@ -418,7 +678,9 @@ function SequenceEditor({ el, apply, disabled }: { el: SequenceElement; apply: A
                     count={el.messages.length}
                     name={`message ${i + 1}`}
                     disabled={disabled}
-                    onMove={(d) => set(sequenceOps.moveMessage(el, m.id, i + d), 'Reorder messages')}
+                    onMove={(d) =>
+                      set(sequenceOps.moveMessage(el, m.id, i + d), 'Reorder messages')
+                    }
                     onRemove={() => set(sequenceOps.removeMessage(el, m.id), 'Remove message')}
                   />
                 </div>
@@ -432,7 +694,14 @@ function SequenceEditor({ el, apply, disabled }: { el: SequenceElement; apply: A
         action={
           !disabled &&
           el.participants.length > 0 && (
-            <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={() => set(sequenceOps.addNote(el, [el.participants[0]!.id], 'Note'), 'Add note')}>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-6 px-2 text-xs"
+              onClick={() =>
+                set(sequenceOps.addNote(el, [el.participants[0]!.id], 'Note'), 'Add note')
+              }
+            >
               <Plus className="size-3.5" /> Add
             </Button>
           )
@@ -447,12 +716,18 @@ function SequenceEditor({ el, apply, disabled }: { el: SequenceElement; apply: A
                 <div className="flex items-center gap-1">
                   <CommitInput
                     value={n.text}
-                    onCommit={(text) => set(sequenceOps.updateNote(el, n.id, { text }), 'Edit note')}
+                    onCommit={(text) =>
+                      set(sequenceOps.updateNote(el, n.id, { text }), 'Edit note')
+                    }
                     normalize={(v) => v.trim() || null}
                     aria-label={`Note ${i + 1} text`}
                     disabled={disabled}
                   />
-                  <IconButton label={`Remove note ${i + 1}`} disabled={disabled} onClick={() => set(sequenceOps.removeNote(el, n.id), 'Remove note')}>
+                  <IconButton
+                    label={`Remove note ${i + 1}`}
+                    disabled={disabled}
+                    onClick={() => set(sequenceOps.removeNote(el, n.id), 'Remove note')}
+                  >
                     <Trash2 className="size-3.5" />
                   </IconButton>
                 </div>
@@ -462,12 +737,26 @@ function SequenceEditor({ el, apply, disabled }: { el: SequenceElement; apply: A
                     value={n.participants[0] ?? el.participants[0]?.id ?? ''}
                     label={`Note ${i + 1} over`}
                     disabled={disabled}
-                    onChange={(id) => set(sequenceOps.updateNote(el, n.id, { participants: [id, ...n.participants.slice(1).filter((p) => p !== id)] }), 'Move note')}
+                    onChange={(id) =>
+                      set(
+                        sequenceOps.updateNote(el, n.id, {
+                          participants: [id, ...n.participants.slice(1).filter((p) => p !== id)],
+                        }),
+                        'Move note',
+                      )
+                    }
                   />
                   <NativeSelect
                     value={n.participants[1] ?? ''}
                     onChange={(e) =>
-                      set(sequenceOps.updateNote(el, n.id, { participants: e.target.value ? [n.participants[0]!, e.target.value] : [n.participants[0]!] }), 'Move note')
+                      set(
+                        sequenceOps.updateNote(el, n.id, {
+                          participants: e.target.value
+                            ? [n.participants[0]!, e.target.value]
+                            : [n.participants[0]!],
+                        }),
+                        'Move note',
+                      )
                     }
                     aria-label={`Note ${i + 1} spans to`}
                     disabled={disabled}
@@ -486,7 +775,12 @@ function SequenceEditor({ el, apply, disabled }: { el: SequenceElement; apply: A
                 </div>
                 <NativeSelect
                   value={String(n.afterMessage)}
-                  onChange={(e) => set(sequenceOps.updateNote(el, n.id, { afterMessage: Number(e.target.value) }), 'Move note')}
+                  onChange={(e) =>
+                    set(
+                      sequenceOps.updateNote(el, n.id, { afterMessage: Number(e.target.value) }),
+                      'Move note',
+                    )
+                  }
                   aria-label={`Note ${i + 1} position`}
                   disabled={disabled}
                   className="h-7 px-2 pr-7 text-xs"
@@ -509,7 +803,11 @@ function SequenceEditor({ el, apply, disabled }: { el: SequenceElement; apply: A
   );
 }
 
-const TITLES: Record<StructuredElement['type'], string> = { table: 'Table', 'uml-class': 'UML class', sequence: 'Sequence diagram' };
+const TITLES: Record<StructuredElement['type'], string> = {
+  table: 'Table',
+  'uml-class': 'UML class',
+  sequence: 'Sequence diagram',
+};
 
 /** Model editor for tables, UML classes and sequence diagrams; every edit resizes the element to fit. */
 export function StructuredEditorPanel() {
@@ -551,7 +849,11 @@ export function StructuredEditorPanel() {
 
   const disabled = !canEdit || el.locked;
   return (
-    <div data-testid="structured-editor" data-element-id={el.id} className="flex min-h-0 flex-1 flex-col">
+    <div
+      data-testid="structured-editor"
+      data-element-id={el.id}
+      className="flex min-h-0 flex-1 flex-col"
+    >
       <div className="flex items-center justify-between border-b px-3 py-2 text-xs">
         <Label className="text-xs font-medium">{TITLES[el.type]}</Label>
         {el.locked && <span className="text-muted-foreground">Locked — unlock to edit</span>}

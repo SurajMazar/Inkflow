@@ -39,7 +39,9 @@ export function InviteAcceptPage() {
 
   if (preview.isError) {
     const error = preview.error;
-    const gone = error instanceof ApiError && ['NOT_FOUND', 'TOKEN_EXPIRED', 'TOKEN_INVALID'].includes(error.code);
+    const gone =
+      error instanceof ApiError &&
+      ['NOT_FOUND', 'TOKEN_EXPIRED', 'TOKEN_INVALID'].includes(error.code);
     return (
       <FullPageMessage
         title={gone ? 'This invitation is no longer valid' : describeApiError(error).title}
@@ -58,7 +60,11 @@ export function InviteAcceptPage() {
   }
 
   const invitation = preview.data;
-  const emailMismatch = !!(user && invitation && user.email.toLowerCase() !== invitation.email.toLowerCase());
+  const emailMismatch = !!(
+    user &&
+    invitation &&
+    user.email.toLowerCase() !== invitation.email.toLowerCase()
+  );
 
   return (
     <AuthLayout
@@ -66,7 +72,8 @@ export function InviteAcceptPage() {
       description={
         invitation ? (
           <>
-            {invitation.invitedBy} invited you to collaborate as {formatRole(invitation.role).toLowerCase() === 'admin' ? 'an' : 'a'}{' '}
+            {invitation.invitedBy} invited you to collaborate as{' '}
+            {formatRole(invitation.role).toLowerCase() === 'admin' ? 'an' : 'a'}{' '}
             <span className="font-medium text-foreground">{formatRole(invitation.role)}</span>.
           </>
         ) : undefined
@@ -94,12 +101,16 @@ export function InviteAcceptPage() {
           {status === 'anonymous' ? (
             <div className="grid gap-2">
               <Button asChild>
-                <Link to={`/login?next=${encodeURIComponent(next)}&email=${encodeURIComponent(invitation.email)}`}>
+                <Link
+                  to={`/login?next=${encodeURIComponent(next)}&email=${encodeURIComponent(invitation.email)}`}
+                >
                   Sign in to accept
                 </Link>
               </Button>
               <Button asChild variant="outline">
-                <Link to={`/register?next=${encodeURIComponent(next)}&email=${encodeURIComponent(invitation.email)}`}>
+                <Link
+                  to={`/register?next=${encodeURIComponent(next)}&email=${encodeURIComponent(invitation.email)}`}
+                >
                   Create an account
                 </Link>
               </Button>
@@ -107,14 +118,17 @@ export function InviteAcceptPage() {
           ) : emailMismatch ? (
             <div className="grid gap-3 text-sm">
               <p className="text-muted-foreground" role="alert">
-                This invitation was sent to <span className="font-medium text-foreground">{invitation.email}</span>, but
-                you're signed in as <span className="font-medium text-foreground">{user?.email}</span>.
+                This invitation was sent to{' '}
+                <span className="font-medium text-foreground">{invitation.email}</span>, but you're
+                signed in as <span className="font-medium text-foreground">{user?.email}</span>.
               </p>
               <Button
                 variant="outline"
                 onClick={() => {
                   void logout().then(() =>
-                    navigate(`/login?next=${encodeURIComponent(next)}&email=${encodeURIComponent(invitation.email)}`),
+                    navigate(
+                      `/login?next=${encodeURIComponent(next)}&email=${encodeURIComponent(invitation.email)}`,
+                    ),
                   );
                 }}
               >
@@ -122,7 +136,11 @@ export function InviteAcceptPage() {
               </Button>
             </div>
           ) : (
-            <Button onClick={() => accept.mutate()} disabled={accept.isPending} data-testid="invite-accept">
+            <Button
+              onClick={() => accept.mutate()}
+              disabled={accept.isPending}
+              data-testid="invite-accept"
+            >
               {accept.isPending ? <Spinner className="text-current" label={null} /> : null}
               Accept invitation
             </Button>

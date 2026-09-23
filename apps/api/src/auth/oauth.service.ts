@@ -1,7 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
 import type { OAuthProvider } from '@inkflow/shared';
 import { AppConfig } from '../config/app-config';
-import { deriveKey, pkceChallenge, randomToken, safeEqual, signPayload, verifySignedPayload } from '../common/crypto';
+import {
+  deriveKey,
+  pkceChallenge,
+  randomToken,
+  safeEqual,
+  signPayload,
+  verifySignedPayload,
+} from '../common/crypto';
 import { Errors } from '../common/errors';
 import type { ClientMeta } from '../common/request';
 import { safeNextPath } from '../common/mappers';
@@ -73,7 +80,8 @@ export class OAuthService {
   private credentials(provider: OAuthProvider): { clientId: string; clientSecret: string } {
     const env = this.config.env;
     const clientId = provider === 'google' ? env.GOOGLE_CLIENT_ID : env.GITHUB_CLIENT_ID;
-    const clientSecret = provider === 'google' ? env.GOOGLE_CLIENT_SECRET : env.GITHUB_CLIENT_SECRET;
+    const clientSecret =
+      provider === 'google' ? env.GOOGLE_CLIENT_SECRET : env.GITHUB_CLIENT_SECRET;
     if (!clientId || !clientSecret) throw Errors.notFound('OAuth provider');
     return { clientId, clientSecret };
   }
@@ -105,14 +113,23 @@ export class OAuthService {
     });
     if (provider === 'google') params.set('prompt', 'select_account');
     if (provider === 'github') params.set('allow_signup', 'true');
-    return { url: `${ENDPOINTS[provider].authorize}?${params.toString()}`, cookie: signPayload(this.stateKey, payload) };
+    return {
+      url: `${ENDPOINTS[provider].authorize}?${params.toString()}`,
+      cookie: signPayload(this.stateKey, payload),
+    };
   }
 
   /** Validates the callback against the state cookie. */
-  verifyState(provider: OAuthProvider, cookie: string | undefined, state: unknown): OAuthStateCookie {
+  verifyState(
+    provider: OAuthProvider,
+    cookie: string | undefined,
+    state: unknown,
+  ): OAuthStateCookie {
     const payload = verifySignedPayload<OAuthStateCookie>(this.stateKey, cookie);
-    if (!payload || payload.provider !== provider || payload.exp < Date.now()) throw Errors.oauthFailed('Sign-in expired, please try again');
-    if (typeof state !== 'string' || !safeEqual(state, payload.state)) throw Errors.oauthFailed('Invalid OAuth state');
+    if (!payload || payload.provider !== provider || payload.exp < Date.now())
+      throw Errors.oauthFailed('Sign-in expired, please try again');
+    if (typeof state !== 'string' || !safeEqual(state, payload.state))
+      throw Errors.oauthFailed('Invalid OAuth state');
     return payload;
   }
 
@@ -122,7 +139,11 @@ export class OAuthService {
     return (await res.json()) as T;
   }
 
-  private async exchangeCode(provider: OAuthProvider, code: string, verifier: string): Promise<string> {
+  private async exchangeCode(
+    provider: OAuthProvider,
+    code: string,
+    verifier: string,
+  ): Promise<string> {
     const { clientId, clientSecret } = this.credentials(provider);
     const body = new URLSearchParams({
       client_id: clientId,
@@ -132,12 +153,19 @@ export class OAuthService {
       redirect_uri: this.redirectUri(provider),
       grant_type: 'authorization_code',
     });
-    const token = await this.fetchJson<{ access_token?: string; error?: string }>(ENDPOINTS[provider].token, {
-      method: 'POST',
-      headers: { 'content-type': 'application/x-www-form-urlencoded', accept: 'application/json' },
-      body,
-    });
-    if (!token.access_token) throw new Error(`Token exchange failed: ${token.error ?? 'no access token'}`);
+    const token = await this.fetchJson<{ access_token?: string; error?: string }>(
+      ENDPOINTS[provider].token,
+      {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/x-www-form-urlencoded',
+          accept: 'application/json',
+        },
+        body,
+      },
+    );
+    if (!token.access_token)
+      throw new Error(`Token exchange failed: ${token.error ?? 'no access token'}`);
     return token.access_token;
   }
 
@@ -149,7 +177,9 @@ export class OAuthService {
         email_verified?: boolean;
         name?: string;
         picture?: string;
-      }>('https://openidconnect.googleapis.com/v1/userinfo', { headers: { authorization: `Bearer ${accessToken}` } });
+      }>('https://openidconnect.googleapis.com/v1/userinfo', {
+        headers: { authorization: `Bearer ${accessToken}` },
+      });
       if (!info.sub || !info.email) throw new Error('Google profile is missing an email address');
       return {
         providerAccountId: info.sub,
@@ -165,10 +195,12 @@ export class OAuthService {
       'user-agent': 'Inkflow',
       'x-github-api-version': '2022-11-28',
     };
-    const user = await this.fetchJson<{ id?: number; login?: string; name?: string | null; avatar_url?: string }>(
-      'https://api.github.com/user',
-      { headers },
-    );
+    const user = await this.fetchJson<{
+      id?: number;
+      login?: string;
+      name?: string | null;
+      avatar_url?: string;
+    }>('https://api.github.com/user', { headers });
     const emails = await this.fetchJson<{ email: string; primary: boolean; verified: boolean }[]>(
       'https://api.github.com/user/emails',
       { headers },
@@ -185,7 +217,12 @@ export class OAuthService {
   }
 
   /** Completes the flow: links or creates the account and starts a session. */
-  async complete(provider: OAuthProvider, code: string, state: OAuthStateCookie, meta: ClientMeta): Promise<IssuedSession> {
+  async complete(
+    provider: OAuthProvider,
+    code: string,
+    state: OAuthStateCookie,
+    meta: ClientMeta,
+  ): Promise<IssuedSession> {
     let profile: OAuthProfile;
     try {
       const accessToken = await this.exchangeCode(provider, code, state.verifier);
@@ -194,14 +231,17 @@ export class OAuthService {
       this.logger.warn(`OAuth (${provider}) failed: ${(err as Error).message}`);
       throw Errors.oauthFailed();
     }
-    if (!profile.emailVerified) throw Errors.oauthFailed('Your provider account email is not verified');
+    if (!profile.emailVerified)
+      throw Errors.oauthFailed('Your provider account email is not verified');
     const userId = await this.linkOrCreate(provider, profile);
     return this.sessions.create(userId, meta);
   }
 
   private async linkOrCreate(provider: OAuthProvider, profile: OAuthProfile): Promise<string> {
     const linked = await this.prisma.oAuthAccount.findUnique({
-      where: { provider_providerAccountId: { provider, providerAccountId: profile.providerAccountId } },
+      where: {
+        provider_providerAccountId: { provider, providerAccountId: profile.providerAccountId },
+      },
       select: { userId: true },
     });
     if (linked) return linked.userId;
@@ -210,7 +250,12 @@ export class OAuthService {
     if (existing) {
       await this.prisma.oAuthAccount.upsert({
         where: { userId_provider: { userId: existing.id, provider } },
-        create: { userId: existing.id, provider, providerAccountId: profile.providerAccountId, email: profile.email },
+        create: {
+          userId: existing.id,
+          provider,
+          providerAccountId: profile.providerAccountId,
+          email: profile.email,
+        },
         update: { providerAccountId: profile.providerAccountId, email: profile.email },
       });
       if (!existing.emailVerifiedAt) {
@@ -236,7 +281,9 @@ export class OAuthService {
         name: profile.name.slice(0, 80),
         avatarUrl: profile.avatarUrl && profile.avatarUrl.length <= 2048 ? profile.avatarUrl : null,
         emailVerifiedAt: new Date(),
-        oauthAccounts: { create: { provider, providerAccountId: profile.providerAccountId, email: profile.email } },
+        oauthAccounts: {
+          create: { provider, providerAccountId: profile.providerAccountId, email: profile.email },
+        },
       },
     });
     await this.onboarding.createPersonalWorkspace(user.id, user.name);

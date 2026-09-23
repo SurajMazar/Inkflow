@@ -3,7 +3,11 @@
  * parsed from the file headers and the data URL is built with a local base64 encoder, so the
  * same code runs in browsers, workers and Node.
  */
-import { ALLOWED_IMAGE_MIME_TYPES, MAX_UPLOAD_BYTES, type AllowedImageMimeType } from '@inkflow/shared';
+import {
+  ALLOWED_IMAGE_MIME_TYPES,
+  MAX_UPLOAD_BYTES,
+  type AllowedImageMimeType,
+} from '@inkflow/shared';
 import { looksLikeSvg } from './detect';
 import { MAX_IMAGE_DIMENSION, MAX_IMAGE_PIXELS } from './limits';
 import { bytesToBase64, sanitizeSvg, svgToDataUrl } from './svg-sanitize';
@@ -31,18 +35,22 @@ function startsWithBytes(bytes: Uint8Array, signature: readonly number[], offset
 
 function ascii(bytes: Uint8Array, offset: number, length: number): string {
   let out = '';
-  for (let i = offset; i < offset + length && i < bytes.length; i++) out += String.fromCharCode(bytes[i]!);
+  for (let i = offset; i < offset + length && i < bytes.length; i++)
+    out += String.fromCharCode(bytes[i]!);
   return out;
 }
 
 const u16be = (b: Uint8Array, o: number) => (b[o]! << 8) | b[o + 1]!;
 const u16le = (b: Uint8Array, o: number) => b[o]! | (b[o + 1]! << 8);
 const u24le = (b: Uint8Array, o: number) => b[o]! | (b[o + 1]! << 8) | (b[o + 2]! << 16);
-const u32be = (b: Uint8Array, o: number) => ((b[o]! << 24) >>> 0) + ((b[o + 1]! << 16) | (b[o + 2]! << 8) | b[o + 3]!);
+const u32be = (b: Uint8Array, o: number) =>
+  ((b[o]! << 24) >>> 0) + ((b[o + 1]! << 16) | (b[o + 2]! << 8) | b[o + 3]!);
 
 /** Decodes the leading bytes of a (possibly binary) file as UTF-8 text. */
 function decodeHead(bytes: Uint8Array, maxBytes: number): string {
-  return new TextDecoder('utf-8', { fatal: false }).decode(bytes.subarray(0, Math.min(bytes.length, maxBytes)));
+  return new TextDecoder('utf-8', { fatal: false }).decode(
+    bytes.subarray(0, Math.min(bytes.length, maxBytes)),
+  );
 }
 
 /** Identifies an allowed image format from its magic bytes (SVG from its leading markup). */
@@ -57,7 +65,8 @@ export function sniffImageMime(bytes: Uint8Array): AllowedImageMimeType | null {
 }
 
 function pngDimensions(b: Uint8Array): ImageDimensions | null {
-  if (b.length < 24 || !startsWithBytes(b, PNG_SIGNATURE) || ascii(b, 12, 4) !== 'IHDR') return null;
+  if (b.length < 24 || !startsWithBytes(b, PNG_SIGNATURE) || ascii(b, 12, 4) !== 'IHDR')
+    return null;
   return { width: u32be(b, 16), height: u32be(b, 20) };
 }
 
@@ -67,7 +76,9 @@ function gifDimensions(b: Uint8Array): ImageDimensions | null {
 }
 
 /** Start-of-frame markers carrying the image size (baseline, progressive, lossless, arithmetic). */
-const JPEG_SOF = new Set([0xc0, 0xc1, 0xc2, 0xc3, 0xc5, 0xc6, 0xc7, 0xc9, 0xca, 0xcb, 0xcd, 0xce, 0xcf]);
+const JPEG_SOF = new Set([
+  0xc0, 0xc1, 0xc2, 0xc3, 0xc5, 0xc6, 0xc7, 0xc9, 0xca, 0xcb, 0xcd, 0xce, 0xcf,
+]);
 
 function jpegDimensions(b: Uint8Array): ImageDimensions | null {
   if (!startsWithBytes(b, [0xff, 0xd8])) return null;
@@ -119,7 +130,9 @@ function webpDimensions(b: Uint8Array): ImageDimensions | null {
 }
 
 function svgDimensions(b: Uint8Array): ImageDimensions | null {
-  const root = findSvgRoot(parseXml(new TextDecoder('utf-8', { fatal: false }).decode(b).replace(/^\uFEFF/, '')));
+  const root = findSvgRoot(
+    parseXml(new TextDecoder('utf-8', { fatal: false }).decode(b).replace(/^\uFEFF/, '')),
+  );
   return root ? getSvgIntrinsicSize(root) : null;
 }
 
@@ -170,9 +183,19 @@ export async function readImageFile(blob: Blob): Promise<ImageFileData> {
   }
 
   const dims = readImageDimensions(bytes, mimeType);
-  if (!dims || dims.width <= 0 || dims.height <= 0) throw new Error('Could not read the image dimensions; the file may be corrupt');
-  if (dims.width > MAX_IMAGE_DIMENSION || dims.height > MAX_IMAGE_DIMENSION || dims.width * dims.height > MAX_IMAGE_PIXELS) {
+  if (!dims || dims.width <= 0 || dims.height <= 0)
+    throw new Error('Could not read the image dimensions; the file may be corrupt');
+  if (
+    dims.width > MAX_IMAGE_DIMENSION ||
+    dims.height > MAX_IMAGE_DIMENSION ||
+    dims.width * dims.height > MAX_IMAGE_PIXELS
+  ) {
     throw new Error('Image dimensions are too large');
   }
-  return { dataUrl: `data:${mimeType};base64,${bytesToBase64(bytes)}`, mimeType, width: dims.width, height: dims.height };
+  return {
+    dataUrl: `data:${mimeType};base64,${bytesToBase64(bytes)}`,
+    mimeType,
+    width: dims.width,
+    height: dims.height,
+  };
 }

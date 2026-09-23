@@ -18,7 +18,8 @@ export function deepEqual(a: unknown, b: unknown): boolean {
   const kb = Object.keys(b as object);
   if (ka.length !== kb.length) return false;
   for (const k of ka) {
-    if (!deepEqual((a as Record<string, unknown>)[k], (b as Record<string, unknown>)[k])) return false;
+    if (!deepEqual((a as Record<string, unknown>)[k], (b as Record<string, unknown>)[k]))
+      return false;
   }
   return true;
 }

@@ -2,7 +2,12 @@ import { randomUUID } from 'node:crypto';
 import { Injectable } from '@nestjs/common';
 import type { Prisma } from '@inkflow/database';
 import type { SceneElement } from '@inkflow/elements';
-import { duplicateElements, parseDocument, sanitizeAppState, type DocumentAppState } from '@inkflow/scene';
+import {
+  duplicateElements,
+  parseDocument,
+  sanitizeAppState,
+  type DocumentAppState,
+} from '@inkflow/scene';
 import {
   boardRoleAtLeast,
   isUuid,
@@ -18,7 +23,12 @@ import { AccessService } from '../access/access.service';
 import { RealtimeService } from '../collaboration/realtime.service';
 import { Errors } from '../common/errors';
 import type { Principal } from '../common/request';
-import { BoardDocumentService, hasNulChar, imageFileId, toSerializedDocument } from '../documents/board-document.service';
+import {
+  BoardDocumentService,
+  hasNulChar,
+  imageFileId,
+  toSerializedDocument,
+} from '../documents/board-document.service';
 import { FilesService, imageError } from '../files/files.service';
 import { validateImage } from '../files/image-validation';
 import { PurgeService } from '../files/purge.service';
@@ -95,7 +105,12 @@ export class BoardsService {
         break;
       case 'shared':
         boards = (await this.prisma.board.findMany({
-          where: { AND: [scope, { deletedAt: null, ownerId: { not: userId }, members: { some: { userId } } }] },
+          where: {
+            AND: [
+              scope,
+              { deletedAt: null, ownerId: { not: userId }, members: { some: { userId } } },
+            ],
+          },
           include,
           orderBy: { updatedAt: 'desc' },
           take: query.limit,
@@ -119,7 +134,13 @@ export class BoardsService {
               });
         const order = new Map(refs.map((r, i) => [r.boardId, i]));
         const found = (await this.prisma.board.findMany({
-          where: { AND: [scope, { id: { in: [...order.keys()] }, deletedAt: null }, accessibleBoardsWhere(userId)] },
+          where: {
+            AND: [
+              scope,
+              { id: { in: [...order.keys()] }, deletedAt: null },
+              accessibleBoardsWhere(userId),
+            ],
+          },
           include,
         })) as BoardWithSummary[];
         boards = found.sort((a, b) => order.get(a.id)! - order.get(b.id)!).slice(0, query.limit);
@@ -151,14 +172,17 @@ export class BoardsService {
     let folder = folderId ?? null;
     if (folder) {
       const f = isUuid(folder) ? await db.folder.findUnique({ where: { id: folder } }) : null;
-      if (!f || f.workspaceId !== workspaceId) throw Errors.validation('Folder not found in this workspace');
-      if (project && f.projectId && f.projectId !== project) throw Errors.validation('Folder belongs to another project');
+      if (!f || f.workspaceId !== workspaceId)
+        throw Errors.validation('Folder not found in this workspace');
+      if (project && f.projectId && f.projectId !== project)
+        throw Errors.validation('Folder belongs to another project');
       project = project ?? f.projectId;
       folder = f.id;
     }
     if (project) {
       const p = isUuid(project) ? await db.project.findUnique({ where: { id: project } }) : null;
-      if (!p || p.workspaceId !== workspaceId) throw Errors.validation('Project not found in this workspace');
+      if (!p || p.workspaceId !== workspaceId)
+        throw Errors.validation('Project not found in this workspace');
       project = p.id;
     }
     return { projectId: project, folderId: folder };
@@ -180,16 +204,23 @@ export class BoardsService {
         throw Errors.validation(`Invalid document: ${(err as Error).message}`);
       }
       const elements = parsed.elements.filter((e) => !e.isDeleted);
-      if (elements.some((el) => hasNulChar(el))) throw Errors.validation('Document contains NUL characters');
+      if (elements.some((el) => hasNulChar(el)))
+        throw Errors.validation('Document contains NUL characters');
       // Image elements may point at files of boards the user can open (copy/paste, duplicates).
-      const fileIds = [...new Set(elements.map(imageFileId).filter((id): id is string => id !== null))];
+      const fileIds = [
+        ...new Set(elements.map(imageFileId).filter((id): id is string => id !== null)),
+      ];
       const sourceFiles: InitialContent['sourceFiles'] = [];
       if (fileIds.length > 0) {
-        const rows = await this.prisma.file.findMany({ where: { id: { in: fileIds } }, select: { id: true, boardId: true } });
+        const rows = await this.prisma.file.findMany({
+          where: { id: { in: fileIds } },
+          select: { id: true, boardId: true },
+        });
         const byBoard = new Map<string, string[]>();
         for (const r of rows) byBoard.set(r.boardId, [...(byBoard.get(r.boardId) ?? []), r.id]);
         for (const [boardId, ids] of byBoard) {
-          if (await this.access.getBoardAccess(boardId, { userId, shareToken: null })) sourceFiles.push({ boardId, fileIds: ids });
+          if (await this.access.getBoardAccess(boardId, { userId, shareToken: null }))
+            sourceFiles.push({ boardId, fileIds: ids });
         }
       }
       return { elements, appState: parsed.appState, sourceFiles };
@@ -221,13 +252,21 @@ export class BoardsService {
       let elements = content.elements;
       const remap = new Map<string, string>();
       for (const source of content.sourceFiles) {
-        const map = await this.files.cloneFiles(tx, source.boardId, boardId, source.fileIds, userId);
+        const map = await this.files.cloneFiles(
+          tx,
+          source.boardId,
+          boardId,
+          source.fileIds,
+          userId,
+        );
         for (const [from, to] of map) remap.set(from, to);
       }
       if (remap.size > 0) {
         elements = elements.map((el) => {
           const fid = imageFileId(el);
-          return el.type === 'image' && fid && remap.has(fid) ? { ...el, fileId: remap.get(fid)! } : el;
+          return el.type === 'image' && fid && remap.has(fid)
+            ? { ...el, fileId: remap.get(fid)! }
+            : el;
         });
       }
       await this.documents.upsertElements(tx, boardId, elements, userId);
@@ -238,7 +277,12 @@ export class BoardsService {
 
   async create(userId: string, input: CreateBoardRequest): Promise<BoardSummaryDto> {
     await this.access.requireWorkspace(input.workspaceId, userId);
-    const placement = await this.validatePlacement(this.prisma, input.workspaceId, input.projectId, input.folderId);
+    const placement = await this.validatePlacement(
+      this.prisma,
+      input.workspaceId,
+      input.projectId,
+      input.folderId,
+    );
     const content = await this.initialContent(userId, input);
     const boardId = await this.insertBoard(
       userId,
@@ -277,27 +321,50 @@ export class BoardsService {
 
   // ───────────── updates ─────────────
 
-  async update(principal: Principal, boardId: string, input: UpdateBoardRequest): Promise<BoardSummaryDto> {
+  async update(
+    principal: Principal,
+    boardId: string,
+    input: UpdateBoardRequest,
+  ): Promise<BoardSummaryDto> {
     const needsOwner = input.workspaceAccess !== undefined;
-    const access = await this.access.requireBoard(boardId, principal, needsOwner ? 'OWNER' : 'EDITOR');
+    const access = await this.access.requireBoard(
+      boardId,
+      principal,
+      needsOwner ? 'OWNER' : 'EDITOR',
+    );
     const board = access.board;
     const data: Prisma.BoardUncheckedUpdateInput = {};
     if (input.title !== undefined) data.title = input.title;
     if (input.workspaceAccess !== undefined) data.workspaceAccess = input.workspaceAccess;
     if (input.projectId !== undefined || input.folderId !== undefined) {
-      if (!access.userId || !access.workspaceRole) throw Errors.forbidden('Only workspace members can move boards');
+      if (!access.userId || !access.workspaceRole)
+        throw Errors.forbidden('Only workspace members can move boards');
       const placement = await this.validatePlacement(
         this.prisma,
         board.workspaceId,
-        input.projectId !== undefined ? input.projectId : input.folderId !== undefined ? null : board.projectId,
-        input.folderId !== undefined ? input.folderId : input.projectId !== undefined ? null : board.folderId,
+        input.projectId !== undefined
+          ? input.projectId
+          : input.folderId !== undefined
+            ? null
+            : board.projectId,
+        input.folderId !== undefined
+          ? input.folderId
+          : input.projectId !== undefined
+            ? null
+            : board.folderId,
       );
       data.projectId = placement.projectId;
       data.folderId = placement.folderId;
     }
     if (input.appState !== undefined) {
-      const current = board.appState && typeof board.appState === 'object' ? (board.appState as Record<string, unknown>) : {};
-      data.appState = sanitizeAppState({ ...current, ...input.appState }) as unknown as Prisma.InputJsonValue;
+      const current =
+        board.appState && typeof board.appState === 'object'
+          ? (board.appState as Record<string, unknown>)
+          : {};
+      data.appState = sanitizeAppState({
+        ...current,
+        ...input.appState,
+      }) as unknown as Prisma.InputJsonValue;
     }
     await this.prisma.board.update({ where: { id: boardId }, data });
     if (input.title !== undefined && input.title !== board.title) {
@@ -312,21 +379,33 @@ export class BoardsService {
 
   async softDelete(principal: Principal, boardId: string): Promise<void> {
     const access = await this.access.requireBoard(boardId, principal, 'VIEWER');
-    if (!boardRoleAtLeast(access.ownRole, 'OWNER')) throw Errors.forbidden('Only the board owner or a workspace admin can delete it');
-    await this.prisma.board.update({ where: { id: boardId }, data: { deletedAt: new Date(), deletedById: access.userId } });
+    if (!boardRoleAtLeast(access.ownRole, 'OWNER'))
+      throw Errors.forbidden('Only the board owner or a workspace admin can delete it');
+    await this.prisma.board.update({
+      where: { id: boardId },
+      data: { deletedAt: new Date(), deletedById: access.userId },
+    });
     await this.realtime.emitEvent(boardId, { kind: 'board-deleted' });
   }
 
   async restore(userId: string, boardId: string): Promise<BoardSummaryDto> {
-    const access = await this.access.requireBoard(boardId, { userId, shareToken: null }, 'OWNER', { includeDeleted: true });
+    const access = await this.access.requireBoard(boardId, { userId, shareToken: null }, 'OWNER', {
+      includeDeleted: true,
+    });
     if (!access.board.deletedAt) throw Errors.conflict('The board is not in the trash');
-    await this.prisma.board.update({ where: { id: boardId }, data: { deletedAt: null, deletedById: null } });
+    await this.prisma.board.update({
+      where: { id: boardId },
+      data: { deletedAt: null, deletedById: null },
+    });
     return this.summary(boardId, userId, access.role);
   }
 
   async permanentDelete(userId: string, boardId: string): Promise<void> {
-    const access = await this.access.requireBoard(boardId, { userId, shareToken: null }, 'OWNER', { includeDeleted: true });
-    if (!access.board.deletedAt) throw Errors.conflict('Move the board to the trash before deleting it permanently');
+    const access = await this.access.requireBoard(boardId, { userId, shareToken: null }, 'OWNER', {
+      includeDeleted: true,
+    });
+    if (!access.board.deletedAt)
+      throw Errors.conflict('Move the board to the trash before deleting it permanently');
     await this.purge.purgeBoards([boardId]);
   }
 
@@ -342,7 +421,11 @@ export class BoardsService {
   async duplicate(userId: string, boardId: string): Promise<BoardSummaryDto> {
     const access = await this.access.requireBoard(boardId, { userId, shareToken: null }, 'VIEWER');
     const source = access.board;
-    let target = { workspaceId: source.workspaceId, projectId: source.projectId, folderId: source.folderId };
+    let target = {
+      workspaceId: source.workspaceId,
+      projectId: source.projectId,
+      folderId: source.folderId,
+    };
     if (!access.workspaceRole) {
       const own = await this.prisma.workspaceMember.findFirst({
         where: { userId, role: 'OWNER' },
@@ -353,7 +436,9 @@ export class BoardsService {
       target = { workspaceId: own.workspaceId, projectId: null, folderId: null };
     }
     const elements = await this.documents.loadElements(this.prisma, boardId);
-    const fileIds = [...new Set(elements.map(imageFileId).filter((id): id is string => id !== null))];
+    const fileIds = [
+      ...new Set(elements.map(imageFileId).filter((id): id is string => id !== null)),
+    ];
     const newId = await this.insertBoard(
       userId,
       { ...target, title: `${source.title} (copy)`.slice(0, 200) },
@@ -383,9 +468,15 @@ export class BoardsService {
 
   // ───────────── thumbnails ─────────────
 
-  async setThumbnail(principal: Principal, boardId: string, buffer: Buffer, declaredMime: string | null): Promise<void> {
+  async setThumbnail(
+    principal: Principal,
+    boardId: string,
+    buffer: Buffer,
+    declaredMime: string | null,
+  ): Promise<void> {
     const access = await this.access.requireBoard(boardId, principal, 'EDITOR');
-    if (buffer.length > MAX_THUMBNAIL_BYTES) throw Errors.payloadTooLarge('Thumbnails may be at most 2 MB');
+    if (buffer.length > MAX_THUMBNAIL_BYTES)
+      throw Errors.payloadTooLarge('Thumbnails may be at most 2 MB');
     let image;
     try {
       image = validateImage(buffer, declaredMime, ['image/png', 'image/webp']);
@@ -396,12 +487,16 @@ export class BoardsService {
     const key = `thumbnails/${boardId}/${randomUUID()}.${ext}`;
     await this.storage.put(key, buffer, image.mimeType);
     // Thumbnails change often: do not bump `updated_at` (it drives "last edited" ordering).
-    await this.prisma.$executeRaw`UPDATE boards SET thumbnail_key = ${key} WHERE id = ${boardId}::uuid`;
+    await this.prisma
+      .$executeRaw`UPDATE boards SET thumbnail_key = ${key} WHERE id = ${boardId}::uuid`;
     const previous = access.board.thumbnailKey;
     if (previous && previous !== key) await this.storage.deleteMany([previous]);
   }
 
-  async thumbnail(principal: Principal, boardId: string): Promise<{ object: StoredObject; mimeType: string }> {
+  async thumbnail(
+    principal: Principal,
+    boardId: string,
+  ): Promise<{ object: StoredObject; mimeType: string }> {
     const access = await this.access.requireBoard(boardId, principal, 'VIEWER');
     const key = access.board.thumbnailKey;
     const object = key ? await this.storage.get(key) : null;

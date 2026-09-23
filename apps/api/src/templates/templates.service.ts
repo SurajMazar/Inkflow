@@ -53,9 +53,14 @@ export function toTemplateSummary(t: TemplateSummaryRow): TemplateSummaryDto {
 /** Builds the stored document of a built-in template. */
 export function buildSystemTemplateDocument(def: TemplateDefinition): SceneDocument {
   const content = def.build();
-  return serializeDocument(content.elements, { ...DEFAULT_DOCUMENT_APP_STATE, ...(content.appState ?? {}) }, {}, {
-    source: `template:${def.key}`,
-  });
+  return serializeDocument(
+    content.elements,
+    { ...DEFAULT_DOCUMENT_APP_STATE, ...(content.appState ?? {}) },
+    {},
+    {
+      source: `template:${def.key}`,
+    },
+  );
 }
 
 @Injectable()
@@ -84,7 +89,9 @@ export class TemplatesService implements OnApplicationBootstrap {
         // Validate like any untrusted document so boards created from it are always well-formed.
         const parsed = parseDocument(buildSystemTemplateDocument(def));
         if (parsed.issues.length > 0) {
-          this.logger.warn(`Template "${def.key}": dropped ${parsed.issues.length} invalid element(s): ${parsed.issues[0]!.message}`);
+          this.logger.warn(
+            `Template "${def.key}": dropped ${parsed.issues.length} invalid element(s): ${parsed.issues[0]!.message}`,
+          );
         }
         document = { ...parsed.document, source: `template:${def.key}` };
       } catch (err) {
@@ -102,12 +109,20 @@ export class TemplatesService implements OnApplicationBootstrap {
       };
       for (let attempt = 0; attempt < 2; attempt++) {
         try {
-          await this.prisma.template.upsert({ where: { key: def.key }, create: { key: def.key, ...data }, update: data });
+          await this.prisma.template.upsert({
+            where: { key: def.key },
+            create: { key: def.key, ...data },
+            update: data,
+          });
           synced++;
           break;
         } catch (err) {
           // Another instance created it concurrently: retry as an update.
-          if (!(err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') || attempt === 1) throw err;
+          if (
+            !(err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') ||
+            attempt === 1
+          )
+            throw err;
         }
       }
     }
@@ -123,7 +138,10 @@ export class TemplatesService implements OnApplicationBootstrap {
       await this.access.requireWorkspace(workspaceId, userId);
       workspaceIds = [workspaceId];
     } else {
-      const memberships = await this.prisma.workspaceMember.findMany({ where: { userId }, select: { workspaceId: true } });
+      const memberships = await this.prisma.workspaceMember.findMany({
+        where: { userId },
+        select: { workspaceId: true },
+      });
       workspaceIds = memberships.map((m) => m.workspaceId);
     }
     const rows = await this.prisma.template.findMany({
@@ -139,7 +157,10 @@ export class TemplatesService implements OnApplicationBootstrap {
     const template = await this.prisma.template.findUnique({ where: { id: templateId } });
     if (!template) throw Errors.notFound('Template');
     if (!template.isSystem) {
-      if (!template.workspaceId || !(await this.access.workspaceRole(template.workspaceId, userId))) {
+      if (
+        !template.workspaceId ||
+        !(await this.access.workspaceRole(template.workspaceId, userId))
+      ) {
         throw Errors.notFound('Template');
       }
     }
@@ -181,7 +202,8 @@ export class TemplatesService implements OnApplicationBootstrap {
     const template = await this.findUsable(userId, templateId);
     if (template.isSystem) throw Errors.forbidden('Built-in templates cannot be deleted');
     const role = await this.access.workspaceRole(template.workspaceId!, userId);
-    if (template.createdById !== userId && !workspaceRoleAtLeast(role, 'ADMIN')) throw Errors.forbidden();
+    if (template.createdById !== userId && !workspaceRoleAtLeast(role, 'ADMIN'))
+      throw Errors.forbidden();
     await this.prisma.template.delete({ where: { id: templateId } });
   }
 }

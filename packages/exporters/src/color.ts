@@ -50,10 +50,18 @@ export function parseColor(input: string): Rgba | null {
   m = /^rgba?\(\s*([\d.]+%?)[\s,]+([\d.]+%?)[\s,]+([\d.]+%?)(?:[\s,/]+([\d.]+%?))?\s*\)$/.exec(c);
   if (m) {
     const ch = (v: string) => (v.endsWith('%') ? (parseFloat(v) / 100) * 255 : parseFloat(v));
-    const alpha = m[4] === undefined ? 1 : m[4].endsWith('%') ? parseFloat(m[4]) / 100 : parseFloat(m[4]);
-    return { r: clamp255(ch(m[1]!)), g: clamp255(ch(m[2]!)), b: clamp255(ch(m[3]!)), a: Math.max(0, Math.min(1, alpha)) };
+    const alpha =
+      m[4] === undefined ? 1 : m[4].endsWith('%') ? parseFloat(m[4]) / 100 : parseFloat(m[4]);
+    return {
+      r: clamp255(ch(m[1]!)),
+      g: clamp255(ch(m[2]!)),
+      b: clamp255(ch(m[3]!)),
+      a: Math.max(0, Math.min(1, alpha)),
+    };
   }
-  m = /^hsla?\(\s*([\d.]+)(?:deg)?[\s,]+([\d.]+)%[\s,]+([\d.]+)%(?:[\s,/]+([\d.]+%?))?\s*\)$/.exec(c);
+  m = /^hsla?\(\s*([\d.]+)(?:deg)?[\s,]+([\d.]+)%[\s,]+([\d.]+)%(?:[\s,/]+([\d.]+%?))?\s*\)$/.exec(
+    c,
+  );
   if (m) {
     const h = (parseFloat(m[1]!) % 360) / 360;
     const s = parseFloat(m[2]!) / 100;
@@ -69,8 +77,14 @@ export function parseColor(input: string): Rgba | null {
       if (x < 2 / 3) return p + (q - p) * (2 / 3 - x) * 6;
       return p;
     };
-    const alpha = m[4] === undefined ? 1 : m[4].endsWith('%') ? parseFloat(m[4]) / 100 : parseFloat(m[4]);
-    return { r: clamp255(hue(h + 1 / 3) * 255), g: clamp255(hue(h) * 255), b: clamp255(hue(h - 1 / 3) * 255), a: alpha };
+    const alpha =
+      m[4] === undefined ? 1 : m[4].endsWith('%') ? parseFloat(m[4]) / 100 : parseFloat(m[4]);
+    return {
+      r: clamp255(hue(h + 1 / 3) * 255),
+      g: clamp255(hue(h) * 255),
+      b: clamp255(hue(h - 1 / 3) * 255),
+      a: alpha,
+    };
   }
   const named = NAMED[c];
   return named ? { r: named[0], g: named[1], b: named[2], a: 1 } : null;

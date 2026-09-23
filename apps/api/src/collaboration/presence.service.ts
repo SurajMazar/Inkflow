@@ -1,5 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { PRESENCE_TTL_SECONDS, presenceKey, type PeerPresence, type PresenceState } from '@inkflow/collaboration';
+import {
+  PRESENCE_TTL_SECONDS,
+  presenceKey,
+  type PeerPresence,
+  type PresenceState,
+} from '@inkflow/collaboration';
 import { RedisService } from '../redis/redis.service';
 
 export const DEFAULT_PRESENCE_STATE: PresenceState = {

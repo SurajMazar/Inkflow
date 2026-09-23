@@ -17,7 +17,10 @@ describe('version comparison', () => {
     const b = createElement('ellipse', { id: 'b' });
     const c = createElement('diamond', { id: 'c' });
     const gone = createElement('text', { id: 'gone', isDeleted: true });
-    const result = compareDocuments(doc([a, b, gone]), doc([{ ...a, x: 50 }, c, { ...b, version: 7 }]));
+    const result = compareDocuments(
+      doc([a, b, gone]),
+      doc([{ ...a, x: 50 }, c, { ...b, version: 7 }]),
+    );
     expect(result).toEqual({ added: ['c'], removed: [], modified: ['a'], unchangedCount: 1 });
     expect(compareDocuments(doc([a, b]), doc([a])).removed).toEqual(['b']);
   });

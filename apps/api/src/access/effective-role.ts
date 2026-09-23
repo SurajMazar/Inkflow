@@ -28,7 +28,10 @@ export interface EffectiveRole {
 }
 
 /** Role implied by workspace membership alone. */
-export function workspaceDerivedRole(workspaceRole: WorkspaceRole | null, access: WorkspaceAccess): BoardRole | null {
+export function workspaceDerivedRole(
+  workspaceRole: WorkspaceRole | null,
+  access: WorkspaceAccess,
+): BoardRole | null {
   if (!workspaceRole) return null;
   if (workspaceRole === 'OWNER' || workspaceRole === 'ADMIN') return 'OWNER';
   if (access === 'EDITOR') return 'EDITOR';

@@ -1,4 +1,5 @@
-export type LinkValidation = { ok: true; href: string; internal: boolean } | { ok: false; error: string };
+export type LinkValidation =
+  { ok: true; href: string; internal: boolean } | { ok: false; error: string };
 
 const INTERNAL_BOARD_LINK = /^\/b\/[A-Za-z0-9_-]{1,64}(?:[/?#][^\s]*)?$/;
 const SCHEME = /^([a-z][a-z0-9+.-]*):/i;
@@ -16,7 +17,8 @@ export function validateLink(raw: string): LinkValidation {
   if (value.length > MAX_LINK_LENGTH) return { ok: false, error: 'This link is too long.' };
   // Control characters and whitespace can hide a dangerous scheme (e.g. "java\tscript:").
   // eslint-disable-next-line no-control-regex
-  if (/[\u0000-\u001f\u007f\s]/.test(value)) return { ok: false, error: 'Links cannot contain spaces or control characters.' };
+  if (/[\u0000-\u001f\u007f\s]/.test(value))
+    return { ok: false, error: 'Links cannot contain spaces or control characters.' };
 
   if (value.startsWith('/')) {
     if (INTERNAL_BOARD_LINK.test(value)) return { ok: true, href: value, internal: true };
@@ -38,15 +40,21 @@ export function validateLink(raw: string): LinkValidation {
     return { ok: false, error: 'Only web (http, https) and email (mailto) links are allowed.' };
   }
   if (url.protocol === 'mailto:') {
-    if (!/^[^@\s]+@[^@\s]+$/.test(decodeURIComponent(url.pathname))) return { ok: false, error: 'Enter a valid email address after mailto:.' };
+    if (!/^[^@\s]+@[^@\s]+$/.test(decodeURIComponent(url.pathname)))
+      return { ok: false, error: 'Enter a valid email address after mailto:.' };
     return { ok: true, href: url.href, internal: false };
   }
   if (!url.hostname || !(url.hostname.includes('.') || url.hostname === 'localhost')) {
     return { ok: false, error: 'This doesn’t look like a valid web address.' };
   }
-  if (url.username || url.password) return { ok: false, error: 'Links with embedded credentials are not allowed.' };
+  if (url.username || url.password)
+    return { ok: false, error: 'Links with embedded credentials are not allowed.' };
   // Links to this app's boards open in the same tab.
-  if (typeof window !== 'undefined' && url.origin === window.location.origin && INTERNAL_BOARD_LINK.test(url.pathname + url.search + url.hash)) {
+  if (
+    typeof window !== 'undefined' &&
+    url.origin === window.location.origin &&
+    INTERNAL_BOARD_LINK.test(url.pathname + url.search + url.hash)
+  ) {
     return { ok: true, href: url.pathname + url.search + url.hash, internal: true };
   }
   return { ok: true, href: url.href, internal: false };

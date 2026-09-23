@@ -103,7 +103,13 @@ function MainMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" aria-label="Board menu" data-testid="board-menu" className="size-8">
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label="Board menu"
+          data-testid="board-menu"
+          className="size-8"
+        >
           <Menu className="size-4" />
         </Button>
       </DropdownMenuTrigger>
@@ -135,10 +141,15 @@ function MainMenu() {
         <DropdownMenuSub>
           <DropdownMenuSubTrigger>Canvas</DropdownMenuSubTrigger>
           <DropdownMenuSubContent className="w-64" data-inkflow-ui>
-            <DropdownMenuCheckboxItem checked={grid.visible} onCheckedChange={() => editor.actions.run('view.toggleGrid')}>
+            <DropdownMenuCheckboxItem
+              checked={grid.visible}
+              onCheckedChange={() => editor.actions.run('view.toggleGrid')}
+            >
               Show grid
             </DropdownMenuCheckboxItem>
-            <DropdownMenuLabel className="text-xs text-muted-foreground">Grid type</DropdownMenuLabel>
+            <DropdownMenuLabel className="text-xs text-muted-foreground">
+              Grid type
+            </DropdownMenuLabel>
             <DropdownMenuRadioGroup
               value={grid.type}
               onValueChange={(v) => {
@@ -150,7 +161,9 @@ function MainMenu() {
               <DropdownMenuRadioItem value="square">Squares</DropdownMenuRadioItem>
               <DropdownMenuRadioItem value="isometric">Isometric</DropdownMenuRadioItem>
             </DropdownMenuRadioGroup>
-            <DropdownMenuLabel className="text-xs text-muted-foreground">Grid size</DropdownMenuLabel>
+            <DropdownMenuLabel className="text-xs text-muted-foreground">
+              Grid size
+            </DropdownMenuLabel>
             <DropdownMenuRadioGroup
               value={String(grid.size)}
               onValueChange={(v) => {
@@ -165,22 +178,36 @@ function MainMenu() {
               ))}
             </DropdownMenuRadioGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuCheckboxItem checked={snapping.toObjects} onCheckedChange={() => editor.actions.run('view.toggleSnap')}>
+            <DropdownMenuCheckboxItem
+              checked={snapping.toObjects}
+              onCheckedChange={() => editor.actions.run('view.toggleSnap')}
+            >
               Snap to objects
             </DropdownMenuCheckboxItem>
-            <DropdownMenuCheckboxItem checked={snapping.toGrid} onCheckedChange={() => editor.actions.run('view.toggleGridSnap')}>
+            <DropdownMenuCheckboxItem
+              checked={snapping.toGrid}
+              onCheckedChange={() => editor.actions.run('view.toggleGridSnap')}
+            >
               Snap to grid
             </DropdownMenuCheckboxItem>
             <DropdownMenuCheckboxItem
               checked={snapping.angle}
-              onCheckedChange={() => editor.setState({ snapping: { ...snapping, angle: !snapping.angle } })}
+              onCheckedChange={() =>
+                editor.setState({ snapping: { ...snapping, angle: !snapping.angle } })
+              }
             >
               Angle snapping
             </DropdownMenuCheckboxItem>
-            <DropdownMenuCheckboxItem checked={showFrameNames} onCheckedChange={() => editor.actions.run('view.toggleFrameNames')}>
+            <DropdownMenuCheckboxItem
+              checked={showFrameNames}
+              onCheckedChange={() => editor.actions.run('view.toggleFrameNames')}
+            >
               Show frame names
             </DropdownMenuCheckboxItem>
-            <DropdownMenuCheckboxItem checked={zen} onCheckedChange={() => editor.actions.run('view.zenMode')}>
+            <DropdownMenuCheckboxItem
+              checked={zen}
+              onCheckedChange={() => editor.actions.run('view.zenMode')}
+            >
               Zen mode
             </DropdownMenuCheckboxItem>
             {canEdit && (
@@ -200,7 +227,8 @@ function MainMenu() {
           </DropdownMenuSubContent>
         </DropdownMenuSub>
         <DropdownMenuItem onSelect={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}>
-          {resolvedTheme === 'dark' ? <Sun /> : <Moon />} {resolvedTheme === 'dark' ? 'Light mode' : 'Dark mode'}
+          {resolvedTheme === 'dark' ? <Sun /> : <Moon />}{' '}
+          {resolvedTheme === 'dark' ? 'Light mode' : 'Dark mode'}
           <DropdownMenuShortcut>⌥⇧D</DropdownMenuShortcut>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
@@ -226,10 +254,19 @@ export function TopBar() {
   const dashboardHref = board.workspaceId && user ? `/w/${board.workspaceId}` : '/';
   return (
     <div className="flex items-start justify-between gap-2">
-      <div className="pointer-events-auto flex min-w-0 items-center gap-1 rounded-xl border bg-popover/95 p-1 shadow-sm backdrop-blur" data-inkflow-ui>
+      <div
+        className="pointer-events-auto flex min-w-0 items-center gap-1 rounded-xl border bg-popover/95 p-1 shadow-sm backdrop-blur"
+        data-inkflow-ui
+      >
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button asChild variant="ghost" size="icon" className="size-8" aria-label="Back to dashboard">
+            <Button
+              asChild
+              variant="ghost"
+              size="icon"
+              className="size-8"
+              aria-label="Back to dashboard"
+            >
               <Link to={dashboardHref} data-testid="back-to-dashboard">
                 <ArrowLeft className="size-4" />
               </Link>
@@ -241,7 +278,10 @@ export function TopBar() {
         <SyncStatusBadge />
       </div>
 
-      <div className="pointer-events-auto flex items-center gap-1 rounded-xl border bg-popover/95 p-1 shadow-sm backdrop-blur" data-inkflow-ui>
+      <div
+        className="pointer-events-auto flex items-center gap-1 rounded-xl border bg-popover/95 p-1 shadow-sm backdrop-blur"
+        data-inkflow-ui
+      >
         <CollaboratorsBar />
         <Tooltip>
           <TooltipTrigger asChild>
@@ -262,7 +302,14 @@ export function TopBar() {
         {!compact && (
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" className="size-8" aria-label="Present frames" data-testid="present" onClick={() => editor.startPresentation()}>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-8"
+                aria-label="Present frames"
+                data-testid="present"
+                onClick={() => editor.startPresentation()}
+              >
                 <Play className="size-4" />
               </Button>
             </TooltipTrigger>
@@ -271,7 +318,12 @@ export function TopBar() {
         )}
         <MainMenu />
         {user && canEdit && (
-          <Button size="sm" className="h-8 gap-1.5" onClick={() => setShareOpen(true)} data-testid="share-button">
+          <Button
+            size="sm"
+            className="h-8 gap-1.5"
+            onClick={() => setShareOpen(true)}
+            data-testid="share-button"
+          >
             <Share2 className="size-3.5" />
             {!compact && 'Share'}
           </Button>

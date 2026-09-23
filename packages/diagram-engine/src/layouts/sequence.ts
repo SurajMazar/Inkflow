@@ -16,9 +16,18 @@ type Msg = SequenceLayout['messages'][number];
 type Part = SequenceLayout['participants'][number];
 
 function headerSize(kind: SequenceParticipantKind, name: string, el: SequenceElement, lh: number) {
-  const w = Math.max(MIN_HEADER_WIDTH, textWidth(name, { fontFamily: el.fontFamily, fontSize: el.fontSize, bold: true }) + HEADER_PAD * 2);
+  const w = Math.max(
+    MIN_HEADER_WIDTH,
+    textWidth(name, { fontFamily: el.fontFamily, fontSize: el.fontSize, bold: true }) +
+      HEADER_PAD * 2,
+  );
   const boxH = Math.round(el.fontSize * 2.6);
-  const h = kind === 'participant' || kind === 'database' ? (kind === 'database' ? boxH + 12 : boxH) : ACTOR_FIGURE_HEIGHT + lh + 4;
+  const h =
+    kind === 'participant' || kind === 'database'
+      ? kind === 'database'
+        ? boxH + 12
+        : boxH
+      : ACTOR_FIGURE_HEIGHT + lh + 4;
   return { width: Math.ceil(w), height: Math.ceil(h) };
 }
 
@@ -32,7 +41,8 @@ function naturalLayout(el: SequenceElement): SequenceLayout {
 
   // Horizontal spacing: participantSpacing, but never narrower than headers or message labels need.
   const gaps: number[] = [];
-  for (let i = 0; i < n - 1; i++) gaps.push(Math.max(el.participantSpacing, (sizes[i]!.width + sizes[i + 1]!.width) / 2 + 20));
+  for (let i = 0; i < n - 1; i++)
+    gaps.push(Math.max(el.participantSpacing, (sizes[i]!.width + sizes[i + 1]!.width) / 2 + 20));
   let rightOverflow = 0;
   const labelWidths = el.messages.map((m) => textWidth(m.label, font));
   el.messages.forEach((m, k) => {
@@ -57,7 +67,8 @@ function naturalLayout(el: SequenceElement): SequenceLayout {
     }
   });
   const centers: number[] = [];
-  for (let i = 0; i < n; i++) centers.push(i === 0 ? sizes[0]!.width / 2 : centers[i - 1]! + gaps[i - 1]!);
+  for (let i = 0; i < n; i++)
+    centers.push(i === 0 ? sizes[0]!.width / 2 : centers[i - 1]! + gaps[i - 1]!);
 
   const createdAt = new Map<string, number>();
   el.messages.forEach((m, k) => {
@@ -95,25 +106,42 @@ function naturalLayout(el: SequenceElement): SequenceLayout {
   let cursor = headerHeight + 8;
   const placeNotes = (after: number) => {
     for (const note of notesAfter.get(after) ?? []) {
-      const idx = note.participants.map((id) => indexOf.get(id)).filter((v): v is number => v !== undefined);
+      const idx = note.participants
+        .map((id) => indexOf.get(id))
+        .filter((v): v is number => v !== undefined);
       if (idx.length === 0) continue;
       const left = Math.min(...idx.map((i) => centers[i]!));
       const right = Math.max(...idx.map((i) => centers[i]!));
       const span = idx.length > 1 ? right - left + 40 : 0;
       const wrap = Math.max(200, span) - NOTE_PAD * 2;
-      const text = layoutText(note.text, { ...font, fontWeight: 'normal', fontStyle: 'normal', lineHeight: 1.4, letterSpacing: 0 }, wrap);
+      const text = layoutText(
+        note.text,
+        { ...font, fontWeight: 'normal', fontStyle: 'normal', lineHeight: 1.4, letterSpacing: 0 },
+        wrap,
+      );
       const width = Math.ceil(Math.max(80, span, text.width + NOTE_PAD * 2));
       const height = Math.ceil(text.height + NOTE_PAD * 2);
       const top = cursor + 4;
-      notes.push({ id: note.id, x: (left + right) / 2 - width / 2, y: top, width, height, text: note.text, lines: text.lines.map((l) => l.text) });
+      notes.push({
+        id: note.id,
+        x: (left + right) / 2 - width / 2,
+        y: top,
+        width,
+        height,
+        text: note.text,
+        lines: text.lines.map((l) => l.text),
+      });
       cursor = top + height + 8;
     }
   };
 
   placeNotes(-1);
-  const stacks = new Map<string, { top: number; depth: number }[]>(el.participants.map((p) => [p.id, []]));
+  const stacks = new Map<string, { top: number; depth: number }[]>(
+    el.participants.map((p) => [p.id, []]),
+  );
   const activations: SequenceLayout['activations'] = [];
-  const barLeft = (pid: string, depth: number) => centers[indexOf.get(pid)!]! + (depth - 1) * ACTIVATION_OFFSET - ACTIVATION_WIDTH / 2;
+  const barLeft = (pid: string, depth: number) =>
+    centers[indexOf.get(pid)!]! + (depth - 1) * ACTIVATION_OFFSET - ACTIVATION_WIDTH / 2;
   const edge = (pid: string, depth: number, side: 1 | -1) => {
     if (depth <= 0) return centers[indexOf.get(pid)!]!;
     const left = barLeft(pid, depth);
@@ -144,7 +172,14 @@ function naturalLayout(el: SequenceElement): SequenceLayout {
         toX = edge(m.from, stackA.length, 1);
       } else if (m.kind === 'return' && stackA.length > 0) {
         const act = stackA.pop()!;
-        activations.push({ participantId: m.from, x: barLeft(m.from, act.depth), width: ACTIVATION_WIDTH, top: act.top, bottom: y, depth: act.depth });
+        activations.push({
+          participantId: m.from,
+          x: barLeft(m.from, act.depth),
+          width: ACTIVATION_WIDTH,
+          top: act.top,
+          bottom: y,
+          depth: act.depth,
+        });
         toX = edge(m.from, stackA.length, 1);
       } else {
         toX = fromX;
@@ -154,7 +189,14 @@ function naturalLayout(el: SequenceElement): SequenceLayout {
       fromX = edge(m.from, stackA.length, dir);
       if (m.kind === 'return' && stackA.length > 0) {
         const act = stackA.pop()!;
-        activations.push({ participantId: m.from, x: barLeft(m.from, act.depth), width: ACTIVATION_WIDTH, top: act.top, bottom: y, depth: act.depth });
+        activations.push({
+          participantId: m.from,
+          x: barLeft(m.from, act.depth),
+          width: ACTIVATION_WIDTH,
+          top: act.top,
+          bottom: y,
+          depth: act.depth,
+        });
       }
       if (m.kind === 'sync') {
         stackB.push({ top: y, depth: stackB.length + 1 });
@@ -169,7 +211,14 @@ function naturalLayout(el: SequenceElement): SequenceLayout {
       }
       if (m.kind === 'destroy') {
         for (const act of stackB.splice(0)) {
-          activations.push({ participantId: m.to, x: barLeft(m.to, act.depth), width: ACTIVATION_WIDTH, top: act.top, bottom: y, depth: act.depth });
+          activations.push({
+            participantId: m.to,
+            x: barLeft(m.to, act.depth),
+            width: ACTIVATION_WIDTH,
+            top: act.top,
+            bottom: y,
+            depth: act.depth,
+          });
         }
         destroyedAt.set(m.to, y);
       }
@@ -195,11 +244,21 @@ function naturalLayout(el: SequenceElement): SequenceLayout {
     placeNotes(k);
   });
 
-  const lifelineBottom = Math.max(cursor + el.messageSpacing * 0.3, headerHeight + el.messageSpacing);
+  const lifelineBottom = Math.max(
+    cursor + el.messageSpacing * 0.3,
+    headerHeight + el.messageSpacing,
+  );
   const openEnd = Math.min(lifelineBottom - 4, lastY + el.messageSpacing * 0.4);
   for (const [pid, stack] of stacks) {
     for (const act of stack) {
-      activations.push({ participantId: pid, x: barLeft(pid, act.depth), width: ACTIVATION_WIDTH, top: act.top, bottom: Math.max(act.top + 8, openEnd), depth: act.depth });
+      activations.push({
+        participantId: pid,
+        x: barLeft(pid, act.depth),
+        width: ACTIVATION_WIDTH,
+        top: act.top,
+        bottom: Math.max(act.top + 8, openEnd),
+        depth: act.depth,
+      });
     }
   }
   activations.sort((p, q) => p.top - q.top || p.depth - q.depth);
@@ -222,7 +281,11 @@ function naturalLayout(el: SequenceElement): SequenceLayout {
   }
   for (const m of messages) {
     minX = Math.min(minX, m.labelX - m.labelWidth / 2);
-    maxX = Math.max(maxX, m.labelX + m.labelWidth / 2, m.self ? Math.max(m.fromX, m.toX) + SELF_LOOP_WIDTH : 0);
+    maxX = Math.max(
+      maxX,
+      m.labelX + m.labelWidth / 2,
+      m.self ? Math.max(m.fromX, m.toX) + SELF_LOOP_WIDTH : 0,
+    );
   }
   if (n > 0) maxX = Math.max(maxX, centers[n - 1]! + rightOverflow);
   const shift = -minX;

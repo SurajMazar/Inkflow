@@ -68,7 +68,8 @@ export function detectImageType(buf: Buffer): AllowedImageMimeType | null {
     const sig = ascii(buf, 0, 6);
     if (sig === 'GIF87a' || sig === 'GIF89a') return 'image/gif';
   }
-  if (buf.length >= 12 && ascii(buf, 0, 4) === 'RIFF' && ascii(buf, 8, 12) === 'WEBP') return 'image/webp';
+  if (buf.length >= 12 && ascii(buf, 0, 4) === 'RIFF' && ascii(buf, 8, 12) === 'WEBP')
+    return 'image/webp';
   if (looksLikeSvg(buf)) return 'image/svg+xml';
   return null;
 }
@@ -80,7 +81,9 @@ export function pngDimensions(buf: Buffer): ImageDimensions | null {
   return { width: buf.readUInt32BE(16), height: buf.readUInt32BE(20) };
 }
 
-const JPEG_SOF = new Set([0xc0, 0xc1, 0xc2, 0xc3, 0xc5, 0xc6, 0xc7, 0xc9, 0xca, 0xcb, 0xcd, 0xce, 0xcf]);
+const JPEG_SOF = new Set([
+  0xc0, 0xc1, 0xc2, 0xc3, 0xc5, 0xc6, 0xc7, 0xc9, 0xca, 0xcb, 0xcd, 0xce, 0xcf,
+]);
 
 export function jpegDimensions(buf: Buffer): ImageDimensions | null {
   let offset = 2;
@@ -126,7 +129,10 @@ export function webpDimensions(buf: Buffer): ImageDimensions | null {
     const b1 = buf[22]!;
     const b2 = buf[23]!;
     const b3 = buf[24]!;
-    return { width: 1 + (b0 | ((b1 & 0x3f) << 8)), height: 1 + ((b1 >> 6) | (b2 << 2) | ((b3 & 0x0f) << 10)) };
+    return {
+      width: 1 + (b0 | ((b1 & 0x3f) << 8)),
+      height: 1 + ((b1 >> 6) | (b2 << 2) | ((b3 & 0x0f) << 10)),
+    };
   }
   if (chunk === 'VP8X') {
     return { width: 1 + buf.readUIntLE(24, 3), height: 1 + buf.readUIntLE(27, 3) };
@@ -163,7 +169,10 @@ export function svgDimensions(text: string): ImageDimensions | null {
   if (width && height) return { width, height };
   const viewBox = attr(tag, 'viewBox');
   if (viewBox) {
-    const parts = viewBox.trim().split(/[\s,]+/).map(Number);
+    const parts = viewBox
+      .trim()
+      .split(/[\s,]+/)
+      .map(Number);
     if (parts.length === 4 && parts.every(Number.isFinite) && parts[2]! > 0 && parts[3]! > 0) {
       const vw = parts[2]!;
       const vh = parts[3]!;
@@ -193,13 +202,19 @@ const NAMED_ENTITIES: Record<string, string> = {
 
 /** Decodes character references and drops whitespace/control characters (defeats `java&#x09;script:`). */
 function normalizeForUrlChecks(text: string): string {
-  return text
-    .replace(/&#x([0-9a-f]+);?/gi, (_, hex: string) => String.fromCodePoint(Math.min(parseInt(hex, 16), 0x10ffff)))
-    .replace(/&#([0-9]+);?/g, (_, dec: string) => String.fromCodePoint(Math.min(parseInt(dec, 10), 0x10ffff)))
-    .replace(/&([a-z]+);/gi, (m, name: string) => NAMED_ENTITIES[name.toLowerCase()] ?? m)
-    // eslint-disable-next-line no-control-regex
-    .replace(/[\s\u0000-\u001f\u007f-\u009f]+/g, '')
-    .toLowerCase();
+  return (
+    text
+      .replace(/&#x([0-9a-f]+);?/gi, (_, hex: string) =>
+        String.fromCodePoint(Math.min(parseInt(hex, 16), 0x10ffff)),
+      )
+      .replace(/&#([0-9]+);?/g, (_, dec: string) =>
+        String.fromCodePoint(Math.min(parseInt(dec, 10), 0x10ffff)),
+      )
+      .replace(/&([a-z]+);/gi, (m, name: string) => NAMED_ENTITIES[name.toLowerCase()] ?? m)
+      // eslint-disable-next-line no-control-regex
+      .replace(/[\s\u0000-\u001f\u007f-\u009f]+/g, '')
+      .toLowerCase()
+  );
 }
 
 /**
@@ -209,8 +224,10 @@ function normalizeForUrlChecks(text: string): string {
  */
 export function svgSafetyIssue(text: string): string | null {
   const lower = text.toLowerCase();
-  if (/<\s*(?:[a-z][\w.-]*:)?script[\s>/]/i.test(text) || lower.includes('<script')) return 'SVG must not contain scripts';
-  if (/<\s*(?:[a-z][\w.-]*:)?foreignobject[\s>/]/i.test(text)) return 'SVG must not contain <foreignObject>';
+  if (/<\s*(?:[a-z][\w.-]*:)?script[\s>/]/i.test(text) || lower.includes('<script'))
+    return 'SVG must not contain scripts';
+  if (/<\s*(?:[a-z][\w.-]*:)?foreignobject[\s>/]/i.test(text))
+    return 'SVG must not contain <foreignObject>';
   if (/<\s*(?:[a-z][\w.-]*:)?(?:iframe|embed|object|handler|listener)[\s>/]/i.test(text)) {
     return 'SVG must not embed other documents';
   }
@@ -218,7 +235,8 @@ export function svgSafetyIssue(text: string): string | null {
   if (/<!doctype[^>]*\[/i.test(text)) return 'SVG must not contain an internal DTD subset';
   if (/<\?(?!xml\s)/i.test(text)) return 'SVG must not contain processing instructions';
   // Event handler attributes (onload=, onclick=, …), including namespaced ones.
-  if (/[\s"'/](?:[a-z][\w.-]*:)?on[a-z]+\s*=/i.test(text)) return 'SVG must not contain event handler attributes';
+  if (/[\s"'/](?:[a-z][\w.-]*:)?on[a-z]+\s*=/i.test(text))
+    return 'SVG must not contain event handler attributes';
   const normalized = normalizeForUrlChecks(text);
   if (normalized.includes('javascript:')) return 'SVG must not contain javascript: URLs';
   if (normalized.includes('vbscript:')) return 'SVG must not contain vbscript: URLs';
@@ -234,7 +252,8 @@ export function svgSafetyIssue(text: string): string | null {
     let h: RegExpExecArray | null;
     while ((h = hrefRe.exec(attrs))) {
       const href = (h[1] ?? h[2] ?? '').trim();
-      if (!href.startsWith('#')) return 'SVG <use> must only reference elements of the same document';
+      if (!href.startsWith('#'))
+        return 'SVG <use> must only reference elements of the same document';
     }
   }
   return null;
@@ -253,13 +272,23 @@ export function validateImage(
 ): ValidatedImage {
   if (buf.length === 0) throw new ImageValidationError('The file is empty', 'content');
   const detected = detectImageType(buf);
-  if (!detected) throw new ImageValidationError('Unsupported file type; upload a PNG, JPEG, WebP, GIF or SVG image', 'type');
-  if (!allowed.includes(detected)) throw new ImageValidationError(`Images of type ${detected} are not accepted here`, 'type');
+  if (!detected)
+    throw new ImageValidationError(
+      'Unsupported file type; upload a PNG, JPEG, WebP, GIF or SVG image',
+      'type',
+    );
+  if (!allowed.includes(detected))
+    throw new ImageValidationError(`Images of type ${detected} are not accepted here`, 'type');
   const declared = declaredMime?.split(';')[0]?.trim().toLowerCase();
-  const generic = !declared || declared === 'application/octet-stream' || declared === 'binary/octet-stream';
-  const normalizedDeclared = declared === 'image/jpg' || declared === 'image/pjpeg' ? 'image/jpeg' : declared;
+  const generic =
+    !declared || declared === 'application/octet-stream' || declared === 'binary/octet-stream';
+  const normalizedDeclared =
+    declared === 'image/jpg' || declared === 'image/pjpeg' ? 'image/jpeg' : declared;
   if (!generic && normalizedDeclared !== detected) {
-    throw new ImageValidationError(`File content (${detected}) does not match its declared type (${declared})`, 'type');
+    throw new ImageValidationError(
+      `File content (${detected}) does not match its declared type (${declared})`,
+      'type',
+    );
   }
 
   let dims: ImageDimensions | null;
@@ -278,7 +307,8 @@ export function validateImage(
       break;
     case 'image/svg+xml': {
       const text = buf.toString('utf8');
-      if (text.includes('�')) throw new ImageValidationError('SVG must be valid UTF-8 text', 'content');
+      if (text.includes('�'))
+        throw new ImageValidationError('SVG must be valid UTF-8 text', 'content');
       const issue = svgSafetyIssue(text);
       if (issue) throw new ImageValidationError(issue, 'content');
       dims = svgDimensions(text);
@@ -291,7 +321,10 @@ export function validateImage(
     }
   }
   if (dims && (dims.width > MAX_IMAGE_DIMENSION || dims.height > MAX_IMAGE_DIMENSION)) {
-    throw new ImageValidationError(`Images may be at most ${MAX_IMAGE_DIMENSION}px wide and high`, 'content');
+    throw new ImageValidationError(
+      `Images may be at most ${MAX_IMAGE_DIMENSION}px wide and high`,
+      'content',
+    );
   }
   return { mimeType: detected, width: dims?.width ?? null, height: dims?.height ?? null };
 }

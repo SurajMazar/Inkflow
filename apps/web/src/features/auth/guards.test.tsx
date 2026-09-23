@@ -26,7 +26,11 @@ describe('route guards', () => {
       <RequireAuth>
         <div data-testid="private" />
       </RequireAuth>,
-      { route: '/w/w1/trash?x=1', path: '/w/:workspaceId/trash', routes: [{ path: '/login', element: <Login /> }] },
+      {
+        route: '/w/w1/trash?x=1',
+        path: '/w/:workspaceId/trash',
+        routes: [{ path: '/login', element: <Login /> }],
+      },
     );
     expect(await screen.findByTestId('login-page')).toBeInTheDocument();
     expect(location.current?.search).toBe(`?next=${encodeURIComponent('/w/w1/trash?x=1')}`);
@@ -34,7 +38,9 @@ describe('route guards', () => {
   });
 
   it('RequireAuth renders children for signed-in users', async () => {
-    installFetchMock([{ method: 'GET', path: '/auth/me', respond: { body: { user: makeUser() } } }]);
+    installFetchMock([
+      { method: 'GET', path: '/auth/me', respond: { body: { user: makeUser() } } },
+    ]);
     renderWithProviders(
       <RequireAuth>
         <div data-testid="private" />
@@ -97,7 +103,10 @@ describe('ShareLinkPage', () => {
   });
 
   it('explains expired or revoked links', async () => {
-    installFetchMock([...anonymous, { method: 'GET', path: '/share-links/gone', respond: apiError(404, 'NOT_FOUND') }]);
+    installFetchMock([
+      ...anonymous,
+      { method: 'GET', path: '/share-links/gone', respond: apiError(404, 'NOT_FOUND') },
+    ]);
     renderWithProviders(<ShareLinkPage />, { route: '/s/gone', path: '/s/:token' });
     expect(await screen.findByText('This link has expired or was revoked')).toBeInTheDocument();
     expect(getShareToken('b7')).toBeNull();

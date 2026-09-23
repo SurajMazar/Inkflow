@@ -5,7 +5,10 @@ import { toastApiError } from '@/features/notifications/notify';
 import { useBoardMutations } from '../hooks';
 
 /** Creates a board from a template (`POST /boards { templateId }`) and opens it. */
-export function useCreateFromTemplate(workspaceId: string, location: { projectId?: string | null; folderId?: string | null } = {}) {
+export function useCreateFromTemplate(
+  workspaceId: string,
+  location: { projectId?: string | null; folderId?: string | null } = {},
+) {
   const { mutate } = useBoardMutations().create;
   const navigate = useNavigate();
   const [pendingId, setPendingId] = React.useState<string | null>(null);

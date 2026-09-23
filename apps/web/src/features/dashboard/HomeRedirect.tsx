@@ -11,9 +11,16 @@ export function HomeRedirect() {
   const workspaces = useWorkspaces();
   if (workspaces.isPending) return <FullPageLoader />;
   if (workspaces.isError) {
-    const { title, description } = describeApiError(workspaces.error, "Couldn't load your workspaces");
+    const { title, description } = describeApiError(
+      workspaces.error,
+      "Couldn't load your workspaces",
+    );
     return (
-      <FullPageMessage title={title} description={description} actions={<Button onClick={() => void workspaces.refetch()}>Try again</Button>} />
+      <FullPageMessage
+        title={title}
+        description={description}
+        actions={<Button onClick={() => void workspaces.refetch()}>Try again</Button>}
+      />
     );
   }
   const list = workspaces.data;

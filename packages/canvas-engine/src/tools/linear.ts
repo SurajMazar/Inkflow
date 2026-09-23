@@ -56,7 +56,11 @@ export class LinearTool extends BaseTool {
     return this.id !== 'line';
   }
 
-  private findCandidate(world: Point, excludeId: string | null, e: CanvasPointerEvent): BindingCandidate | null {
+  private findCandidate(
+    world: Point,
+    excludeId: string | null,
+    e: CanvasPointerEvent,
+  ): BindingCandidate | null {
     if (!this.binds || e.mod) return null;
     const candidates = this.editor.scene.queryPoint(world.x, world.y, this.px(24));
     return findBindingCandidate(candidates, world, this.px(12), {
@@ -84,7 +88,8 @@ export class LinearTool extends BaseTool {
     const tx = editor.beginGesture(`Create ${this.id}`);
     if (!tx) return;
     const startCandidate = this.findCandidate(e.world, null, e);
-    const start = startCandidate?.point ?? snapDrawingPoint(editor, e.world, new Set(), e.mod).point;
+    const start =
+      startCandidate?.point ?? snapDrawingPoint(editor, e.world, new Set(), e.mod).point;
     const el = createElement(this.id, {
       ...(editor.styleProps(this.id) as object),
       x: start.x,
@@ -94,7 +99,10 @@ export class LinearTool extends BaseTool {
         [0, 0],
       ],
       startBinding: startCandidate
-        ? createBinding(startCandidate.element.id, { portId: startCandidate.portId, anchor: startCandidate.anchor })
+        ? createBinding(startCandidate.element.id, {
+            portId: startCandidate.portId,
+            anchor: startCandidate.anchor,
+          })
         : null,
     } as never);
     const [index] = indicesAbove(editor.scene.getElementsIncludingDeleted(), 1);
@@ -121,7 +129,11 @@ export class LinearTool extends BaseTool {
     }
     if (!d.multiPoint && e.buttons === 0) return;
     if (!d.dragged && !d.multiPoint) {
-      if (Math.hypot(e.screen.x - d.down.screen.x, e.screen.y - d.down.screen.y) < DRAG_THRESHOLD_PX[e.pointerType]) return;
+      if (
+        Math.hypot(e.screen.x - d.down.screen.x, e.screen.y - d.down.screen.y) <
+        DRAG_THRESHOLD_PX[e.pointerType]
+      )
+        return;
       d.dragged = true;
     }
     this.updateEnd(e);
@@ -152,16 +164,33 @@ export class LinearTool extends BaseTool {
     const d = this.drawing;
     const tx = this.editor.activeGesture;
     if (!d || !tx) return;
-    const norm = normalizeLinearPoints(0, 0, d.points.map((p) => [p.x, p.y] as LocalPoint));
-    const patch: ElementPatch = { x: norm.x, y: norm.y, width: norm.width, height: norm.height, points: norm.points };
+    const norm = normalizeLinearPoints(
+      0,
+      0,
+      d.points.map((p) => [p.x, p.y] as LocalPoint),
+    );
+    const patch: ElementPatch = {
+      x: norm.x,
+      y: norm.y,
+      width: norm.width,
+      height: norm.height,
+      points: norm.points,
+    };
     if (this.binds) {
       patch.endBinding = d.endCandidate
-        ? createBinding(d.endCandidate.element.id, { portId: d.endCandidate.portId, anchor: d.endCandidate.anchor })
+        ? createBinding(d.endCandidate.element.id, {
+            portId: d.endCandidate.portId,
+            anchor: d.endCandidate.anchor,
+          })
         : null;
     }
     const updated = tx.update(d.id, patch);
     if (updated && updated.type === 'connector') {
-      const route = computeConnectorRoute(updated as ConnectorElement, (id) => this.editor.scene.getLiveElement(id), this.obstaclesFor(updated));
+      const route = computeConnectorRoute(
+        updated as ConnectorElement,
+        (id) => this.editor.scene.getLiveElement(id),
+        this.obstaclesFor(updated),
+      );
       tx.update(d.id, route);
     }
   }
@@ -169,8 +198,21 @@ export class LinearTool extends BaseTool {
   private obstaclesFor(el: LinearElement) {
     const pad = 200;
     return this.editor.scene
-      .queryBounds(expandBounds({ minX: el.x, minY: el.y, maxX: el.x + el.width, maxY: el.y + el.height }, pad))
-      .filter((o) => o.id !== el.id && o.type !== 'arrow' && o.type !== 'line' && o.type !== 'connector' && o.type !== 'freedraw' && o.type !== 'frame');
+      .queryBounds(
+        expandBounds(
+          { minX: el.x, minY: el.y, maxX: el.x + el.width, maxY: el.y + el.height },
+          pad,
+        ),
+      )
+      .filter(
+        (o) =>
+          o.id !== el.id &&
+          o.type !== 'arrow' &&
+          o.type !== 'line' &&
+          o.type !== 'connector' &&
+          o.type !== 'freedraw' &&
+          o.type !== 'frame',
+      );
   }
 
   override onPointerUp(e: CanvasPointerEvent): void {
@@ -206,7 +248,11 @@ export class LinearTool extends BaseTool {
     if (!d) return;
     const first = d.points[0]!;
     const last = d.points[d.points.length - 1]!;
-    const length = d.points.reduce((acc, p, i) => (i === 0 ? 0 : acc + Math.hypot(p.x - d.points[i - 1]!.x, p.y - d.points[i - 1]!.y)), 0);
+    const length = d.points.reduce(
+      (acc, p, i) =>
+        i === 0 ? 0 : acc + Math.hypot(p.x - d.points[i - 1]!.x, p.y - d.points[i - 1]!.y),
+      0,
+    );
     if (length < this.px(4) && Math.hypot(last.x - first.x, last.y - first.y) < this.px(4)) {
       editor.cancelGesture();
       editor.setState({ interaction: 'idle' });
@@ -243,11 +289,16 @@ export class LinearTool extends BaseTool {
   }
 
   override overlay(): Partial<InteractiveRenderState> {
-    const candidate = this.drawing ? (this.drawing.endCandidate ?? (this.drawing.dragged ? null : this.drawing.startCandidate)) : this.hoverCandidate;
+    const candidate = this.drawing
+      ? (this.drawing.endCandidate ?? (this.drawing.dragged ? null : this.drawing.startCandidate))
+      : this.hoverCandidate;
     const out: Partial<InteractiveRenderState> = {};
     if (candidate) {
       out.bindingHighlight = getOutlinePolygon(candidate.element);
-      out.ports = getElementPorts(candidate.element).map((p) => ({ point: p.point, active: p.id === candidate.portId }));
+      out.ports = getElementPorts(candidate.element).map((p) => ({
+        point: p.point,
+        active: p.id === candidate.portId,
+      }));
     }
     if (this.drawing) {
       out.snapLines = this.drawing.guides.lines;

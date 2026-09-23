@@ -25,7 +25,13 @@ export interface BoardSession {
 
 const SessionContext = React.createContext<BoardSession | null>(null);
 
-export function BoardSessionProvider({ value, children }: { value: BoardSession; children: React.ReactNode }) {
+export function BoardSessionProvider({
+  value,
+  children,
+}: {
+  value: BoardSession;
+  children: React.ReactNode;
+}) {
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
 }
 

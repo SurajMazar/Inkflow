@@ -27,7 +27,11 @@ export function readProp(el: SceneElement, key: string): unknown {
 }
 
 /** Common value of a property across elements (MIXED when they differ, fallback when none has it). */
-export function commonValue<T>(elements: readonly SceneElement[], key: string, fallback: T): Maybe<T> {
+export function commonValue<T>(
+  elements: readonly SceneElement[],
+  key: string,
+  fallback: T,
+): Maybe<T> {
   let found = false;
   let value: unknown;
   for (const el of elements) {
@@ -82,13 +86,17 @@ export interface Capabilities {
   opacity: boolean;
 }
 
-export function capabilitiesFor(types: readonly ElementType[], elements: readonly SceneElement[]): Capabilities {
+export function capabilitiesFor(
+  types: readonly ElementType[],
+  elements: readonly SceneElement[],
+): Capabilities {
   const any = (list: ElementType[]) => types.some((t) => list.includes(t));
   const closedLine = elements.some((e) => e.type === 'line' && e.closed);
   const labelled = elements.some((e) => 'label' in e && e.label && !isLinearElement(e));
   return {
     stroke: types.some((t) => t !== 'image'),
-    background: any([...SHAPES, 'node', 'text', 'frame', 'table', 'uml-class', 'sequence']) || closedLine,
+    background:
+      any([...SHAPES, 'node', 'text', 'frame', 'table', 'uml-class', 'sequence']) || closedLine,
     fill: any([...SHAPES, 'node']) || closedLine,
     strokeWidth: any([...SHAPES, ...LINEAR, 'freedraw', 'node', 'table', 'uml-class', 'sequence']),
     strokeStyle: any([...SHAPES, ...LINEAR, 'node', 'table', 'uml-class']),

@@ -17,9 +17,17 @@ import {
 import { isLinearElement } from './guards';
 import type { FreedrawElement, LinearElement, LocalPoint, SceneElement } from './types';
 
-export const getElementRect = (el: SceneElement): Rect => ({ x: el.x, y: el.y, width: el.width, height: el.height });
+export const getElementRect = (el: SceneElement): Rect => ({
+  x: el.x,
+  y: el.y,
+  width: el.width,
+  height: el.height,
+});
 
-export const getElementCenter = (el: SceneElement): Point => ({ x: el.x + el.width / 2, y: el.y + el.height / 2 });
+export const getElementCenter = (el: SceneElement): Point => ({
+  x: el.x + el.width / 2,
+  y: el.y + el.height / 2,
+});
 
 /** Converts a world point into the element's unrotated coordinate space (still world units). */
 export function toElementSpace(el: SceneElement, p: Point): Point {
@@ -82,7 +90,8 @@ export function getLinearPath(el: LinearElement): Point[] {
   const pts = getLinearWorldPoints(el);
   if (pts.length < 2) return pts;
   const curved =
-    (el.type !== 'connector' && el.pathStyle === 'curved') || (el.type === 'connector' && el.routing === 'curved');
+    (el.type !== 'connector' && el.pathStyle === 'curved') ||
+    (el.type === 'connector' && el.routing === 'curved');
   if (el.type === 'connector' && el.routing === 'bezier' && pts.length === 4) {
     return flattenCubic({ p0: pts[0]!, c1: pts[1]!, c2: pts[2]!, p1: pts[3]! }, 32);
   }
@@ -101,7 +110,9 @@ export function getLinearPath(el: LinearElement): Point[] {
 export function getElementBounds(el: SceneElement): Bounds {
   if (isLinearElement(el)) {
     const path = getLinearPath(el);
-    return path.length ? boundsFromPoints(path) : { minX: el.x, minY: el.y, maxX: el.x, maxY: el.y };
+    return path.length
+      ? boundsFromPoints(path)
+      : { minX: el.x, minY: el.y, maxX: el.x, maxY: el.y };
   }
   if (el.type === 'freedraw') {
     const pts = getLinearWorldPoints(el);
@@ -155,7 +166,12 @@ export function normalizeLinearPoints<P extends LocalPoint | [number, number, nu
 }
 
 function isTransparent(color: string): boolean {
-  return color === 'transparent' || color === '' || /^#[0-9a-f]{6}00$/i.test(color) || /rgba\([^)]*,\s*0\)$/.test(color);
+  return (
+    color === 'transparent' ||
+    color === '' ||
+    /^#[0-9a-f]{6}00$/i.test(color) ||
+    /rgba\([^)]*,\s*0\)$/.test(color)
+  );
 }
 
 export function isFilled(el: SceneElement): boolean {
@@ -172,7 +188,11 @@ export interface HitTestOptions {
 const FRAME_TITLE_HEIGHT = 24;
 
 /** Precise hit test of a world point against an element's rendered geometry. */
-export function hitTestElement(el: SceneElement, worldPoint: Point, options: HitTestOptions): boolean {
+export function hitTestElement(
+  el: SceneElement,
+  worldPoint: Point,
+  options: HitTestOptions,
+): boolean {
   const tol = options.tolerance + el.strokeWidth / 2;
   if (isLinearElement(el)) {
     const closed = el.type === 'line' && el.closed;
@@ -196,7 +216,10 @@ export function hitTestElement(el: SceneElement, worldPoint: Point, options: Hit
     const onTitle = p.y >= y - FRAME_TITLE_HEIGHT && p.y <= y && p.x >= x && p.x <= x + w;
     if (onTitle) return true;
     const nearEdge =
-      Math.abs(p.x - x) <= tol || Math.abs(p.x - (x + w)) <= tol || Math.abs(p.y - y) <= tol || Math.abs(p.y - (y + h)) <= tol;
+      Math.abs(p.x - x) <= tol ||
+      Math.abs(p.x - (x + w)) <= tol ||
+      Math.abs(p.y - y) <= tol ||
+      Math.abs(p.y - (y + h)) <= tol;
     return nearEdge;
   }
 
@@ -234,13 +257,17 @@ function hasVisibleLabel(el: SceneElement): boolean {
 /** True when the element's bounds are fully contained in the given world bounds. */
 export function isElementInsideBounds(el: SceneElement, bounds: Bounds): boolean {
   const b = getElementBounds(el);
-  return b.minX >= bounds.minX && b.maxX <= bounds.maxX && b.minY >= bounds.minY && b.maxY <= bounds.maxY;
+  return (
+    b.minX >= bounds.minX && b.maxX <= bounds.maxX && b.minY >= bounds.minY && b.maxY <= bounds.maxY
+  );
 }
 
 /** True when any part of the element's rendered geometry intersects the bounds (eraser, lasso). */
 export function elementIntersectsBounds(el: SceneElement, bounds: Bounds): boolean {
   const b = getElementBounds(el);
-  return b.minX <= bounds.maxX && b.maxX >= bounds.minX && b.minY <= bounds.maxY && b.maxY >= bounds.minY;
+  return (
+    b.minX <= bounds.maxX && b.maxX >= bounds.minX && b.minY <= bounds.maxY && b.maxY >= bounds.minY
+  );
 }
 
 export { FRAME_TITLE_HEIGHT };

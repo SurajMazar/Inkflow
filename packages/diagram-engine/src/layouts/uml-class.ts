@@ -10,7 +10,11 @@ export const UML_MIN_WIDTH = 140;
  * Member text conventions (Mermaid-compatible): a trailing `$` marks a static member (underlined),
  * a trailing `*` marks an abstract member (italic). Markers are stripped from the displayed text.
  */
-export function parseUmlMember(raw: string): { text: string; isStatic: boolean; isAbstract: boolean } {
+export function parseUmlMember(raw: string): {
+  text: string;
+  isStatic: boolean;
+  isAbstract: boolean;
+} {
   let text = raw.trim();
   let isStatic = false;
   let isAbstract = false;
@@ -26,7 +30,12 @@ export function parseUmlMember(raw: string): { text: string; isStatic: boolean; 
   return { text, isStatic, isAbstract };
 }
 
-function natural(el: Pick<UmlClassElement, 'name' | 'stereotype' | 'attributes' | 'methods' | 'isAbstract' | 'fontFamily' | 'fontSize'>) {
+function natural(
+  el: Pick<
+    UmlClassElement,
+    'name' | 'stereotype' | 'attributes' | 'methods' | 'isAbstract' | 'fontFamily' | 'fontSize'
+  >,
+) {
   const lineHeight = Math.round(el.fontSize * 1.45);
   const family = el.fontFamily;
   const nameLines: UmlClassLayout['nameLines'] = [];
@@ -46,13 +55,32 @@ function natural(el: Pick<UmlClassElement, 'name' | 'stereotype' | 'attributes' 
   const methodsY = attributesY + attributesHeight;
   const methodLines = el.methods.map((a, i) => {
     const m = parseUmlMember(a);
-    return { text: m.text, y: methodsY + UML_PADDING_Y + i * lineHeight, underline: m.isStatic, italic: m.isAbstract };
+    return {
+      text: m.text,
+      y: methodsY + UML_PADDING_Y + i * lineHeight,
+      underline: m.isStatic,
+      italic: m.isAbstract,
+    };
   });
   const methodsHeight = UML_PADDING_Y * 2 + el.methods.length * lineHeight;
   let textMax = 0;
-  for (const l of nameLines) textMax = Math.max(textMax, textWidth(l.text, { fontFamily: family, fontSize: el.fontSize, bold: l.bold, italic: l.italic }));
-  for (const l of attributeLines) textMax = Math.max(textMax, textWidth(l.text, { fontFamily: family, fontSize: el.fontSize }));
-  for (const l of methodLines) textMax = Math.max(textMax, textWidth(l.text, { fontFamily: family, fontSize: el.fontSize, italic: l.italic }));
+  for (const l of nameLines)
+    textMax = Math.max(
+      textMax,
+      textWidth(l.text, {
+        fontFamily: family,
+        fontSize: el.fontSize,
+        bold: l.bold,
+        italic: l.italic,
+      }),
+    );
+  for (const l of attributeLines)
+    textMax = Math.max(textMax, textWidth(l.text, { fontFamily: family, fontSize: el.fontSize }));
+  for (const l of methodLines)
+    textMax = Math.max(
+      textMax,
+      textWidth(l.text, { fontFamily: family, fontSize: el.fontSize, italic: l.italic }),
+    );
   return {
     lineHeight,
     nameLines,

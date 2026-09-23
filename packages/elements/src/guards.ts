@@ -15,7 +15,14 @@ import type {
   SequenceElement,
 } from './types';
 
-export const SHAPE_TYPES = ['rectangle', 'ellipse', 'diamond', 'triangle', 'polygon', 'star'] as const;
+export const SHAPE_TYPES = [
+  'rectangle',
+  'ellipse',
+  'diamond',
+  'triangle',
+  'polygon',
+  'star',
+] as const;
 export const LINEAR_TYPES = ['line', 'arrow', 'connector'] as const;
 export const BINDABLE_TYPES: readonly ElementType[] = [
   ...SHAPE_TYPES,
@@ -38,11 +45,15 @@ export const isImageElement = (el: SceneElement): el is ImageElement => el.type 
 export const isFrameElement = (el: SceneElement): el is FrameElement => el.type === 'frame';
 export const isNodeElement = (el: SceneElement): el is NodeElement => el.type === 'node';
 export const isTableElement = (el: SceneElement): el is TableElement => el.type === 'table';
-export const isUmlClassElement = (el: SceneElement): el is UmlClassElement => el.type === 'uml-class';
-export const isSequenceElement = (el: SceneElement): el is SequenceElement => el.type === 'sequence';
+export const isUmlClassElement = (el: SceneElement): el is UmlClassElement =>
+  el.type === 'uml-class';
+export const isSequenceElement = (el: SceneElement): el is SequenceElement =>
+  el.type === 'sequence';
 
 /** Elements whose endpoints can attach to other elements. */
-export const isBindingElement = (el: SceneElement): el is Extract<LinearElement, { type: 'arrow' | 'connector' }> =>
+export const isBindingElement = (
+  el: SceneElement,
+): el is Extract<LinearElement, { type: 'arrow' | 'connector' }> =>
   el.type === 'arrow' || el.type === 'connector';
 
 /** Elements that connectors and arrows can attach to. */

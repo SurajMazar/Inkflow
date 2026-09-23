@@ -9,10 +9,15 @@ import { SettingsSection } from '../components';
 export function WorkspaceSettingsLinks() {
   const workspaces = useWorkspaces();
   const lastId = getLastWorkspaceId();
-  const list = [...(workspaces.data ?? [])].sort((a, b) => Number(b.id === lastId) - Number(a.id === lastId) || a.name.localeCompare(b.name));
+  const list = [...(workspaces.data ?? [])].sort(
+    (a, b) => Number(b.id === lastId) - Number(a.id === lastId) || a.name.localeCompare(b.name),
+  );
   return (
     <div className="grid gap-8">
-      <SettingsSection title="Your workspaces" description="Members, invitations and workspace names are managed per workspace.">
+      <SettingsSection
+        title="Your workspaces"
+        description="Members, invitations and workspace names are managed per workspace."
+      >
         {workspaces.isPending ? (
           <div className="grid gap-2 p-4">
             <Skeleton className="h-10 w-full" />
@@ -36,7 +41,10 @@ export function WorkspaceSettingsLinks() {
                   className="flex items-center gap-3 px-4 py-3 outline-none transition-colors hover:bg-accent/60 focus-visible:bg-accent/60"
                   data-testid="settings-workspace-link"
                 >
-                  <span aria-hidden className="flex size-8 items-center justify-center rounded-md bg-primary text-sm font-semibold text-primary-foreground">
+                  <span
+                    aria-hidden
+                    className="flex size-8 items-center justify-center rounded-md bg-primary text-sm font-semibold text-primary-foreground"
+                  >
                     {workspace.name.charAt(0).toUpperCase()}
                   </span>
                   <span className="min-w-0 flex-1">
@@ -45,7 +53,8 @@ export function WorkspaceSettingsLinks() {
                       {workspace.id === lastId ? <Badge variant="outline">Current</Badge> : null}
                     </span>
                     <span className="block truncate text-[13px] text-muted-foreground">
-                      {formatRole(workspace.role)} · {pluralize(workspace.memberCount, 'member')} · {pluralize(workspace.boardCount, 'board')}
+                      {formatRole(workspace.role)} · {pluralize(workspace.memberCount, 'member')} ·{' '}
+                      {pluralize(workspace.boardCount, 'board')}
                     </span>
                   </span>
                   <ChevronRight className="size-4 text-muted-foreground" aria-hidden />

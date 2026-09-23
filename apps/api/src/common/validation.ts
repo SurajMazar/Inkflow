@@ -28,7 +28,8 @@ export class ZodValidationPipe<S extends z.ZodType> implements PipeTransform<unk
   transform(value: unknown): z.output<S> {
     const input = value === undefined && this.options.emptyAsObject ? {} : value;
     const result = this.schema.safeParse(input);
-    if (!result.success) throw Errors.validation('Request validation failed', formatZodIssues(result.error));
+    if (!result.success)
+      throw Errors.validation('Request validation failed', formatZodIssues(result.error));
     return result.data;
   }
 }
@@ -39,9 +40,11 @@ export function parseOrThrow<S extends z.ZodType>(schema: S, value: unknown): z.
 }
 
 /** Body parameter validated by a Zod schema (a missing body is treated as `{}`). */
-export const ZBody = <S extends z.ZodType>(schema: S) => Body(new ZodValidationPipe(schema, { emptyAsObject: true }));
+export const ZBody = <S extends z.ZodType>(schema: S) =>
+  Body(new ZodValidationPipe(schema, { emptyAsObject: true }));
 /** Query object validated by a Zod schema. */
-export const ZQuery = <S extends z.ZodType>(schema: S) => Query(new ZodValidationPipe(schema, { emptyAsObject: true }));
+export const ZQuery = <S extends z.ZodType>(schema: S) =>
+  Query(new ZodValidationPipe(schema, { emptyAsObject: true }));
 
 /** Route params that must be UUIDs: anything else cannot exist, so it is a 404 (never a DB error). */
 export class UuidPipe implements PipeTransform<unknown, string> {
@@ -57,7 +60,10 @@ export const IdParam = (name = 'id', what = 'Resource') => Param(name, new UuidP
 /** OpenAPI JSON schema from a Zod schema (input side). */
 export function toOpenApiSchema(schema: z.ZodType): Record<string, unknown> {
   try {
-    const json = z.toJSONSchema(schema, { io: 'input', unrepresentable: 'any' }) as Record<string, unknown>;
+    const json = z.toJSONSchema(schema, { io: 'input', unrepresentable: 'any' }) as Record<
+      string,
+      unknown
+    >;
     const { $schema: _ignored, ...rest } = json;
     return rest;
   } catch {
@@ -70,7 +76,10 @@ export const ApiZodBody = (schema: z.ZodType) => ApiBody({ schema: toOpenApiSche
 
 /** Documents the properties of a query object in OpenAPI. */
 export function ApiZodQuery(schema: z.ZodObject) {
-  const json = toOpenApiSchema(schema) as { properties?: Record<string, Record<string, unknown>>; required?: string[] };
+  const json = toOpenApiSchema(schema) as {
+    properties?: Record<string, Record<string, unknown>>;
+    required?: string[];
+  };
   const decorators = Object.entries(json.properties ?? {}).map(([name, prop]) =>
     ApiQuery({ name, required: json.required?.includes(name) ?? false, schema: prop }),
   );

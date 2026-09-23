@@ -1,7 +1,13 @@
 import { QueryClient } from '@tanstack/react-query';
 import { ApiError } from '@inkflow/shared';
 
-const NON_RETRYABLE = new Set(['UNAUTHORIZED', 'SESSION_EXPIRED', 'FORBIDDEN', 'NOT_FOUND', 'VALIDATION_FAILED']);
+const NON_RETRYABLE = new Set([
+  'UNAUTHORIZED',
+  'SESSION_EXPIRED',
+  'FORBIDDEN',
+  'NOT_FOUND',
+  'VALIDATION_FAILED',
+]);
 
 /** Retry transient failures (network, 5xx) a couple of times; never retry 4xx. */
 export function shouldRetryQuery(failureCount: number, error: unknown): boolean {

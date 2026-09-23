@@ -78,7 +78,10 @@ export class SharingService {
       include: {
         owner: { select: publicUserSelect },
         members: { include: { user: { select: publicUserSelect } }, orderBy: { createdAt: 'asc' } },
-        shares: { include: { invitedBy: { select: publicUserSelect } }, orderBy: { createdAt: 'asc' } },
+        shares: {
+          include: { invitedBy: { select: publicUserSelect } },
+          orderBy: { createdAt: 'asc' },
+        },
         shareLinks: {
           where: { revokedAt: null, OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }] },
           include: { createdBy: { select: publicUserSelect } },
@@ -114,15 +117,23 @@ export class SharingService {
     return this.sharing(boardId);
   }
 
-  async share(principal: Principal, boardId: string, input: AddBoardShareRequest): Promise<BoardSharingDto> {
+  async share(
+    principal: Principal,
+    boardId: string,
+    input: AddBoardShareRequest,
+  ): Promise<BoardSharingDto> {
     const access = await this.access.requireBoard(boardId, principal, 'EDITOR');
     if (!access.userId) throw Errors.unauthorized('Sign in to share boards');
     const role = (input.role ?? 'EDITOR') as BoardRole;
-    if (!boardRoleAtLeast(access.role, role)) throw Errors.forbidden('You cannot grant a role higher than your own');
+    if (!boardRoleAtLeast(access.role, role))
+      throw Errors.forbidden('You cannot grant a role higher than your own');
     const email = input.email.trim().toLowerCase();
     const board = access.board;
     const [inviter, target] = await Promise.all([
-      this.prisma.user.findUniqueOrThrow({ where: { id: access.userId }, select: publicUserSelect }),
+      this.prisma.user.findUniqueOrThrow({
+        where: { id: access.userId },
+        select: publicUserSelect,
+      }),
       this.prisma.user.findUnique({ where: { email } }),
     ]);
 
@@ -132,9 +143,14 @@ export class SharingService {
           where: { boardId_userId: { boardId, userId: target.id } },
         });
         if (!existing) {
-          await this.prisma.boardMember.create({ data: { boardId, userId: target.id, role, addedById: access.userId } });
+          await this.prisma.boardMember.create({
+            data: { boardId, userId: target.id, role, addedById: access.userId },
+          });
         } else if (!boardRoleAtLeast(existing.role, role)) {
-          await this.prisma.boardMember.update({ where: { boardId_userId: { boardId, userId: target.id } }, data: { role } });
+          await this.prisma.boardMember.update({
+            where: { boardId_userId: { boardId, userId: target.id } },
+            data: { role },
+          });
         }
         await this.prisma.share.deleteMany({ where: { boardId, email } });
         const mail = this.onboarding.boardSharedMail({
@@ -163,7 +179,13 @@ export class SharingService {
     } else {
       await this.prisma.share.upsert({
         where: { boardId_email: { boardId, email } },
-        create: { boardId, email, role, message: input.message ?? null, invitedById: access.userId },
+        create: {
+          boardId,
+          email,
+          role,
+          message: input.message ?? null,
+          invitedById: access.userId,
+        },
         update: { role, message: input.message ?? null, invitedById: access.userId },
       });
       const mail = this.onboarding.boardSharedMail({
@@ -180,16 +202,29 @@ export class SharingService {
     return this.sharing(boardId);
   }
 
-  async updateMember(principal: Principal, boardId: string, userId: string, input: UpdateBoardMemberRequest): Promise<BoardSharingDto> {
+  async updateMember(
+    principal: Principal,
+    boardId: string,
+    userId: string,
+    input: UpdateBoardMemberRequest,
+  ): Promise<BoardSharingDto> {
     const access = await this.access.requireBoard(boardId, principal, 'OWNER');
-    if (userId === access.board.ownerId) throw Errors.conflict("The board owner's role cannot be changed");
-    const res = await this.prisma.boardMember.updateMany({ where: { boardId, userId }, data: { role: input.role } });
+    if (userId === access.board.ownerId)
+      throw Errors.conflict("The board owner's role cannot be changed");
+    const res = await this.prisma.boardMember.updateMany({
+      where: { boardId, userId },
+      data: { role: input.role },
+    });
     if (res.count === 0) throw Errors.notFound('Member');
     await this.realtime.emitEvent(boardId, { kind: 'permissions-changed' });
     return this.sharing(boardId);
   }
 
-  async removeMember(principal: Principal, boardId: string, userId: string): Promise<BoardSharingDto> {
+  async removeMember(
+    principal: Principal,
+    boardId: string,
+    userId: string,
+  ): Promise<BoardSharingDto> {
     const self = principal.userId === userId;
     const access = await this.access.requireBoard(boardId, principal, self ? 'VIEWER' : 'OWNER');
     if (userId === access.board.ownerId) throw Errors.conflict('The board owner cannot be removed');
@@ -203,18 +238,27 @@ export class SharingService {
     return this.sharing(boardId);
   }
 
-  async revokeShare(principal: Principal, boardId: string, shareId: string): Promise<BoardSharingDto> {
+  async revokeShare(
+    principal: Principal,
+    boardId: string,
+    shareId: string,
+  ): Promise<BoardSharingDto> {
     await this.access.requireBoard(boardId, principal, 'EDITOR');
     const res = await this.prisma.share.deleteMany({ where: { id: shareId, boardId } });
     if (res.count === 0) throw Errors.notFound('Share');
     return this.sharing(boardId);
   }
 
-  async createLink(principal: Principal, boardId: string, input: CreateShareLinkRequest): Promise<ShareLinkDto> {
+  async createLink(
+    principal: Principal,
+    boardId: string,
+    input: CreateShareLinkRequest,
+  ): Promise<ShareLinkDto> {
     const access = await this.access.requireBoard(boardId, principal, 'EDITOR');
     if (!access.userId) throw Errors.unauthorized('Sign in to create share links');
     const role = input.role ?? 'VIEWER';
-    if (!boardRoleAtLeast(access.role, role)) throw Errors.forbidden('You cannot grant a role higher than your own');
+    if (!boardRoleAtLeast(access.role, role))
+      throw Errors.forbidden('You cannot grant a role higher than your own');
     const issued = this.cipher.issue();
     const link = await this.prisma.shareLink.create({
       data: {
@@ -223,7 +267,9 @@ export class SharingService {
         tokenHash: issued.tokenHash,
         tokenCiphertext: issued.ciphertext,
         createdById: access.userId,
-        expiresAt: input.expiresInHours ? new Date(Date.now() + input.expiresInHours * 3_600_000) : null,
+        expiresAt: input.expiresInHours
+          ? new Date(Date.now() + input.expiresInHours * 3_600_000)
+          : null,
       },
       include: { createdBy: { select: publicUserSelect } },
     });
@@ -243,8 +289,16 @@ export class SharingService {
   async resolve(token: string): Promise<ResolvedShareLinkDto> {
     const link = await this.access.resolveShareLink(token);
     if (!link) throw Errors.notFound('Share link');
-    const board = await this.prisma.board.findUnique({ where: { id: link.boardId }, select: { title: true, deletedAt: true } });
+    const board = await this.prisma.board.findUnique({
+      where: { id: link.boardId },
+      select: { title: true, deletedAt: true },
+    });
     if (!board || board.deletedAt) throw Errors.notFound('Share link');
-    return { boardId: link.boardId, boardTitle: board.title, role: link.role, expiresAt: iso(link.expiresAt) };
+    return {
+      boardId: link.boardId,
+      boardTitle: board.title,
+      role: link.role,
+      expiresAt: iso(link.expiresAt),
+    };
   }
 }

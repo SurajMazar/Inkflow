@@ -12,7 +12,10 @@ export interface CreatePrismaClientOptions {
  * Creates a Prisma client for the given connection string (defaults to `DATABASE_URL`).
  * Callers own the client and must `$disconnect()` it.
  */
-export function createPrismaClient(url?: string, options: CreatePrismaClientOptions = {}): PrismaClient {
+export function createPrismaClient(
+  url?: string,
+  options: CreatePrismaClientOptions = {},
+): PrismaClient {
   const log: ('warn' | 'error')[] = options.logWarnings === false ? [] : ['warn', 'error'];
   return new PrismaClient({
     ...(url ? { datasources: { db: { url } } } : {}),

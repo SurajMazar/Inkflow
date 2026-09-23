@@ -48,10 +48,17 @@ function assertValidElements(elements: readonly SceneElement[], label: string) {
         if (!b) continue;
         const target = elements.find((e) => e.id === b.elementId);
         expect(target, `${label}: binding target exists`).toBeDefined();
-        if (b.portId) expect(getElementPorts(target!).some((p) => p.id === b.portId), `${label}: port ${b.portId}`).toBe(true);
+        if (b.portId)
+          expect(
+            getElementPorts(target!).some((p) => p.id === b.portId),
+            `${label}: port ${b.portId}`,
+          ).toBe(true);
       }
     }
-    if (el.frameId) expect(elements.find((e) => e.id === el.frameId)?.type, `${label}: frame exists`).toBe('frame');
+    if (el.frameId)
+      expect(elements.find((e) => e.id === el.frameId)?.type, `${label}: frame exists`).toBe(
+        'frame',
+      );
   }
 }
 
@@ -60,45 +67,82 @@ describe('templates and seed boards', () => {
     const keys = SYSTEM_TEMPLATES.map((t) => t.key);
     expect(new Set(keys).size).toBe(keys.length);
     for (const k of [
-      'microservices', 'rest-api', 'auth-flow', 'oauth2-authorization-code', 'ci-cd-pipeline', 'database-erd',
-      'cloud-architecture', 'kubernetes', 'event-driven', 'frontend-backend', 'payment-system', 'user-registration',
-      'flowchart-basics', 'uml-class-diagram', 'state-machine', 'activity-diagram', 'use-case-diagram',
-      'component-diagram', 'network-diagram', 'data-flow-diagram', 'org-chart', 'mind-map', 'user-flow',
-      'kanban-board', 'retrospective',
+      'microservices',
+      'rest-api',
+      'auth-flow',
+      'oauth2-authorization-code',
+      'ci-cd-pipeline',
+      'database-erd',
+      'cloud-architecture',
+      'kubernetes',
+      'event-driven',
+      'frontend-backend',
+      'payment-system',
+      'user-registration',
+      'flowchart-basics',
+      'uml-class-diagram',
+      'state-machine',
+      'activity-diagram',
+      'use-case-diagram',
+      'component-diagram',
+      'network-diagram',
+      'data-flow-diagram',
+      'org-chart',
+      'mind-map',
+      'user-flow',
+      'kanban-board',
+      'retrospective',
     ]) {
       expect(getTemplate(k), k).toBeDefined();
     }
-    for (const t of [...SYSTEM_TEMPLATES, ...SEED_BOARDS]) expect(TEMPLATE_CATEGORIES).toContain(t.category);
+    for (const t of [...SYSTEM_TEMPLATES, ...SEED_BOARDS])
+      expect(TEMPLATE_CATEGORIES).toContain(t.category);
     expect(SEED_BOARDS.length).toBe(6);
     expect(getTemplate('seed-kanban')).toBe(SEED_BOARDS[5]);
     expect(getTemplate('nope')).toBeUndefined();
   });
 
-  it.each([...SYSTEM_TEMPLATES, ...SEED_BOARDS].map((t) => [t.key, t] as const))('%s builds valid, parseable content', (key, t) => {
-    const first = t.build();
-    const second = t.build();
-    expect(first.elements.length).toBeGreaterThan(2);
-    // Fresh ids every call.
-    const ids1 = new Set(first.elements.map((e) => e.id));
-    expect(second.elements.some((e) => ids1.has(e.id))).toBe(false);
-    // Unique, valid, ascending fractional indices.
-    const idx = first.elements.map((e) => e.index);
-    for (const i of idx) expect(isValidOrderKey(i)).toBe(true);
-    for (let i = 1; i < idx.length; i++) expect(idx[i - 1]! < idx[i]!).toBe(true);
-    assertValidElements(first.elements, key);
-    const parsed = parseDocument({ type: 'inkflow', version: CURRENT_DOCUMENT_VERSION, elements: first.elements, appState: first.appState, files: {} });
-    expect(parsed.issues).toEqual([]);
-    expect(parsed.document.elements.length).toBe(first.elements.length);
-    // Frames are drawn beneath their children.
-    for (const el of first.elements) {
-      if (!el.frameId) continue;
-      const frame = first.elements.find((e) => e.id === el.frameId)!;
-      expect(frame.index < el.index).toBe(true);
-    }
-  });
+  it.each([...SYSTEM_TEMPLATES, ...SEED_BOARDS].map((t) => [t.key, t] as const))(
+    '%s builds valid, parseable content',
+    (key, t) => {
+      const first = t.build();
+      const second = t.build();
+      expect(first.elements.length).toBeGreaterThan(2);
+      // Fresh ids every call.
+      const ids1 = new Set(first.elements.map((e) => e.id));
+      expect(second.elements.some((e) => ids1.has(e.id))).toBe(false);
+      // Unique, valid, ascending fractional indices.
+      const idx = first.elements.map((e) => e.index);
+      for (const i of idx) expect(isValidOrderKey(i)).toBe(true);
+      for (let i = 1; i < idx.length; i++) expect(idx[i - 1]! < idx[i]!).toBe(true);
+      assertValidElements(first.elements, key);
+      const parsed = parseDocument({
+        type: 'inkflow',
+        version: CURRENT_DOCUMENT_VERSION,
+        elements: first.elements,
+        appState: first.appState,
+        files: {},
+      });
+      expect(parsed.issues).toEqual([]);
+      expect(parsed.document.elements.length).toBe(first.elements.length);
+      // Frames are drawn beneath their children.
+      for (const el of first.elements) {
+        if (!el.frameId) continue;
+        const frame = first.elements.find((e) => e.id === el.frameId)!;
+        expect(frame.index < el.index).toBe(true);
+      }
+    },
+  );
 
   it('connect nodes with bound connectors in diagram templates', () => {
-    for (const key of ['microservices', 'database-erd', 'uml-class-diagram', 'auth-flow', 'mind-map', 'org-chart']) {
+    for (const key of [
+      'microservices',
+      'database-erd',
+      'uml-class-diagram',
+      'auth-flow',
+      'mind-map',
+      'org-chart',
+    ]) {
       const { elements } = getTemplate(key)!.build();
       const connectors = elements.filter((e): e is ConnectorElement => e.type === 'connector');
       expect(connectors.length, key).toBeGreaterThan(3);
@@ -111,11 +155,17 @@ describe('templates and seed boards', () => {
     const tables = erd.filter((e): e is TableElement => e.type === 'table').map((t) => t.name);
     expect(tables).toEqual(expect.arrayContaining(['users', 'orders', 'products', 'order_items']));
     const rel = erd.filter((e): e is ConnectorElement => e.type === 'connector');
-    expect(rel.every((r) => r.edgeKind === 'relationship' && r.routing === 'orthogonal')).toBe(true);
+    expect(rel.every((r) => r.edgeKind === 'relationship' && r.routing === 'orthogonal')).toBe(
+      true,
+    );
     expect(rel.every((r) => r.startBinding!.portId!.startsWith('col:'))).toBe(true);
     const kanban = getTemplate('kanban-board')!.build().elements;
     expect(kanban.filter((e) => e.type === 'frame').length).toBe(5);
-    expect(kanban.filter((e) => e.type === 'node' && e.shape === 'sticky').every((e) => e.frameId !== null)).toBe(true);
+    expect(
+      kanban
+        .filter((e) => e.type === 'node' && e.shape === 'sticky')
+        .every((e) => e.frameId !== null),
+    ).toBe(true);
     const oauth = getTemplate('oauth2-authorization-code')!.build().elements;
     expect(oauth.some((e) => e.type === 'sequence')).toBe(true);
   });
@@ -126,22 +176,47 @@ describe('library', () => {
     expect(LIBRARY_ITEMS.length).toBeGreaterThanOrEqual(60);
     expect(new Set(LIBRARY_ITEMS.map((i) => i.id)).size).toBe(LIBRARY_ITEMS.length);
     const cats = new Set(LIBRARY_ITEMS.map((i) => i.category));
-    for (const c of ['basic', 'flowchart', 'infrastructure', 'network', 'cloud', 'software', 'data', 'people', 'uml', 'er']) expect(cats.has(c as never), c).toBe(true);
-    for (const id of ['three-tier-web-app', 'er-table', 'uml-class', 'sequence-diagram', 'decision-block']) expect(LIBRARY_ITEMS.some((i) => i.id === id), id).toBe(true);
+    for (const c of [
+      'basic',
+      'flowchart',
+      'infrastructure',
+      'network',
+      'cloud',
+      'software',
+      'data',
+      'people',
+      'uml',
+      'er',
+    ])
+      expect(cats.has(c as never), c).toBe(true);
+    for (const id of [
+      'three-tier-web-app',
+      'er-table',
+      'uml-class',
+      'sequence-diagram',
+      'decision-block',
+    ])
+      expect(
+        LIBRARY_ITEMS.some((i) => i.id === id),
+        id,
+      ).toBe(true);
   });
 
-  it.each(LIBRARY_ITEMS.map((i) => [i.id, i] as const))('%s creates fresh, valid elements centred on the point', (_id, item) => {
-    const center = { x: 500, y: -300 };
-    const a = item.create(center);
-    const b = item.create(center);
-    expect(a.length).toBeGreaterThan(0);
-    const ids = new Set(a.map((e) => e.id));
-    expect(b.some((e) => ids.has(e.id))).toBe(false);
-    assertValidElements(a, item.id);
-    const bounds = getCommonBounds(a)!;
-    expect((bounds.minX + bounds.maxX) / 2).toBeCloseTo(center.x, 0);
-    expect((bounds.minY + bounds.maxY) / 2).toBeCloseTo(center.y, 0);
-  });
+  it.each(LIBRARY_ITEMS.map((i) => [i.id, i] as const))(
+    '%s creates fresh, valid elements centred on the point',
+    (_id, item) => {
+      const center = { x: 500, y: -300 };
+      const a = item.create(center);
+      const b = item.create(center);
+      expect(a.length).toBeGreaterThan(0);
+      const ids = new Set(a.map((e) => e.id));
+      expect(b.some((e) => ids.has(e.id))).toBe(false);
+      assertValidElements(a, item.id);
+      const bounds = getCommonBounds(a)!;
+      expect((bounds.minX + bounds.maxX) / 2).toBeCloseTo(center.x, 0);
+      expect((bounds.minY + bounds.maxY) / 2).toBeCloseTo(center.y, 0);
+    },
+  );
 
   it('searches by name, id and keyword', () => {
     expect(searchLibrary('database')[0]!.name).toBe('Database');
@@ -183,18 +258,35 @@ describe('builders', () => {
 
   it('ER builders size tables and use crow-foot arrowheads on column ports', () => {
     const users = createErTable('users', [{ name: 'id', dataType: 'uuid', primaryKey: true }]);
-    const orders = createErTable('orders', [{ name: 'id', dataType: 'uuid', primaryKey: true }, { name: 'user_id', dataType: 'uuid', foreignKey: true }], { x: 400 });
+    const orders = createErTable(
+      'orders',
+      [
+        { name: 'id', dataType: 'uuid', primaryKey: true },
+        { name: 'user_id', dataType: 'uuid', foreignKey: true },
+      ],
+      { x: 400 },
+    );
     expect({ width: users.width, height: users.height }).toEqual(measureTable(users));
     expect(users.columns[0]!.nullable).toBe(false);
-    const rel = createErRelationship(users, users.columns[0]!.id, orders, orders.columns[1]!.id, 'one-to-many');
+    const rel = createErRelationship(
+      users,
+      users.columns[0]!.id,
+      orders,
+      orders.columns[1]!.id,
+      'one-to-many',
+    );
     expect(rel.startArrowhead).toBe('er-one-only');
     expect(rel.endArrowhead).toBe('er-zero-many');
     expect(rel.edgeKind).toBe('relationship');
     expect(rel.routing).toBe('orthogonal');
     expect(rel.startBinding!.portId).toBe(`col:${users.columns[0]!.id}:right`);
     expect(rel.endBinding!.portId).toBe(`col:${orders.columns[1]!.id}:left`);
-    expect(createErRelationship(users, null, orders, null, 'many-to-many').startArrowhead).toBe('er-zero-many');
-    expect(createErRelationship(orders, null, users, null, 'one-to-one').endArrowhead).toBe('er-one-only');
+    expect(createErRelationship(users, null, orders, null, 'many-to-many').startArrowhead).toBe(
+      'er-zero-many',
+    );
+    expect(createErRelationship(orders, null, users, null, 'one-to-one').endArrowhead).toBe(
+      'er-one-only',
+    );
     expect(validateElement(rel).success).toBe(true);
   });
 
@@ -209,17 +301,24 @@ describe('builders', () => {
     expect(real.strokeStyle).toBe('dashed');
     expect(createUmlRelation(base, sub, 'composition').startArrowhead).toBe('diamond');
     expect(createUmlRelation(base, sub, 'aggregation').startArrowhead).toBe('diamond-outline');
-    expect(createUmlRelation(base, sub, 'dependency')).toMatchObject({ strokeStyle: 'dashed', endArrowhead: 'arrow', edgeKind: 'dependency' });
+    expect(createUmlRelation(base, sub, 'dependency')).toMatchObject({
+      strokeStyle: 'dashed',
+      endArrowhead: 'arrow',
+      edgeKind: 'dependency',
+    });
     expect(createUmlRelation(base, sub, 'association').edgeKind).toBe('association');
     expect(validateElement(inh).success).toBe(true);
   });
 
   it('createSequenceDiagram maps indices to participant ids and sizes the element', () => {
-    const seq = createSequenceDiagram([{ name: 'A' }, { name: 'B', kind: 'database' }], [
-      { from: 0, to: 1, label: 'query' },
-      { from: 1, to: 0, label: 'rows', kind: 'return' },
-      { from: 5, to: 0, label: 'ignored' },
-    ]);
+    const seq = createSequenceDiagram(
+      [{ name: 'A' }, { name: 'B', kind: 'database' }],
+      [
+        { from: 0, to: 1, label: 'query' },
+        { from: 1, to: 0, label: 'rows', kind: 'return' },
+        { from: 5, to: 0, label: 'ignored' },
+      ],
+    );
     expect(seq.participants.map((p) => p.kind)).toEqual(['participant', 'database']);
     expect(seq.messages.length).toBe(2);
     expect(seq.messages[0]!.from).toBe(seq.participants[0]!.id);

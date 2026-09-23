@@ -1,6 +1,11 @@
 import type { EditorHost } from '@inkflow/canvas-engine';
 import type { FileMetadata, SceneElement } from '@inkflow/elements';
-import { detectImportKind, importExcalidraw, importMermaid, importSvgAsElements } from '@inkflow/importers';
+import {
+  detectImportKind,
+  importExcalidraw,
+  importMermaid,
+  importSvgAsElements,
+} from '@inkflow/importers';
 import { ApiError, type FileDto } from '@inkflow/shared';
 import { api, uploadWithProgress } from '@/lib/api';
 import { localStore } from '../persistence/local-store';
@@ -18,12 +23,17 @@ export function fileDtoToMetadata(dto: FileDto, shareToken: string | null): File
 }
 
 function isNetworkError(error: unknown): boolean {
-  return error instanceof ApiError ? error.code === 'SERVICE_UNAVAILABLE' : error instanceof TypeError;
+  return error instanceof ApiError
+    ? error.code === 'SERVICE_UNAVAILABLE'
+    : error instanceof TypeError;
 }
 
 function waitForOnline(): Promise<void> {
-  if (typeof navigator === 'undefined' || navigator.onLine) return new Promise((r) => setTimeout(r, 5000));
-  return new Promise((resolve) => window.addEventListener('online', () => resolve(), { once: true }));
+  if (typeof navigator === 'undefined' || navigator.onLine)
+    return new Promise((r) => setTimeout(r, 5000));
+  return new Promise((resolve) =>
+    window.addEventListener('online', () => resolve(), { once: true }),
+  );
 }
 
 /** Uploads a board image under a client-chosen id; retries while offline (the blob is kept in IndexedDB). */
@@ -34,7 +44,9 @@ export async function uploadBoardImage(
   fileId: string,
   name: string,
 ): Promise<FileMetadata> {
-  await localStore.queueUpload({ fileId, boardId, blob, name, type: blob.type }).catch(() => undefined);
+  await localStore
+    .queueUpload({ fileId, boardId, blob, name, type: blob.type })
+    .catch(() => undefined);
   for (let attempt = 0; ; attempt++) {
     try {
       const form = new FormData();
@@ -75,9 +87,13 @@ function pickFiles(accept: string, multiple: boolean): Promise<File[]> {
   });
 }
 
-export const pickImageFiles = () => pickFiles('image/png,image/jpeg,image/webp,image/gif,image/svg+xml', true);
+export const pickImageFiles = () =>
+  pickFiles('image/png,image/jpeg,image/webp,image/gif,image/svg+xml', true);
 export const pickImportFile = () =>
-  pickFiles('.inkflow,.json,.excalidraw,.svg,.png,.jpg,.jpeg,.webp,.gif,.mmd,.mermaid,.txt,application/json,image/*', false);
+  pickFiles(
+    '.inkflow,.json,.excalidraw,.svg,.png,.jpg,.jpeg,.webp,.gif,.mmd,.mermaid,.txt,application/json,image/*',
+    false,
+  );
 
 /** Converts pasted rich text (SVG markup, Mermaid, Excalidraw clipboard) into editable elements. */
 export async function transformPastedText(text: string): Promise<SceneElement[] | null> {

@@ -18,7 +18,10 @@ import {
   worldToPage,
 } from '../helpers';
 
-test('complete journey: register → draw → diagram → undo/redo → persist → share → collaborate → export', async ({ page, browser }) => {
+test('complete journey: register → draw → diagram → undo/redo → persist → share → collaborate → export', async ({
+  page,
+  browser,
+}) => {
   test.setTimeout(240_000);
   const owner = uniqueUser('owner');
 
@@ -33,8 +36,18 @@ test('complete journey: register → draw → diagram → undo/redo → persist 
   const c = await canvasCenter(page);
 
   // Draw objects
-  await drawWithTool(page, 'rectangle', { x: c.x - 360, y: c.y - 120 }, { x: c.x - 200, y: c.y - 20 });
-  await drawWithTool(page, 'ellipse', { x: c.x + 120, y: c.y - 120 }, { x: c.x + 280, y: c.y - 20 });
+  await drawWithTool(
+    page,
+    'rectangle',
+    { x: c.x - 360, y: c.y - 120 },
+    { x: c.x - 200, y: c.y - 20 },
+  );
+  await drawWithTool(
+    page,
+    'ellipse',
+    { x: c.x + 120, y: c.y - 120 },
+    { x: c.x + 280, y: c.y - 20 },
+  );
   let els = await sceneElements(page);
   expect(els.map((e) => e.type).sort()).toEqual(['ellipse', 'rectangle']);
   const rect = els.find((e) => e.type === 'rectangle')!;
@@ -71,7 +84,9 @@ test('complete journey: register → draw → diagram → undo/redo → persist 
   const movedEllipse = els.find((e) => e.id === ellipse.id)!;
   expect(movedEllipse.y).toBeGreaterThan(ellipse.y + 150);
   const movedConnector = els.find((e) => e.id === connector.id)!;
-  expect(movedConnector.y + movedConnector.height).toBeGreaterThan(connector.y + connector.height + 100);
+  expect(movedConnector.y + movedConnector.height).toBeGreaterThan(
+    connector.y + connector.height + 100,
+  );
 
   // Undo / redo actually change the document
   await page.keyboard.press(`${modKey}+z`);
@@ -97,10 +112,13 @@ test('complete journey: register → draw → diagram → undo/redo → persist 
 
   // Share: create an editor link
   await page.getByTestId('share-button').click();
-  await page.getByTestId('share-link-role').click();
-  await page.getByRole('option', { name: /edit/i }).click();
+  await page.getByTestId('share-link-role').selectOption('EDITOR');
   await page.getByTestId('share-link-create').click();
-  const shareUrl = await page.getByTestId('share-link-url').first().inputValue().catch(async () => (await page.getByTestId('share-link-url').first().textContent()) ?? '');
+  const shareUrl = await page
+    .getByTestId('share-link-url')
+    .first()
+    .inputValue()
+    .catch(async () => (await page.getByTestId('share-link-url').first().textContent()) ?? '');
   expect(shareUrl).toContain('/s/');
   await page.keyboard.press('Escape');
 
@@ -115,16 +133,27 @@ test('complete journey: register → draw → diagram → undo/redo → persist 
 
   // Collaborate: the guest draws, the owner sees it live and it is persisted
   const gc = await canvasCenter(guest);
-  await drawWithTool(guest, 'rectangle', { x: gc.x - 100, y: gc.y + 150 }, { x: gc.x + 40, y: gc.y + 240 });
+  await drawWithTool(
+    guest,
+    'rectangle',
+    { x: gc.x - 100, y: gc.y + 150 },
+    { x: gc.x + 40, y: gc.y + 240 },
+  );
   await expect.poll(async () => (await sceneElements(page)).length, { timeout: 20_000 }).toBe(5);
   // The owner moves the text; the guest sees the new position
   const text = (await sceneElements(page)).find((e) => e.type === 'text')!;
   await page.getByTestId('canvas-container').focus();
   const textPoint = await worldToPage(page, text.x + 10, text.y + text.height / 2);
   await dragOnCanvas(page, textPoint, { x: textPoint.x + 120, y: textPoint.y });
-  await expect.poll(async () => (await sceneElements(guest)).find((e) => e.id === text.id)!.x, { timeout: 20_000 }).toBeGreaterThan(text.x + 80);
+  await expect
+    .poll(async () => (await sceneElements(guest)).find((e) => e.id === text.id)!.x, {
+      timeout: 20_000,
+    })
+    .toBeGreaterThan(text.x + 80);
   await waitSaved(guest);
-  await expect.poll(async () => (await boardElementsInDb(boardId)).length, { timeout: 20_000 }).toBe(5);
+  await expect
+    .poll(async () => (await boardElementsInDb(boardId)).length, { timeout: 20_000 })
+    .toBe(5);
   await guestContext.close();
 
   // Export PNG (actually produces a PNG file)

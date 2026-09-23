@@ -5,7 +5,10 @@ export function NotificationSettings() {
   const n = preferences.notifications;
   return (
     <div className="grid gap-8">
-      <SettingsSection title="Email" description="In-app notifications are always available from the bell.">
+      <SettingsSection
+        title="Email"
+        description="In-app notifications are always available from the bell."
+      >
         <SwitchRow
           label="Email notifications"
           description="Receive a copy of important notifications by email."

@@ -1,6 +1,14 @@
 import type { ToolType } from '@inkflow/canvas-engine';
-import { Popover, PopoverContent, PopoverTrigger, Tooltip, TooltipContent, TooltipTrigger, cn } from '@inkflow/ui';
-import { ChevronDown, LayoutGrid, Lock, LockOpen } from 'lucide-react';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+  cn,
+} from '@inkflow/ui';
+import { LayoutGrid, Lock, LockOpen } from 'lucide-react';
 import * as React from 'react';
 import { useBoardSession, useEditorState } from '../hooks/editor-context';
 import { useEditorUi } from '../hooks/ui-store';
@@ -18,12 +26,15 @@ function ToolButton({
   onSelect,
   orientation,
   compact,
+  showHint = true,
 }: {
   tool: ToolType;
   active: boolean;
   onSelect(tool: ToolType): void;
   orientation: Orientation;
   compact?: boolean;
+  /** Corner shortcut letter (hidden where a variant caret occupies the corner). */
+  showHint?: boolean;
 }) {
   const meta = TOOL_META[tool];
   const Icon = meta.icon;
@@ -43,9 +54,9 @@ function ToolButton({
           )}
         >
           <Icon className="size-[18px]" strokeWidth={1.75} />
-          {meta.shortcut && !compact && (
-            <span className="pointer-events-none absolute bottom-0.5 right-1 text-[8px] font-medium leading-none text-muted-foreground">
-              {meta.shortcut.length === 1 ? meta.shortcut : ''}
+          {showHint && meta.shortcut?.length === 1 && !compact && (
+            <span className="pointer-events-none absolute bottom-[3px] right-[4px] text-[8px] font-medium leading-none text-muted-foreground/80">
+              {meta.shortcut}
             </span>
           )}
         </button>
@@ -82,21 +93,35 @@ function VariantTool({
   const active = variants.includes(current);
   return (
     <div className="relative flex">
-      <ToolButton tool={last} active={active} onSelect={onSelect} orientation={orientation} compact={compact} />
+      <ToolButton
+        tool={last}
+        active={active}
+        onSelect={onSelect}
+        orientation={orientation}
+        compact={compact}
+        showHint={false}
+      />
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <button
             type="button"
             aria-label={`More ${label} tools`}
-            className={cn(
-              'absolute flex items-center justify-center rounded text-muted-foreground hover:bg-accent hover:text-foreground',
-              orientation === 'vertical' ? '-right-1 bottom-0 size-3.5' : '-bottom-1 right-0 size-3.5',
-            )}
+            className="group/caret absolute bottom-0 right-0 flex size-3.5 items-end justify-end rounded-br-lg p-[3px] outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
-            <ChevronDown className="size-3" />
+            <svg
+              viewBox="0 0 6 6"
+              aria-hidden="true"
+              className="size-[6px] fill-muted-foreground/70 group-hover/caret:fill-foreground"
+            >
+              <path d="M6 0 V6 H0 Z" />
+            </svg>
           </button>
         </PopoverTrigger>
-        <PopoverContent side={orientation === 'vertical' ? 'right' : 'top'} className="flex w-auto gap-1 p-1" data-inkflow-ui>
+        <PopoverContent
+          side={orientation === 'vertical' ? 'right' : 'top'}
+          className="flex w-auto gap-1 p-1"
+          data-inkflow-ui
+        >
           {variants.map((t) => (
             <ToolButton
               key={t}
@@ -116,7 +141,15 @@ function VariantTool({
 }
 
 function Divider({ orientation }: { orientation: Orientation }) {
-  return <span aria-hidden="true" className={cn('bg-border', orientation === 'vertical' ? 'mx-1.5 h-px w-auto' : 'my-1.5 h-auto w-px')} />;
+  return (
+    <span
+      aria-hidden="true"
+      className={cn(
+        'bg-border',
+        orientation === 'vertical' ? 'mx-1.5 h-px w-auto' : 'my-1.5 h-auto w-px',
+      )}
+    />
+  );
 }
 
 /** Floating drawing toolbar. Vertical on desktop, horizontal (scrollable) on phones. */
@@ -156,26 +189,103 @@ export function Toolbar({ orientation }: { orientation: Orientation }) {
               {locked ? <Lock className="size-4" /> : <LockOpen className="size-4" />}
             </button>
           </TooltipTrigger>
-          <TooltipContent side={orientation === 'vertical' ? 'right' : 'top'}>Keep tool active (Q)</TooltipContent>
+          <TooltipContent side={orientation === 'vertical' ? 'right' : 'top'}>
+            Keep tool active (Q)
+          </TooltipContent>
         </Tooltip>
       )}
-      <ToolButton tool="selection" active={tool === 'selection'} onSelect={select} orientation={orientation} compact={compact} />
-      <ToolButton tool="hand" active={tool === 'hand'} onSelect={select} orientation={orientation} compact={compact} />
+      <ToolButton
+        tool="selection"
+        active={tool === 'selection'}
+        onSelect={select}
+        orientation={orientation}
+        compact={compact}
+      />
+      <ToolButton
+        tool="hand"
+        active={tool === 'hand'}
+        onSelect={select}
+        orientation={orientation}
+        compact={compact}
+      />
       {canEdit ? (
         <>
           <Divider orientation={orientation} />
-          <VariantTool label="shape" variants={SHAPE_VARIANTS} current={tool} onSelect={select} orientation={orientation} compact={compact} />
-          <ToolButton tool="diamond" active={tool === 'diamond'} onSelect={select} orientation={orientation} compact={compact} />
-          <ToolButton tool="ellipse" active={tool === 'ellipse'} onSelect={select} orientation={orientation} compact={compact} />
-          <VariantTool label="line" variants={LINE_VARIANTS} current={tool} onSelect={select} orientation={orientation} compact={compact} />
+          <VariantTool
+            label="shape"
+            variants={SHAPE_VARIANTS}
+            current={tool}
+            onSelect={select}
+            orientation={orientation}
+            compact={compact}
+          />
+          <ToolButton
+            tool="diamond"
+            active={tool === 'diamond'}
+            onSelect={select}
+            orientation={orientation}
+            compact={compact}
+          />
+          <ToolButton
+            tool="ellipse"
+            active={tool === 'ellipse'}
+            onSelect={select}
+            orientation={orientation}
+            compact={compact}
+          />
+          <VariantTool
+            label="line"
+            variants={LINE_VARIANTS}
+            current={tool}
+            onSelect={select}
+            orientation={orientation}
+            compact={compact}
+          />
           <Divider orientation={orientation} />
-          <VariantTool label="drawing" variants={DRAW_VARIANTS} current={tool} onSelect={select} orientation={orientation} compact={compact} />
-          <ToolButton tool="eraser" active={tool === 'eraser'} onSelect={select} orientation={orientation} compact={compact} />
-          <ToolButton tool="text" active={tool === 'text'} onSelect={select} orientation={orientation} compact={compact} />
-          <ToolButton tool="image" active={tool === 'image'} onSelect={select} orientation={orientation} compact={compact} />
+          <VariantTool
+            label="drawing"
+            variants={DRAW_VARIANTS}
+            current={tool}
+            onSelect={select}
+            orientation={orientation}
+            compact={compact}
+          />
+          <ToolButton
+            tool="eraser"
+            active={tool === 'eraser'}
+            onSelect={select}
+            orientation={orientation}
+            compact={compact}
+          />
+          <ToolButton
+            tool="text"
+            active={tool === 'text'}
+            onSelect={select}
+            orientation={orientation}
+            compact={compact}
+          />
+          <ToolButton
+            tool="image"
+            active={tool === 'image'}
+            onSelect={select}
+            orientation={orientation}
+            compact={compact}
+          />
           <Divider orientation={orientation} />
-          <ToolButton tool="frame" active={tool === 'frame'} onSelect={select} orientation={orientation} compact={compact} />
-          <ToolButton tool="node" active={tool === 'node'} onSelect={select} orientation={orientation} compact={compact} />
+          <ToolButton
+            tool="frame"
+            active={tool === 'frame'}
+            onSelect={select}
+            orientation={orientation}
+            compact={compact}
+          />
+          <ToolButton
+            tool="node"
+            active={tool === 'node'}
+            onSelect={select}
+            orientation={orientation}
+            compact={compact}
+          />
           <Tooltip>
             <TooltipTrigger asChild>
               <button
@@ -193,14 +303,28 @@ export function Toolbar({ orientation }: { orientation: Orientation }) {
                 <LayoutGrid className="size-[18px]" strokeWidth={1.75} />
               </button>
             </TooltipTrigger>
-            <TooltipContent side={orientation === 'vertical' ? 'right' : 'top'}>Library & templates</TooltipContent>
+            <TooltipContent side={orientation === 'vertical' ? 'right' : 'top'}>
+              Library & templates
+            </TooltipContent>
           </Tooltip>
         </>
       ) : (
         <Divider orientation={orientation} />
       )}
-      <ToolButton tool="comment" active={tool === 'comment'} onSelect={select} orientation={orientation} compact={compact} />
-      <ToolButton tool="laser" active={tool === 'laser'} onSelect={select} orientation={orientation} compact={compact} />
+      <ToolButton
+        tool="comment"
+        active={tool === 'comment'}
+        onSelect={select}
+        orientation={orientation}
+        compact={compact}
+      />
+      <ToolButton
+        tool="laser"
+        active={tool === 'laser'}
+        onSelect={select}
+        orientation={orientation}
+        compact={compact}
+      />
     </nav>
   );
 }

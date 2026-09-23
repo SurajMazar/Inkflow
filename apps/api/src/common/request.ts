@@ -50,22 +50,28 @@ export function getClientMeta(req: Request): ClientMeta {
 }
 
 /** The signed-in user (throws 401 when the route allowed anonymous access and nobody is signed in). */
-export const CurrentUser = createParamDecorator((_data: unknown, ctx: ExecutionContext): AuthInfo => {
-  const req = ctx.switchToHttp().getRequest<AppRequest>();
-  if (!req.auth) throw Errors.unauthorized();
-  return req.auth;
-});
+export const CurrentUser = createParamDecorator(
+  (_data: unknown, ctx: ExecutionContext): AuthInfo => {
+    const req = ctx.switchToHttp().getRequest<AppRequest>();
+    if (!req.auth) throw Errors.unauthorized();
+    return req.auth;
+  },
+);
 
 /** The signed-in user or null. */
-export const OptionalUser = createParamDecorator((_data: unknown, ctx: ExecutionContext): AuthInfo | null => {
-  return ctx.switchToHttp().getRequest<AppRequest>().auth ?? null;
-});
+export const OptionalUser = createParamDecorator(
+  (_data: unknown, ctx: ExecutionContext): AuthInfo | null => {
+    return ctx.switchToHttp().getRequest<AppRequest>().auth ?? null;
+  },
+);
 
 /** Signed-in user (if any) plus share token (if any). */
-export const CurrentPrincipal = createParamDecorator((_data: unknown, ctx: ExecutionContext): Principal => {
-  const req = ctx.switchToHttp().getRequest<AppRequest>();
-  return { userId: req.auth?.userId ?? null, shareToken: getShareToken(req) };
-});
+export const CurrentPrincipal = createParamDecorator(
+  (_data: unknown, ctx: ExecutionContext): Principal => {
+    const req = ctx.switchToHttp().getRequest<AppRequest>();
+    return { userId: req.auth?.userId ?? null, shareToken: getShareToken(req) };
+  },
+);
 
 export const Meta = createParamDecorator((_data: unknown, ctx: ExecutionContext): ClientMeta => {
   return getClientMeta(ctx.switchToHttp().getRequest<Request>());

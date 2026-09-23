@@ -302,7 +302,9 @@ export function simplifyOrthogonal(points: readonly Point[]): Point[] {
       const a = out[out.length - 3]!;
       const b = out[out.length - 2]!;
       const c = out[out.length - 1]!;
-      const collinear = (Math.abs(a.x - b.x) < 1e-6 && Math.abs(b.x - c.x) < 1e-6) || (Math.abs(a.y - b.y) < 1e-6 && Math.abs(b.y - c.y) < 1e-6);
+      const collinear =
+        (Math.abs(a.x - b.x) < 1e-6 && Math.abs(b.x - c.x) < 1e-6) ||
+        (Math.abs(a.y - b.y) < 1e-6 && Math.abs(b.y - c.y) < 1e-6);
       const cross = (b.x - a.x) * (c.y - b.y) - (b.y - a.y) * (c.x - b.x);
       if (collinear || Math.abs(cross) < 1e-9) out.splice(out.length - 2, 1);
       else break;

@@ -36,16 +36,30 @@ export function hitTestAll(scene: Scene, point: Point, options: HitTestOptions):
   return out.sort((a, b) => Number(a.type === 'frame') - Number(b.type === 'frame'));
 }
 
-export function hitTestTop(scene: Scene, point: Point, options: HitTestOptions): SceneElement | null {
+export function hitTestTop(
+  scene: Scene,
+  point: Point,
+  options: HitTestOptions,
+): SceneElement | null {
   return hitTestAll(scene, point, options)[0] ?? null;
 }
 
 function hitInsideBox(el: SceneElement, p: Point): boolean {
-  const frame: SelectionFrame = { x: el.x, y: el.y, width: el.width, height: el.height, angle: el.angle };
+  const frame: SelectionFrame = {
+    x: el.x,
+    y: el.y,
+    width: el.width,
+    height: el.height,
+    angle: el.angle,
+  };
   return pointInPolygon(p, frameCorners(frame));
 }
 
-export function pointInSelectionFrame(frame: SelectionFrame | null, p: Point, padding: number): boolean {
+export function pointInSelectionFrame(
+  frame: SelectionFrame | null,
+  p: Point,
+  padding: number,
+): boolean {
   if (!frame) return false;
   return pointInPolygon(p, frameCorners(frame, padding));
 }

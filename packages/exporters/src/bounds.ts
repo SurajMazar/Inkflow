@@ -38,7 +38,10 @@ export function getExportBounds(
   if (options.frameId) {
     const frame = findFrame(scope, options.frameId);
     if (frame) {
-      const b = rotatedRectBounds({ x: frame.x, y: frame.y, width: frame.width, height: frame.height }, frame.angle);
+      const b = rotatedRectBounds(
+        { x: frame.x, y: frame.y, width: frame.width, height: frame.height },
+        frame.angle,
+      );
       return { x: b.minX, y: b.minY, width: b.maxX - b.minX, height: b.maxY - b.minY };
     }
   }
@@ -56,6 +59,12 @@ export function getExportBounds(
     if (b.maxX > maxX) maxX = b.maxX;
     if (b.maxY > maxY) maxY = b.maxY;
   }
-  if (!Number.isFinite(minX)) return { x: 0, y: 0, width: Math.max(1, pad * 2), height: Math.max(1, pad * 2) };
-  return { x: minX - pad, y: minY - pad, width: maxX - minX + pad * 2, height: maxY - minY + pad * 2 };
+  if (!Number.isFinite(minX))
+    return { x: 0, y: 0, width: Math.max(1, pad * 2), height: Math.max(1, pad * 2) };
+  return {
+    x: minX - pad,
+    y: minY - pad,
+    width: maxX - minX + pad * 2,
+    height: maxY - minY + pad * 2,
+  };
 }

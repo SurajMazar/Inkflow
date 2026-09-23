@@ -84,11 +84,13 @@ const TEXT_ALIGNS: readonly TextAlign[] = ['left', 'center', 'right'];
 const VERTICAL_ALIGNS: readonly VerticalAlign[] = ['top', 'middle', 'bottom'];
 
 const isRecord = (v: unknown): v is Raw => typeof v === 'object' && v !== null && !Array.isArray(v);
-const finiteOr = (v: unknown, fallback: number): number => (typeof v === 'number' && Number.isFinite(v) ? v : fallback);
+const finiteOr = (v: unknown, fallback: number): number =>
+  typeof v === 'number' && Number.isFinite(v) ? v : fallback;
 const clamp = (v: number, min: number, max: number): number => Math.min(max, Math.max(min, v));
 const oneOf = <T extends string>(v: unknown, allowed: readonly T[], fallback: T): T =>
   typeof v === 'string' && (allowed as readonly string[]).includes(v) ? (v as T) : fallback;
-const colorOr = (v: unknown, fallback: string): string => (typeof v === 'string' && COLOR_RE.test(v) ? v.trim() : fallback);
+const colorOr = (v: unknown, fallback: string): string =>
+  typeof v === 'string' && COLOR_RE.test(v) ? v.trim() : fallback;
 
 /** Keeps web, mail and in-app links; drops script/data URLs and anything unusual. */
 function sanitizeLink(v: unknown): string | null {
@@ -105,11 +107,17 @@ function mapArrowhead(v: unknown, fallback: Arrowhead): Arrowhead {
   return ARROWHEAD_MAP[v] ?? fallback;
 }
 
-function readTextStyle(raw: Raw): Pick<TextStyle, 'fontFamily' | 'fontSize' | 'textAlign' | 'verticalAlign' | 'lineHeight'> {
+function readTextStyle(
+  raw: Raw,
+): Pick<TextStyle, 'fontFamily' | 'fontSize' | 'textAlign' | 'verticalAlign' | 'lineHeight'> {
   const family = typeof raw.fontFamily === 'number' ? FONT_MAP[raw.fontFamily] : undefined;
   return {
     fontFamily: family ?? 'sans',
-    fontSize: clamp(finiteOr(raw.fontSize, DEFAULT_TEXT_STYLE.fontSize), MIN_FONT_SIZE, MAX_FONT_SIZE),
+    fontSize: clamp(
+      finiteOr(raw.fontSize, DEFAULT_TEXT_STYLE.fontSize),
+      MIN_FONT_SIZE,
+      MAX_FONT_SIZE,
+    ),
     textAlign: oneOf(raw.textAlign, TEXT_ALIGNS, 'left'),
     verticalAlign: oneOf(raw.verticalAlign, VERTICAL_ALIGNS, 'top'),
     lineHeight: clamp(finiteOr(raw.lineHeight, DEFAULT_TEXT_STYLE.lineHeight), 0.5, 5),
@@ -205,7 +213,8 @@ function readPoints(raw: Raw, id: string, ctx: ConversionContext): LocalPoint[] 
 function readText(raw: Raw, prefer: 'text' | 'originalText'): string {
   const primary = raw[prefer];
   const secondary = raw[prefer === 'text' ? 'originalText' : 'text'];
-  const text = typeof primary === 'string' ? primary : typeof secondary === 'string' ? secondary : '';
+  const text =
+    typeof primary === 'string' ? primary : typeof secondary === 'string' ? secondary : '';
   return text.length > MAX_TEXT_LENGTH ? text.slice(0, MAX_TEXT_LENGTH) : text;
 }
 
@@ -214,7 +223,8 @@ function readBinding(value: unknown, ctx: ConversionContext): Binding | null {
   const target = ctx.idMap.get(value.elementId);
   if (!target) return null;
   const targetType = ctx.emittedTypes.get(target);
-  if (!targetType || targetType === 'arrow' || targetType === 'line' || targetType === 'freedraw') return null;
+  if (!targetType || targetType === 'arrow' || targetType === 'line' || targetType === 'freedraw')
+    return null;
   return createBinding(target, { gap: clamp(finiteOr(value.gap, DEFAULT_BINDING_GAP), 0, 200) });
 }
 
@@ -229,21 +239,33 @@ function convertFiles(files: unknown, issues: ParseIssue[]): Map<string, FileInf
   let count = 0;
   for (const [key, value] of Object.entries(files)) {
     if (++count > MAX_FILES) {
-      issues.push({ elementId: null, message: `Too many files; only the first ${MAX_FILES} were imported` });
+      issues.push({
+        elementId: null,
+        message: `Too many files; only the first ${MAX_FILES} were imported`,
+      });
       break;
     }
     if (!ID_RE.test(key) || !isRecord(value)) {
-      issues.push({ elementId: null, message: `Invalid file entry "${key.slice(0, 64)}" was skipped` });
+      issues.push({
+        elementId: null,
+        message: `Invalid file entry "${key.slice(0, 64)}" was skipped`,
+      });
       continue;
     }
     const dataURL = value.dataURL;
     if (typeof dataURL !== 'string' || dataURL.length > MAX_DATA_URL_CHARS) {
-      issues.push({ elementId: null, message: `File ${key} has no usable image data and was skipped` });
+      issues.push({
+        elementId: null,
+        message: `File ${key} has no usable image data and was skipped`,
+      });
       continue;
     }
     const match = DATA_URL_RE.exec(dataURL);
     if (!match) {
-      issues.push({ elementId: null, message: `File ${key} is not an embedded PNG, JPEG, WebP, GIF or SVG image and was skipped` });
+      issues.push({
+        elementId: null,
+        message: `File ${key} is not an embedded PNG, JPEG, WebP, GIF or SVG image and was skipped`,
+      });
       continue;
     }
     const mimeType = match[1]!;
@@ -251,11 +273,17 @@ function convertFiles(files: unknown, issues: ParseIssue[]): Map<string, FileInf
     try {
       bytes = base64ToBytes(match[2]!);
     } catch {
-      issues.push({ elementId: null, message: `File ${key} contains corrupt image data and was skipped` });
+      issues.push({
+        elementId: null,
+        message: `File ${key} contains corrupt image data and was skipped`,
+      });
       continue;
     }
     if (sniffImageMime(bytes) !== mimeType) {
-      issues.push({ elementId: null, message: `File ${key} content does not match its declared type and was skipped` });
+      issues.push({
+        elementId: null,
+        message: `File ${key} content does not match its declared type and was skipped`,
+      });
       continue;
     }
     let url = dataURL.replace(/\s+/g, '');
@@ -264,7 +292,10 @@ function convertFiles(files: unknown, issues: ParseIssue[]): Map<string, FileInf
       try {
         url = svgToDataUrl(new TextDecoder('utf-8', { fatal: false }).decode(bytes));
       } catch {
-        issues.push({ elementId: null, message: `File ${key} contains an invalid SVG image and was skipped` });
+        issues.push({
+          elementId: null,
+          message: `File ${key} contains an invalid SVG image and was skipped`,
+        });
         continue;
       }
       size = Math.floor(((url.length - url.indexOf(',') - 1) * 3) / 4);
@@ -288,7 +319,11 @@ function convertFiles(files: unknown, issues: ParseIssue[]): Map<string, FileInf
  */
 export function importExcalidraw(json: unknown): ParsedDocument {
   if (!isRecord(json)) throw new Error('Not an Excalidraw file');
-  if (json.type !== undefined && json.type !== 'excalidraw' && json.type !== 'excalidraw/clipboard') {
+  if (
+    json.type !== undefined &&
+    json.type !== 'excalidraw' &&
+    json.type !== 'excalidraw/clipboard'
+  ) {
     throw new Error('Not an Excalidraw file');
   }
   if (!Array.isArray(json.elements)) throw new Error('Not an Excalidraw file');
@@ -298,7 +333,10 @@ export function importExcalidraw(json: unknown): ParsedDocument {
   for (const raw of json.elements) {
     if (!isRecord(raw) || raw.isDeleted === true) continue;
     if (live.length >= MAX_EXCALIDRAW_ELEMENTS) {
-      issues.push({ elementId: null, message: `Too many elements; only the first ${MAX_EXCALIDRAW_ELEMENTS} were imported` });
+      issues.push({
+        elementId: null,
+        message: `Too many elements; only the first ${MAX_EXCALIDRAW_ELEMENTS} were imported`,
+      });
       break;
     }
     live.push(raw);
@@ -337,7 +375,18 @@ export function importExcalidraw(json: unknown): ParsedDocument {
   });
 
   // Determine which elements will be emitted (needed to validate bindings and frame refs).
-  const SUPPORTED = new Set(['rectangle', 'ellipse', 'diamond', 'line', 'arrow', 'freedraw', 'text', 'image', 'frame', 'magicframe']);
+  const SUPPORTED = new Set([
+    'rectangle',
+    'ellipse',
+    'diamond',
+    'line',
+    'arrow',
+    'freedraw',
+    'text',
+    'image',
+    'frame',
+    'magicframe',
+  ]);
   live.forEach((raw, i) => {
     if (consumed.has(i) || !SUPPORTED.has(String(raw.type))) return;
     ctx.emittedTypes.set(ids[i]!, raw.type === 'magicframe' ? 'frame' : String(raw.type));
@@ -352,7 +401,10 @@ export function importExcalidraw(json: unknown): ParsedDocument {
     const id = ids[i]!;
     const type = String(raw.type);
     if (!SUPPORTED.has(type)) {
-      const label = type === 'embeddable' || type === 'iframe' ? `Embedded web content (${type}) is not supported` : `Unsupported element type "${type.slice(0, 40)}"`;
+      const label =
+        type === 'embeddable' || type === 'iframe'
+          ? `Embedded web content (${type}) is not supported`
+          : `Unsupported element type "${type.slice(0, 40)}"`;
       issues.push({ elementId: id, message: `${label}; the element was skipped` });
       return;
     }
@@ -425,7 +477,10 @@ export function importExcalidraw(json: unknown): ParsedDocument {
           createElement('freedraw', {
             ...common,
             ...box,
-            simulatePressure: typeof raw.simulatePressure === 'boolean' ? raw.simulatePressure : pressures.length === 0,
+            simulatePressure:
+              typeof raw.simulatePressure === 'boolean'
+                ? raw.simulatePressure
+                : pressures.length === 0,
           }),
         );
         break;
@@ -459,7 +514,8 @@ export function importExcalidraw(json: unknown): ParsedDocument {
           const nh = finiteOr(c.naturalHeight, 0);
           if (nw > 0 && nh > 0) cropNatural = { width: nw, height: nh };
         }
-        const natural = file?.natural ?? cropNatural ?? { width: common.width, height: common.height };
+        const natural = file?.natural ??
+          cropNatural ?? { width: common.width, height: common.height };
         if (fileId && file && !fileDims.has(fileId)) fileDims.set(fileId, natural);
         elements.push(
           createElement('image', {
@@ -476,7 +532,8 @@ export function importExcalidraw(json: unknown): ParsedDocument {
       }
       case 'frame':
       case 'magicframe': {
-        const name = typeof raw.name === 'string' && raw.name.trim() !== '' ? raw.name.slice(0, 200) : 'Frame';
+        const name =
+          typeof raw.name === 'string' && raw.name.trim() !== '' ? raw.name.slice(0, 200) : 'Frame';
         elements.push(createElement('frame', { ...common, name }));
         break;
       }
@@ -496,8 +553,10 @@ export function importExcalidraw(json: unknown): ParsedDocument {
 
   const appState = isRecord(json.appState) ? json.appState : {};
   const inkflowAppState: Raw = {};
-  if (typeof appState.viewBackgroundColor === 'string') inkflowAppState.viewBackgroundColor = colorOr(appState.viewBackgroundColor, '#ffffff');
-  if (typeof appState.gridSize === 'number' && Number.isInteger(appState.gridSize)) inkflowAppState.gridSize = appState.gridSize;
+  if (typeof appState.viewBackgroundColor === 'string')
+    inkflowAppState.viewBackgroundColor = colorOr(appState.viewBackgroundColor, '#ffffff');
+  if (typeof appState.gridSize === 'number' && Number.isInteger(appState.gridSize))
+    inkflowAppState.gridSize = appState.gridSize;
 
   const parsed = parseDocument({
     type: 'inkflow',

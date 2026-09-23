@@ -6,7 +6,13 @@ export function buildOrgChart(): TemplateContent {
   const b = new DiagramBuilder();
   b.text(0, -90, 'Organization chart', { fontSize: 28, fontWeight: 'bold' });
   const person = (name: string, title: string, color: PaletteColor) =>
-    b.node('org-card', 0, 0, name, { metadata: { subtitle: title }, strokeColor: PALETTE[color].stroke, backgroundColor: '#ffffff', width: 210, height: 70 });
+    b.node('org-card', 0, 0, name, {
+      metadata: { subtitle: title },
+      strokeColor: PALETTE[color].stroke,
+      backgroundColor: '#ffffff',
+      width: 210,
+      height: 70,
+    });
   const ceo = person('Alex Morgan', 'Chief Executive Officer', 'violet');
   const cto = person('Priya Shah', 'Chief Technology Officer', 'blue');
   const cfo = person('Daniel Kim', 'Chief Financial Officer', 'green');
@@ -18,7 +24,11 @@ export function buildOrgChart(): TemplateContent {
   const fin = person('Omar Haddad', 'Finance Manager', 'green');
   const ops = person('Grace Liu', 'Operations Manager', 'orange');
   const support = person('Noah Evans', 'Support Lead', 'orange');
-  const tree = { routing: 'orthogonal' as const, endArrowhead: 'none' as const, startArrowhead: 'none' as const };
+  const tree = {
+    routing: 'orthogonal' as const,
+    endArrowhead: 'none' as const,
+    startArrowhead: 'none' as const,
+  };
   const edges: [NodeElement, NodeElement][] = [
     [ceo, cto],
     [ceo, cfo],
@@ -32,7 +42,12 @@ export function buildOrgChart(): TemplateContent {
     [coo, support],
   ];
   for (const [p, c] of edges) b.connect(p, c, { ...tree, fromPort: 'bottom', toPort: 'top' });
-  b.layout([ceo, cto, cfo, coo, eng, design, fe, be, fin, ops, support], 'tree', { direction: 'TB', nodeSpacing: 30, rankSpacing: 70 }, { x: 0, y: 0 });
+  b.layout(
+    [ceo, cto, cfo, coo, eng, design, fe, be, fin, ops, support],
+    'tree',
+    { direction: 'TB', nodeSpacing: 30, rankSpacing: 70 },
+    { x: 0, y: 0 },
+  );
   return b.build();
 }
 
@@ -57,20 +72,49 @@ export function buildMindMap(): TemplateContent {
   for (const [name, color, leaves] of branches) {
     const branch = topic(name, color, 'branch');
     nodes.push(branch);
-    b.connect(root, branch, { routing: 'bezier', endArrowhead: 'none', strokeColor: PALETTE[color].stroke, strokeWidth: 2.5, fromPort: null, toPort: null });
+    b.connect(root, branch, {
+      routing: 'bezier',
+      endArrowhead: 'none',
+      strokeColor: PALETTE[color].stroke,
+      strokeWidth: 2.5,
+      fromPort: null,
+      toPort: null,
+    });
     for (const leaf of leaves) {
       const l = topic(leaf, color, 'leaf');
       nodes.push(l);
-      b.connect(branch, l, { routing: 'bezier', endArrowhead: 'none', strokeColor: PALETTE[color].stroke, strokeWidth: 1.5 });
+      b.connect(branch, l, {
+        routing: 'bezier',
+        endArrowhead: 'none',
+        strokeColor: PALETTE[color].stroke,
+        strokeWidth: 1.5,
+      });
     }
   }
-  b.layout(nodes, 'tree', { direction: 'LR', mindMap: true, nodeSpacing: 18, rankSpacing: 70 }, { x: 0, y: 0 });
+  b.layout(
+    nodes,
+    'tree',
+    { direction: 'LR', mindMap: true, nodeSpacing: 18, rankSpacing: 70 },
+    { x: 0, y: 0 },
+  );
   return b.build();
 }
 
-function boardColumn(b: DiagramBuilder, x: number, title: string, cards: string[], color: string, width = 260) {
+function boardColumn(
+  b: DiagramBuilder,
+  x: number,
+  title: string,
+  cards: string[],
+  color: string,
+  width = 260,
+) {
   const stickies = cards.map((text, i) =>
-    b.node('sticky', x + 20, 40 + i * 130, text, { width: width - 40, height: 110, backgroundColor: color, strokeColor: '#d9a300' }),
+    b.node('sticky', x + 20, 40 + i * 130, text, {
+      width: width - 40,
+      height: 110,
+      backgroundColor: color,
+      strokeColor: '#d9a300',
+    }),
   );
   const height = Math.max(420, 60 + cards.length * 130);
   const frame = b.frameRect(title, x, 0, width, height);
@@ -82,7 +126,11 @@ export function buildKanban(): TemplateContent {
   const b = new DiagramBuilder();
   b.text(0, -90, 'Sprint board', { fontSize: 28, fontWeight: 'bold' });
   const columns: [string, string[], string][] = [
-    ['Backlog', ['Dark mode', 'Export to PDF', 'SSO with Okta', 'Keyboard shortcuts help'], '#f1f3f5'],
+    [
+      'Backlog',
+      ['Dark mode', 'Export to PDF', 'SSO with Okta', 'Keyboard shortcuts help'],
+      '#f1f3f5',
+    ],
     ['To do', ['Onboarding checklist', 'Rate-limit public API'], '#ffec99'],
     ['In progress', ['Realtime cursors', 'Billing webhooks'], '#a5d8ff'],
     ['Review', ['Template gallery'], '#d0bfff'],
@@ -95,9 +143,37 @@ export function buildKanban(): TemplateContent {
 export function buildRetrospective(): TemplateContent {
   const b = new DiagramBuilder();
   b.text(0, -110, 'Sprint 24 retrospective', { fontSize: 28, fontWeight: 'bold' });
-  b.text(0, -64, 'Add a sticky per idea, then dot-vote the top three action items.', { fontSize: 16, color: '#868e96' });
-  boardColumn(b, 0, 'What went well', ['Shipped realtime collaboration on time', 'Great pairing on the routing engine', 'Zero incidents'], '#b2f2bb', 320);
-  boardColumn(b, 360, 'What could be improved', ['Flaky end-to-end tests', 'Too many meetings mid-sprint', 'Late design hand-off'], '#ffc9c9', 320);
-  boardColumn(b, 720, 'Action items', ['Quarantine flaky tests (Sam)', 'No-meeting Wednesdays', 'Design review at sprint start'], '#a5d8ff', 320);
+  b.text(0, -64, 'Add a sticky per idea, then dot-vote the top three action items.', {
+    fontSize: 16,
+    color: '#868e96',
+  });
+  boardColumn(
+    b,
+    0,
+    'What went well',
+    [
+      'Shipped realtime collaboration on time',
+      'Great pairing on the routing engine',
+      'Zero incidents',
+    ],
+    '#b2f2bb',
+    320,
+  );
+  boardColumn(
+    b,
+    360,
+    'What could be improved',
+    ['Flaky end-to-end tests', 'Too many meetings mid-sprint', 'Late design hand-off'],
+    '#ffc9c9',
+    320,
+  );
+  boardColumn(
+    b,
+    720,
+    'Action items',
+    ['Quarantine flaky tests (Sam)', 'No-meeting Wednesdays', 'Design review at sprint start'],
+    '#a5d8ff',
+    320,
+  );
   return b.build();
 }

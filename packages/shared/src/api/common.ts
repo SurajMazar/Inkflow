@@ -11,7 +11,10 @@ export const passwordSchema = z
     message: 'Password must contain at least one letter and one number',
   });
 
-export const emailSchema = z.email('Enter a valid email address').max(254).transform((v) => v.trim().toLowerCase());
+export const emailSchema = z
+  .email('Enter a valid email address')
+  .max(254)
+  .transform((v) => v.trim().toLowerCase());
 export const nameSchema = z.string().trim().min(1, 'Name is required').max(80);
 export const titleSchema = z.string().trim().min(1, 'Title is required').max(200);
 export const idSchema = z.string().min(1).max(64);

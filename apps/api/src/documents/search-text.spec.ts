@@ -5,9 +5,16 @@ import { extractSearchText, snippetAround } from './search-text';
 describe('search text extraction', () => {
   it('collects text, labels, names and structured content', () => {
     expect(extractSearchText(createElement('text', { text: 'Hello world' }))).toBe('Hello world');
-    expect(extractSearchText(createElement('rectangle', { label: createLabel('API gateway') }))).toBe('API gateway');
-    expect(extractSearchText(createElement('frame', { name: 'Checkout flow' }))).toBe('Checkout flow');
-    const table = createElement('table', { name: 'users', columns: [createTableColumn('email', { dataType: 'text' })] });
+    expect(
+      extractSearchText(createElement('rectangle', { label: createLabel('API gateway') })),
+    ).toBe('API gateway');
+    expect(extractSearchText(createElement('frame', { name: 'Checkout flow' }))).toBe(
+      'Checkout flow',
+    );
+    const table = createElement('table', {
+      name: 'users',
+      columns: [createTableColumn('email', { dataType: 'text' })],
+    });
     expect(extractSearchText(table)).toBe('users\nemail text');
     expect(extractSearchText(createElement('freedraw'))).toBe('');
   });

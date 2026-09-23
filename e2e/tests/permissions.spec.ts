@@ -53,7 +53,9 @@ test('viewer links are read-only and strangers have no access', async ({ page, b
   const stranger = await strangerCtx.newPage();
   await registerAndVerify(stranger, uniqueUser('stranger'));
   await stranger.goto(`/b/${boardId}`);
-  await expect(stranger.getByText(/not found|no access|could not be opened|permission/i).first()).toBeVisible();
+  await expect(
+    stranger.getByText(/couldn.t find|no longer have access|not found/i).first(),
+  ).toBeVisible();
   // The API itself refuses (never trust the frontend).
   const res = await stranger.request.get(`/api/boards/${boardId}`);
   expect(res.status()).toBe(404);

@@ -32,7 +32,11 @@ export default defineConfig({
     acceptDownloads: true,
   },
   projects: [
-    { name: 'chromium', use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } }, testIgnore: /mobile\.spec\.ts/ },
+    {
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } },
+      testIgnore: /mobile\.spec\.ts/,
+    },
     { name: 'mobile', use: { ...devices['Pixel 7'] }, testMatch: /mobile\.spec\.ts/ },
   ],
   webServer: [
@@ -43,7 +47,7 @@ export default defineConfig({
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,
       env: apiEnv,
-      stdout: 'pipe',
+      stdout: 'ignore',
       stderr: 'pipe',
     },
     {

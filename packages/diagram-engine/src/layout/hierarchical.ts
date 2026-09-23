@@ -59,7 +59,10 @@ function mapAxes(u: number, v: number, direction: LayoutDirection): { x: number;
 }
 
 /** Depth-first cycle breaking: back edges are reversed (Eades et al. DFS heuristic). */
-export function breakCycles(nodes: readonly number[], edges: readonly [number, number][]): [number, number][] {
+export function breakCycles(
+  nodes: readonly number[],
+  edges: readonly [number, number][],
+): [number, number][] {
   const out = new Map<number, number[]>();
   for (const n of nodes) out.set(n, []);
   edges.forEach(([a], k) => out.get(a)!.push(k));
@@ -91,7 +94,10 @@ export function breakCycles(nodes: readonly number[], edges: readonly [number, n
 }
 
 /** Longest-path layering (sources at layer 0), then sources pulled down next to their successors. */
-export function assignLayers(nodes: readonly number[], dag: readonly [number, number][]): Map<number, number> {
+export function assignLayers(
+  nodes: readonly number[],
+  dag: readonly [number, number][],
+): Map<number, number> {
   const preds = new Map<number, number[]>();
   const succs = new Map<number, number[]>();
   for (const n of nodes) {
@@ -134,7 +140,12 @@ export function assignLayers(nodes: readonly number[], dag: readonly [number, nu
 }
 
 /** Number of crossings between two adjacent layers (inversion count with a Fenwick tree). */
-function countCrossings(upper: readonly number[], lower: readonly number[], vertices: readonly Vertex[], pos: Int32Array): number {
+function countCrossings(
+  upper: readonly number[],
+  lower: readonly number[],
+  vertices: readonly Vertex[],
+  pos: Int32Array,
+): number {
   const pairs: [number, number][] = [];
   for (const v of upper) for (const w of vertices[v]!.down) pairs.push([pos[v]!, pos[w]!]);
   if (pairs.length < 2) return 0;
@@ -167,7 +178,14 @@ function layoutComponent(
   const vertexOf = new Map<number, number>();
   for (const n of comp) {
     vertexOf.set(n, vertices.length);
-    vertices.push({ node: n, layer: layerOf.get(n)!, along: along(n), across: across(n), up: [], down: [] });
+    vertices.push({
+      node: n,
+      layer: layerOf.get(n)!,
+      along: along(n),
+      across: across(n),
+      up: [],
+      down: [],
+    });
   }
   for (const [a, b] of dag) {
     let prev = vertexOf.get(a)!;
@@ -194,7 +212,12 @@ function layoutComponent(
     const layer = layers[l]!;
     for (const v of layer) {
       const vert = vertices[v]!;
-      orderKey[v] = l === 0 || vert.up.length === 0 ? (vert.node >= 0 ? vert.node : v) : average(vert.up.map((u) => pos[u]!)) * 1e6 + v;
+      orderKey[v] =
+        l === 0 || vert.up.length === 0
+          ? vert.node >= 0
+            ? vert.node
+            : v
+          : average(vert.up.map((u) => pos[u]!)) * 1e6 + v;
     }
     layer.sort((a, b) => orderKey[a]! - orderKey[b]! || a - b);
     layer.forEach((v, i) => (pos[v] = i));
@@ -203,7 +226,8 @@ function layoutComponent(
   // Crossing minimization: alternating barycenter sweeps, keeping the best ordering seen.
   const totalCrossings = () => {
     let c = 0;
-    for (let l = 0; l < layerCount - 1; l++) c += countCrossings(layers[l]!, layers[l + 1]!, vertices, pos);
+    for (let l = 0; l < layerCount - 1; l++)
+      c += countCrossings(layers[l]!, layers[l + 1]!, vertices, pos);
     return c;
   };
   let best = totalCrossings();
@@ -237,7 +261,12 @@ function layoutComponent(
   // Coordinate assignment: priority-weighted barycentric placement, solved exactly per layer as a
   // separation-constrained least-squares problem (dummy vertices weigh more so long edges stay straight).
   const sep = (a: Vertex, b: Vertex) => {
-    const gap = a.node < 0 && b.node < 0 ? nodeSpacing * 0.25 : a.node < 0 || b.node < 0 ? nodeSpacing * 0.5 : nodeSpacing;
+    const gap =
+      a.node < 0 && b.node < 0
+        ? nodeSpacing * 0.25
+        : a.node < 0 || b.node < 0
+          ? nodeSpacing * 0.5
+          : nodeSpacing;
     return (a.along + b.along) / 2 + gap;
   };
   const u = new Float64Array(vertices.length);
@@ -259,7 +288,8 @@ function layoutComponent(
       const gaps: number[] = [];
       layer.forEach((v, i) => {
         const vert = vertices[v]!;
-        const nb = pass === 'down' ? vert.up : pass === 'up' ? vert.down : [...vert.up, ...vert.down];
+        const nb =
+          pass === 'down' ? vert.up : pass === 'up' ? vert.down : [...vert.up, ...vert.down];
         desired.push(nb.length ? average(nb.map((w) => u[w]!)) : u[v]!);
         weights.push(nb.length ? priority(vert) : 0.01);
         if (i > 0) gaps.push(sep(vertices[layer[i - 1]!]!, vert));
@@ -273,7 +303,11 @@ function layoutComponent(
   const thickness = layers.map((layer) => Math.max(0, ...layer.map((v) => vertices[v]!.across)));
   const centerV: number[] = [];
   for (let l = 0; l < layerCount; l++) {
-    centerV.push(l === 0 ? thickness[0]! / 2 : centerV[l - 1]! + thickness[l - 1]! / 2 + rankSpacing + thickness[l]! / 2);
+    centerV.push(
+      l === 0
+        ? thickness[0]! / 2
+        : centerV[l - 1]! + thickness[l - 1]! / 2 + rankSpacing + thickness[l]! / 2,
+    );
   }
   const out = new Map<number, { u: number; v: number }>();
   vertices.forEach((vert, i) => {

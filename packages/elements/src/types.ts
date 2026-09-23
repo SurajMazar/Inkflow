@@ -314,7 +314,8 @@ export interface UmlClassElement extends BaseElement {
   fontSize: number;
 }
 
-export type SequenceParticipantKind = 'participant' | 'actor' | 'database' | 'boundary' | 'control' | 'entity';
+export type SequenceParticipantKind =
+  'participant' | 'actor' | 'database' | 'boundary' | 'control' | 'entity';
 export type SequenceMessageKind = 'sync' | 'async' | 'return' | 'create' | 'destroy';
 
 export interface SequenceParticipant {
@@ -382,7 +383,11 @@ export type ElementPatch = {
 };
 
 type AllKeys<U> = U extends unknown ? keyof U : never;
-type ValueAt<U, K extends PropertyKey> = U extends unknown ? (K extends keyof U ? U[K] : never) : never;
+type ValueAt<U, K extends PropertyKey> = U extends unknown
+  ? K extends keyof U
+    ? U[K]
+    : never
+  : never;
 
 export type ElementsMap = ReadonlyMap<string, SceneElement>;
 

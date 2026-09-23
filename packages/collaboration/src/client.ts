@@ -44,7 +44,10 @@ export interface CollabHttpTransport {
     boardId: string,
     body: { clientId: string; batchId: string; ops: Operation[] },
   ): Promise<{ results: OpResult[]; changes: ServerChange[]; seq: number }>;
-  getChanges(boardId: string, since: number): Promise<{ seq: number; changes: ServerChange[] | null }>;
+  getChanges(
+    boardId: string,
+    since: number,
+  ): Promise<{ seq: number; changes: ServerChange[] | null }>;
 }
 
 export interface WebSocketLike {
@@ -112,13 +115,40 @@ export class CollabClient {
   private clientSeq = 0;
   /** Whether the HTTP fallback succeeded recently while the socket is down. */
   private httpReachable = false;
-  private status: SyncStatus = { connection: 'connecting', save: 'saved', pendingOps: 0, lastSavedAt: null, error: null };
+  private status: SyncStatus = {
+    connection: 'connecting',
+    save: 'saved',
+    pendingOps: 0,
+    lastSavedAt: null,
+    error: null,
+  };
   private readonly sendTransientThrottled: Throttled<[SceneElement[]]>;
   private readonly sendPresenceThrottled: Throttled<[]>;
   private presence: Partial<PresenceState> = {};
   private transientBuffer = new Map<string, SceneElement>();
   private readonly onOnline = () => this.reconnectNow();
-  private readonly onOffline = () => this.socket?.close(CLOSE_CODES.GOING_AWAY, 'offline');
+  /**
+   * The browser lost connectivity: a close handshake can't complete, so detach the socket now
+   * (pending operations stay queued) instead of waiting for the browser to time it out.
+   */
+  private readonly onOffline = () => {
+    const s = this.socket;
+    this.socket = null;
+    this.welcomed = false;
+    if (this.inFlight && !this.inFlight.viaHttp) this.inFlight = null;
+    this.httpReachable = false;
+    this.stopHeartbeat();
+    if (s) {
+      s.onclose = null;
+      s.onmessage = null;
+      try {
+        s.close(CLOSE_CODES.GOING_AWAY, 'offline');
+      } catch {
+        // Already closing.
+      }
+    }
+    this.setConnection('offline');
+  };
 
   constructor(private readonly options: CollabClientOptions) {
     this.seq = options.initialSeq;
@@ -227,7 +257,9 @@ export class CollabClient {
 
   private connect() {
     if (this.stopped) return;
-    const create = this.options.createSocket ?? ((url: string) => new WebSocket(url) as unknown as WebSocketLike);
+    const create =
+      this.options.createSocket ??
+      ((url: string) => new WebSocket(url) as unknown as WebSocketLike);
     this.setConnection(this.attempt === 0 ? 'connecting' : 'reconnecting');
     let socket: WebSocketLike;
     try {
@@ -240,7 +272,13 @@ export class CollabClient {
     this.socket = socket;
     this.welcomed = false;
     socket.onopen = () => {
-      this.send({ t: 'hello', protocol: PROTOCOL_VERSION, boardId: this.options.boardId, clientId: this.options.clientId, lastSeq: this.seq });
+      this.send({
+        t: 'hello',
+        protocol: PROTOCOL_VERSION,
+        boardId: this.options.boardId,
+        clientId: this.options.clientId,
+        lastSeq: this.seq,
+      });
     };
     socket.onmessage = (ev) => {
       if (typeof ev.data !== 'string') return;
@@ -256,14 +294,22 @@ export class CollabClient {
       this.welcomed = false;
       this.inFlight = this.inFlight?.viaHttp ? this.inFlight : null;
       this.stopHeartbeat();
-      if (ev.code === CLOSE_CODES.UNAUTHORIZED || ev.code === CLOSE_CODES.FORBIDDEN || ev.code === CLOSE_CODES.NOT_FOUND || ev.code === CLOSE_CODES.BOARD_DELETED || ev.code === CLOSE_CODES.PROTOCOL_MISMATCH) {
+      if (
+        ev.code === CLOSE_CODES.UNAUTHORIZED ||
+        ev.code === CLOSE_CODES.FORBIDDEN ||
+        ev.code === CLOSE_CODES.NOT_FOUND ||
+        ev.code === CLOSE_CODES.BOARD_DELETED ||
+        ev.code === CLOSE_CODES.PROTOCOL_MISMATCH
+      ) {
         this.setConnection('offline');
         this.options.onFatal?.(ev.code, ev.reason || 'Connection closed by server');
         // Unauthorized may be a stale access token: retry after the app refreshes the session.
         if (ev.code === CLOSE_CODES.UNAUTHORIZED) this.scheduleReconnect();
         return;
       }
-      this.setConnection(typeof navigator !== 'undefined' && navigator.onLine === false ? 'offline' : 'reconnecting');
+      this.setConnection(
+        typeof navigator !== 'undefined' && navigator.onLine === false ? 'offline' : 'reconnecting',
+      );
       this.scheduleReconnect();
       // Keep saving through HTTP while the socket is down.
       this.scheduleFlush();
@@ -343,7 +389,9 @@ export class CollabClient {
         this.setConnection('online');
         this.startHeartbeat();
         this.options.onWelcome?.({ role: msg.role, user: msg.user });
-        this.peers = new Map(msg.peers.filter((p) => p.clientId !== this.options.clientId).map((p) => [p.clientId, p]));
+        this.peers = new Map(
+          msg.peers.filter((p) => p.clientId !== this.options.clientId).map((p) => [p.clientId, p]),
+        );
         this.options.onPeers?.([...this.peers.values()]);
         if (msg.missed === null) {
           this.options.onResync?.('gap');
@@ -364,7 +412,8 @@ export class CollabClient {
         this.handleAck(msg.batchId, msg.results);
         return;
       case 'transient':
-        if (msg.clientId !== this.options.clientId) this.options.onTransient?.(msg.clientId, msg.elements);
+        if (msg.clientId !== this.options.clientId)
+          this.options.onTransient?.(msg.clientId, msg.elements);
         return;
       case 'presence':
         if (msg.peer.clientId === this.options.clientId) return;
@@ -450,7 +499,9 @@ export class CollabClient {
         const local = new Map<string, SceneElement>();
         if (el) local.set(id, el);
         for (const op of ops) {
-          const res = applyOperation((x) => local.get(x) ?? this.server.get(x), op, { validate: false });
+          const res = applyOperation((x) => local.get(x) ?? this.server.get(x), op, {
+            validate: false,
+          });
           for (const r of res.elements) if (r.id === id) local.set(id, r);
         }
         el = local.get(id);
@@ -481,7 +532,11 @@ export class CollabClient {
       this.emitRebased(new Set(rejectedOps.flatMap(operationTargets)));
       this.options.onRejected?.(rejected);
     }
-    this.status = { ...this.status, lastSavedAt: Date.now(), error: rejected.length ? (rejected[0]!.reason ?? 'Change rejected') : null };
+    this.status = {
+      ...this.status,
+      lastSavedAt: Date.now(),
+      error: rejected.length ? (rejected[0]!.reason ?? 'Change rejected') : null,
+    };
     this.updateStatus();
     if (this.pending.length) this.scheduleFlush(0);
   }
@@ -514,7 +569,11 @@ export class CollabClient {
     this.inFlight = { batchId, opIds: new Set(batch.map((o) => o.opId)), viaHttp: true };
     this.updateStatus();
     try {
-      const res = await http.postOperations(this.options.boardId, { clientId: this.options.clientId, batchId, ops: batch });
+      const res = await http.postOperations(this.options.boardId, {
+        clientId: this.options.clientId,
+        batchId,
+        ops: batch,
+      });
       this.inFlight = null;
       this.httpReachable = true;
       this.applyChanges(res.changes);
@@ -522,7 +581,10 @@ export class CollabClient {
     } catch (error) {
       this.inFlight = null;
       this.httpReachable = false;
-      this.status = { ...this.status, error: error instanceof Error ? error.message : 'Save failed' };
+      this.status = {
+        ...this.status,
+        error: error instanceof Error ? error.message : 'Save failed',
+      };
       this.updateStatus();
       // Retry later; the ops stay queued (and persisted).
       setTimeout(() => this.scheduleFlush(), 3000);
@@ -544,7 +606,9 @@ export class CollabClient {
   private persist() {
     const storage = this.options.storage;
     if (!storage) return;
-    storage.savePending(this.options.boardId, this.pending).catch((error) => console.warn('[inkflow] could not persist offline changes', error));
+    storage
+      .savePending(this.options.boardId, this.pending)
+      .catch((error) => console.warn('[inkflow] could not persist offline changes', error));
   }
 
   // ───────────────────────────── status ─────────────────────────────
@@ -562,7 +626,10 @@ export class CollabClient {
   private updateStatus() {
     const pendingOps = this.pending.length;
     // The very first connection attempt is not "offline" yet.
-    const online = this.status.connection === 'online' || this.status.connection === 'connecting' || this.httpReachable;
+    const online =
+      this.status.connection === 'online' ||
+      this.status.connection === 'connecting' ||
+      this.httpReachable;
     let save: SaveState;
     if (!online) save = 'offline';
     else if (pendingOps === 0) save = 'saved';

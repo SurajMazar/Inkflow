@@ -15,7 +15,10 @@ class IntersectionObserverStub {
   readonly thresholds = [];
   constructor(private readonly callback: IntersectionObserverCallback) {}
   observe(target: Element) {
-    this.callback([{ isIntersecting: true, target } as IntersectionObserverEntry], this as unknown as IntersectionObserver);
+    this.callback(
+      [{ isIntersecting: true, target } as IntersectionObserverEntry],
+      this as unknown as IntersectionObserver,
+    );
   }
   unobserve() {}
   disconnect() {}
@@ -26,7 +29,10 @@ class IntersectionObserverStub {
 
 Object.defineProperty(window, 'ResizeObserver', { writable: true, value: ResizeObserverStub });
 Object.defineProperty(globalThis, 'ResizeObserver', { writable: true, value: ResizeObserverStub });
-Object.defineProperty(window, 'IntersectionObserver', { writable: true, value: IntersectionObserverStub });
+Object.defineProperty(window, 'IntersectionObserver', {
+  writable: true,
+  value: IntersectionObserverStub,
+});
 
 if (!window.matchMedia) {
   Object.defineProperty(window, 'matchMedia', {

@@ -14,12 +14,19 @@ export function OnboardingPage() {
         <Logo />
         <UserMenu />
       </header>
-      <main id="main-content" className="flex flex-1 items-start justify-center px-4 pt-[8vh] pb-16" data-testid="onboarding">
+      <main
+        id="main-content"
+        className="flex flex-1 items-start justify-center px-4 pt-[8vh] pb-16"
+        data-testid="onboarding"
+      >
         <div className="w-full max-w-md">
-          <p className="font-hand text-lg text-primary">Welcome{user ? `, ${user.name.split(' ')[0]}` : ''}!</p>
+          <p className="font-hand text-lg text-primary">
+            Welcome{user ? `, ${user.name.split(' ')[0]}` : ''}!
+          </p>
           <h1 className="mt-1 text-2xl font-semibold tracking-tight">Create your workspace</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            A workspace is home for your team's boards. You can invite people and create more workspaces later.
+            A workspace is home for your team's boards. You can invite people and create more
+            workspaces later.
           </p>
           <div className="mt-8 rounded-2xl border bg-card p-6">
             <CreateWorkspaceForm submitLabel="Create workspace" />

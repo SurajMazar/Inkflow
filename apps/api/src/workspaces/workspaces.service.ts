@@ -41,11 +41,17 @@ export class WorkspacesService {
     private readonly onboarding: OnboardingService,
   ) {}
 
-  private async toDtos(workspaces: (Workspace & { members: { role: WorkspaceRole }[] })[]): Promise<WorkspaceDto[]> {
+  private async toDtos(
+    workspaces: (Workspace & { members: { role: WorkspaceRole }[] })[],
+  ): Promise<WorkspaceDto[]> {
     if (workspaces.length === 0) return [];
     const ids = workspaces.map((w) => w.id);
     const [memberCounts, boardCounts] = await Promise.all([
-      this.prisma.workspaceMember.groupBy({ by: ['workspaceId'], where: { workspaceId: { in: ids } }, _count: { _all: true } }),
+      this.prisma.workspaceMember.groupBy({
+        by: ['workspaceId'],
+        where: { workspaceId: { in: ids } },
+        _count: { _all: true },
+      }),
       this.prisma.board.groupBy({
         by: ['workspaceId'],
         where: { workspaceId: { in: ids }, deletedAt: null },
@@ -89,9 +95,16 @@ export class WorkspacesService {
     return this.get(userId, ws.id);
   }
 
-  async update(userId: string, workspaceId: string, input: UpdateWorkspaceRequest): Promise<WorkspaceDto> {
+  async update(
+    userId: string,
+    workspaceId: string,
+    input: UpdateWorkspaceRequest,
+  ): Promise<WorkspaceDto> {
     await this.access.requireWorkspace(workspaceId, userId, 'ADMIN');
-    await this.prisma.workspace.update({ where: { id: workspaceId }, data: { name: input.name.trim() } });
+    await this.prisma.workspace.update({
+      where: { id: workspaceId },
+      data: { name: input.name.trim() },
+    });
     return this.get(userId, workspaceId);
   }
 
@@ -102,7 +115,11 @@ export class WorkspacesService {
 
   // ───────────── members ─────────────
 
-  private toMember(m: { role: WorkspaceRole; createdAt: Date; user: PublicUserRow }): WorkspaceMemberDto {
+  private toMember(m: {
+    role: WorkspaceRole;
+    createdAt: Date;
+    user: PublicUserRow;
+  }): WorkspaceMemberDto {
     return { user: toPublicUser(m.user), role: m.role, joinedAt: iso(m.createdAt) };
   }
 
@@ -134,7 +151,11 @@ export class WorkspacesService {
     if ((input.role === 'OWNER' || target.role === 'OWNER') && myRole !== 'OWNER') {
       throw Errors.forbidden('Only workspace owners can grant or change the owner role');
     }
-    if (target.role === 'OWNER' && input.role !== 'OWNER' && (await this.ownerCount(workspaceId)) <= 1) {
+    if (
+      target.role === 'OWNER' &&
+      input.role !== 'OWNER' &&
+      (await this.ownerCount(workspaceId)) <= 1
+    ) {
       throw Errors.conflict('A workspace must keep at least one owner');
     }
     const updated = await this.prisma.workspaceMember.update({
@@ -156,17 +177,25 @@ export class WorkspacesService {
     if (!target) throw Errors.notFound('Member');
     if (target.role === 'OWNER') {
       if (!self && myRole !== 'OWNER') throw Errors.forbidden('Only owners can remove an owner');
-      if ((await this.ownerCount(workspaceId)) <= 1) throw Errors.conflict('The last owner cannot leave the workspace');
+      if ((await this.ownerCount(workspaceId)) <= 1)
+        throw Errors.conflict('The last owner cannot leave the workspace');
     }
-    await this.prisma.workspaceMember.delete({ where: { workspaceId_userId: { workspaceId, userId: targetUserId } } });
+    await this.prisma.workspaceMember.delete({
+      where: { workspaceId_userId: { workspaceId, userId: targetUserId } },
+    });
     await this.announcePermissionChange(workspaceId);
   }
 
   /** Workspace role changes alter effective board roles: tell every board's sockets to re-check. */
   private async announcePermissionChange(workspaceId: string): Promise<void> {
-    const boards = await this.prisma.board.findMany({ where: { workspaceId, deletedAt: null }, select: { id: true } });
+    const boards = await this.prisma.board.findMany({
+      where: { workspaceId, deletedAt: null },
+      select: { id: true },
+    });
     const active = await this.realtime.activeBoards(boards.map((b) => b.id));
-    await Promise.all(active.map((id) => this.realtime.emitEvent(id, { kind: 'permissions-changed' })));
+    await Promise.all(
+      active.map((id) => this.realtime.emitEvent(id, { kind: 'permissions-changed' })),
+    );
   }
 
   // ───────────── invitations ─────────────
@@ -201,7 +230,11 @@ export class WorkspacesService {
     return rows.map((r) => this.toInvitation(r));
   }
 
-  async invite(userId: string, workspaceId: string, input: InviteMemberRequest): Promise<InviteMemberResponse> {
+  async invite(
+    userId: string,
+    workspaceId: string,
+    input: InviteMemberRequest,
+  ): Promise<InviteMemberResponse> {
     await this.access.requireWorkspace(workspaceId, userId, 'ADMIN');
     const email = input.email.trim().toLowerCase();
     const role = (input.role ?? 'MEMBER') as WorkspaceRole;
@@ -232,7 +265,12 @@ export class WorkspacesService {
           link: `/w/${workspaceId}`,
           data: { workspaceId },
           email: {
-            ...workspaceInviteEmail({ inviterName: inviter.name, workspaceName: workspace.name, url, existingUser: true }),
+            ...workspaceInviteEmail({
+              inviterName: inviter.name,
+              workspaceName: workspace.name,
+              url,
+              existingUser: true,
+            }),
             link: url,
           },
         },
@@ -244,13 +282,25 @@ export class WorkspacesService {
     const expiresAt = new Date(Date.now() + INVITATION_TTL_MS);
     const invitation = await this.prisma.workspaceInvitation.upsert({
       where: { workspaceId_email: { workspaceId, email } },
-      create: { workspaceId, email, role, tokenHash: sha256Hex(token), invitedById: userId, expiresAt },
+      create: {
+        workspaceId,
+        email,
+        role,
+        tokenHash: sha256Hex(token),
+        invitedById: userId,
+        expiresAt,
+      },
       update: { role, tokenHash: sha256Hex(token), invitedById: userId, expiresAt },
       include: { invitedBy: { select: publicUserSelect } },
     });
     const url = this.config.webLink(`/invite/${token}`);
     await this.mail.send({
-      ...workspaceInviteEmail({ inviterName: inviter.name, workspaceName: workspace.name, url, existingUser: false }),
+      ...workspaceInviteEmail({
+        inviterName: inviter.name,
+        workspaceName: workspace.name,
+        url,
+        existingUser: false,
+      }),
       to: email,
       link: url,
     });
@@ -259,7 +309,9 @@ export class WorkspacesService {
 
   async revokeInvitation(userId: string, workspaceId: string, invitationId: string): Promise<void> {
     await this.access.requireWorkspace(workspaceId, userId, 'ADMIN');
-    const res = await this.prisma.workspaceInvitation.deleteMany({ where: { id: invitationId, workspaceId } });
+    const res = await this.prisma.workspaceInvitation.deleteMany({
+      where: { id: invitationId, workspaceId },
+    });
     if (res.count === 0) throw Errors.notFound('Invitation');
   }
 
@@ -268,7 +320,10 @@ export class WorkspacesService {
     const tokenHash = sha256Hex(token);
     const inv = await this.prisma.workspaceInvitation.findUnique({
       where: { tokenHash },
-      include: { workspace: { select: { id: true, name: true } }, invitedBy: { select: { name: true } } },
+      include: {
+        workspace: { select: { id: true, name: true } },
+        invitedBy: { select: { name: true } },
+      },
     });
     if (!inv || !safeEqual(inv.tokenHash, tokenHash)) throw Errors.notFound('Invitation');
     if (inv.expiresAt <= new Date()) throw Errors.tokenExpired('This invitation has expired');
@@ -289,17 +344,24 @@ export class WorkspacesService {
   async accept(userId: string, token: string): Promise<WorkspaceDto> {
     const inv = await this.findInvitation(token);
     const user = await this.prisma.user.findUniqueOrThrow({ where: { id: userId } });
-    if (user.email !== inv.email) throw Errors.forbidden('This invitation was sent to a different email address');
+    if (user.email !== inv.email)
+      throw Errors.forbidden('This invitation was sent to a different email address');
     await this.prisma.$transaction(async (tx) => {
       const existing = await tx.workspaceMember.findUnique({
         where: { workspaceId_userId: { workspaceId: inv.workspaceId, userId } },
       });
-      if (!existing) await tx.workspaceMember.create({ data: { workspaceId: inv.workspaceId, userId, role: inv.role } });
+      if (!existing)
+        await tx.workspaceMember.create({
+          data: { workspaceId: inv.workspaceId, userId, role: inv.role },
+        });
       await tx.workspaceInvitation.delete({ where: { id: inv.id } });
     });
     if (!user.emailVerifiedAt) {
       // Opening the emailed link proves ownership of the address.
-      await this.prisma.user.update({ where: { id: userId }, data: { emailVerifiedAt: new Date() } });
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: { emailVerifiedAt: new Date() },
+      });
       await this.onboarding.claimPendingInvitations(userId, user.email);
     }
     return this.get(userId, inv.workspaceId);

@@ -53,7 +53,8 @@ export class EraserTool extends BaseTool {
       const p = { x: a.x + ((b.x - a.x) * i) / steps, y: a.y + ((b.y - a.y) * i) / steps };
       for (const el of scene.queryPoint(p.x, p.y, r)) {
         if (el.locked || el.hidden || this.targets.has(el.id)) continue;
-        if (!hitTestElement(el, p, { tolerance: r, areaHitForTransparent: el.type !== 'frame' })) continue;
+        if (!hitTestElement(el, p, { tolerance: r, areaHitForTransparent: el.type !== 'frame' }))
+          continue;
         this.addTarget(el);
       }
     }
@@ -62,7 +63,9 @@ export class EraserTool extends BaseTool {
   private addTarget(el: SceneElement) {
     this.targets.add(el.id);
     const group = el.groupIds.at(-1);
-    if (group) for (const m of this.editor.scene.getGroupElements(group)) if (!m.locked) this.targets.add(m.id);
+    if (group)
+      for (const m of this.editor.scene.getGroupElements(group))
+        if (!m.locked) this.targets.add(m.id);
   }
 
   override onPointerUp(): void {

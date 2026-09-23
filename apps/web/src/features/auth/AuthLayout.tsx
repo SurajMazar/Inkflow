@@ -19,7 +19,10 @@ export function AuthLayout({ title, description, children, footer }: AuthLayoutP
           <Logo />
         </Link>
       </header>
-      <main id="main-content" className="flex flex-1 items-start justify-center px-4 pt-[6vh] pb-16 sm:items-center sm:pt-0">
+      <main
+        id="main-content"
+        className="flex flex-1 items-start justify-center px-4 pt-[6vh] pb-16 sm:items-center sm:pt-0"
+      >
         <div className="w-full max-w-[400px]">
           <div className="rounded-2xl border bg-card p-6 sm:p-8">
             <div className="mb-6 flex flex-col gap-1.5">
@@ -28,7 +31,9 @@ export function AuthLayout({ title, description, children, footer }: AuthLayoutP
             </div>
             {children}
           </div>
-          {footer ? <div className="mt-6 text-center text-sm text-muted-foreground">{footer}</div> : null}
+          {footer ? (
+            <div className="mt-6 text-center text-sm text-muted-foreground">{footer}</div>
+          ) : null}
         </div>
       </main>
     </div>
@@ -52,7 +57,10 @@ export function FormAlert({
         ? 'border-success/30 bg-success/5 text-foreground'
         : 'border-border bg-muted text-foreground';
   return (
-    <div role={variant === 'error' ? 'alert' : 'status'} className={`rounded-lg border px-3 py-2.5 text-sm ${styles} ${className ?? ''}`}>
+    <div
+      role={variant === 'error' ? 'alert' : 'status'}
+      className={`rounded-lg border px-3 py-2.5 text-sm ${styles} ${className ?? ''}`}
+    >
       {children}
     </div>
   );

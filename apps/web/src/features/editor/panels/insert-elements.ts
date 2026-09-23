@@ -11,7 +11,9 @@ export function viewportCenterWorld(editor: Editor): Point {
 
 /** Elements sorted by their fractional z-order key (ties broken by id, like the scene). */
 export function sortByIndex(elements: readonly SceneElement[]): SceneElement[] {
-  return [...elements].sort((a, b) => (a.index < b.index ? -1 : a.index > b.index ? 1 : a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+  return [...elements].sort((a, b) =>
+    a.index < b.index ? -1 : a.index > b.index ? 1 : a.id < b.id ? -1 : a.id > b.id ? 1 : 0,
+  );
 }
 
 /**

@@ -60,7 +60,12 @@ describe('Transaction + History', () => {
     expect(committed.deltas).toHaveLength(1);
     expect(committed.deltas[0]!.before).toEqual({ x: 0, y: 0 });
     expect(committed.deltas[0]!.after).toEqual({ x: 100, y: 40 });
-    history.record({ label: 'move', deltas: committed.deltas, selectionBefore: [], selectionAfter: [] });
+    history.record({
+      label: 'move',
+      deltas: committed.deltas,
+      selectionBefore: [],
+      selectionAfter: [],
+    });
 
     undo(scene, history);
     expect(scene.getElement('a')!.x).toBe(0);
@@ -71,9 +76,16 @@ describe('Transaction + History', () => {
   it('undo of a creation tombstones the element; redo revives it', () => {
     const { scene, history } = setup();
     const tx = new Transaction(scene, 'create');
-    tx.create(createElement('diamond', { id: 'd', index: indicesAbove(scene.getElements(), 1)[0]! }));
+    tx.create(
+      createElement('diamond', { id: 'd', index: indicesAbove(scene.getElements(), 1)[0]! }),
+    );
     const committed = tx.commit()!;
-    history.record({ label: 'create', deltas: committed.deltas, selectionBefore: [], selectionAfter: ['d'] });
+    history.record({
+      label: 'create',
+      deltas: committed.deltas,
+      selectionBefore: [],
+      selectionAfter: ['d'],
+    });
     expect(scene.getElements()).toHaveLength(3);
     undo(scene, history);
     expect(scene.getElements()).toHaveLength(2);
@@ -86,7 +98,12 @@ describe('Transaction + History', () => {
     const { scene, history } = setup();
     const tx = new Transaction(scene, 'color');
     tx.update('a', { strokeColor: '#ff0000' });
-    history.record({ label: 'color', deltas: tx.commit()!.deltas, selectionBefore: [], selectionAfter: [] });
+    history.record({
+      label: 'color',
+      deltas: tx.commit()!.deltas,
+      selectionBefore: [],
+      selectionAfter: [],
+    });
     // A collaborator moves the element afterwards.
     scene.upsert([applyPatch(scene.getElement('a')!, { x: 500 })], 'remote');
     undo(scene, history);
@@ -99,7 +116,13 @@ describe('Transaction + History', () => {
     const { scene } = setup();
     const tx = new Transaction(scene, 'x');
     tx.update('a', { width: 999 });
-    tx.create(createElement('text', { id: 't', text: 'hi', index: indicesAbove(scene.getElements(), 1)[0]! }));
+    tx.create(
+      createElement('text', {
+        id: 't',
+        text: 'hi',
+        index: indicesAbove(scene.getElements(), 1)[0]!,
+      }),
+    );
     tx.rollback();
     expect(scene.getElement('a')!.width).toBe(100);
     expect(scene.getElement('t')).toBeUndefined();

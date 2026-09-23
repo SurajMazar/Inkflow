@@ -30,7 +30,12 @@ const MIN_SIZE = 1;
  * Resizes a (possibly rotated) box by dragging `handle` to `pointer` (world coordinates), keeping
  * the opposite handle fixed in world space (or the center when `fromCenter`).
  */
-export function resizeBox(frame: SelectionFrame, handle: ResizeHandle, pointer: Point, mods: ResizeModifiers): ResizedBox {
+export function resizeBox(
+  frame: SelectionFrame,
+  handle: ResizeHandle,
+  pointer: Point,
+  mods: ResizeModifiers,
+): ResizedBox {
   const c = { x: frame.x + frame.width / 2, y: frame.y + frame.height / 2 };
   const p = rotatePoint(pointer, c, -frame.angle);
   let x0 = frame.x;
@@ -95,7 +100,14 @@ export function resizeBox(frame: SelectionFrame, handle: ResizeHandle, pointer: 
   // Rotate the new local center back into world space so the anchor stays put.
   const localCenter = { x: lx + w / 2, y: ly + h / 2 };
   const worldCenter = rotatePoint(localCenter, c, frame.angle);
-  return { x: worldCenter.x - w / 2, y: worldCenter.y - h / 2, width: w, height: h, flippedX, flippedY };
+  return {
+    x: worldCenter.x - w / 2,
+    y: worldCenter.y - h / 2,
+    width: w,
+    height: h,
+    flippedX,
+    flippedY,
+  };
 }
 
 /**
@@ -123,7 +135,10 @@ export function applyBoxToElement(
         pr,
       ]) as typeof original.points;
     } else {
-      patch.points = original.points.map(([px, py]) => [fx > 0 ? px * sx : w - px * sx, fy > 0 ? py * sy : h - py * sy]);
+      patch.points = original.points.map(([px, py]) => [
+        fx > 0 ? px * sx : w - px * sx,
+        fy > 0 ? py * sy : h - py * sy,
+      ]);
     }
     return patch;
   }
@@ -211,7 +226,10 @@ export function resizeMultiple(
       patch.letterSpacing = el.letterSpacing * s;
     }
     if ('label' in el && el.label && !isLinearElement(el)) {
-      patch.label = { ...el.label, fontSize: Math.max(4, Math.min(400, el.label.fontSize * Math.min(esx, esy))) } as ElementPatch['label'];
+      patch.label = {
+        ...el.label,
+        fontSize: Math.max(4, Math.min(400, el.label.fontSize * Math.min(esx, esy))),
+      } as ElementPatch['label'];
     }
     result.set(el.id, patch);
   }

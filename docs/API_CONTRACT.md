@@ -32,24 +32,24 @@ board.workspaceAccess (NONE/VIEWER/EDITOR), valid share link role). No access �
 
 ## Auth — `/auth`
 
-| Method | Path | Body / Query | Response | Notes |
-| --- | --- | --- | --- | --- |
-| GET | `/auth/csrf` | – | `CsrfResponse` | public; sets CSRF cookie |
-| GET | `/auth/providers` | – | `AuthProvidersResponse` | public |
-| POST | `/auth/register` | `RegisterRequest` | `RegisterResponse` | public; sends verification email. If `REQUIRE_EMAIL_VERIFICATION=false`, signs in immediately |
-| POST | `/auth/verify-email` | `TokenRequest` | `AuthResponse` | public; marks verified, signs in |
-| POST | `/auth/resend-verification` | `EmailOnlyRequest` | `OkResponse` | public; always ok |
-| POST | `/auth/login` | `LoginRequest` | `AuthResponse` | `401 INVALID_CREDENTIALS`, `403 EMAIL_NOT_VERIFIED` |
-| POST | `/auth/refresh` | – (refresh cookie) | `AuthResponse` | public; `401 SESSION_EXPIRED` |
-| POST | `/auth/logout` | – | `OkResponse` | revokes current session, clears cookies |
-| POST | `/auth/forgot-password` | `EmailOnlyRequest` | `OkResponse` | public; always ok |
-| POST | `/auth/reset-password` | `ResetPasswordRequest` | `OkResponse` | public; revokes all sessions |
-| POST | `/auth/change-password` | `ChangePasswordRequest` | `OkResponse` | revokes other sessions |
-| GET | `/auth/me` | – | `AuthResponse` | |
-| GET | `/auth/sessions` | – | `SessionDto[]` | |
-| DELETE | `/auth/sessions/:id` | – | `OkResponse` | |
-| GET | `/auth/oauth/:provider` | `?next=/path` | 302 | public; provider = google \| github |
-| GET | `/auth/oauth/:provider/callback` | provider params | 302 → `${WEB_ORIGIN}/auth/callback?status=success\|error&code=…&next=…` | public |
+| Method | Path                             | Body / Query            | Response                                                                | Notes                                                                                         |
+| ------ | -------------------------------- | ----------------------- | ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| GET    | `/auth/csrf`                     | –                       | `CsrfResponse`                                                          | public; sets CSRF cookie                                                                      |
+| GET    | `/auth/providers`                | –                       | `AuthProvidersResponse`                                                 | public                                                                                        |
+| POST   | `/auth/register`                 | `RegisterRequest`       | `RegisterResponse`                                                      | public; sends verification email. If `REQUIRE_EMAIL_VERIFICATION=false`, signs in immediately |
+| POST   | `/auth/verify-email`             | `TokenRequest`          | `AuthResponse`                                                          | public; marks verified, signs in                                                              |
+| POST   | `/auth/resend-verification`      | `EmailOnlyRequest`      | `OkResponse`                                                            | public; always ok                                                                             |
+| POST   | `/auth/login`                    | `LoginRequest`          | `AuthResponse`                                                          | `401 INVALID_CREDENTIALS`, `403 EMAIL_NOT_VERIFIED`                                           |
+| POST   | `/auth/refresh`                  | – (refresh cookie)      | `AuthResponse`                                                          | public; `401 SESSION_EXPIRED`                                                                 |
+| POST   | `/auth/logout`                   | –                       | `OkResponse`                                                            | revokes current session, clears cookies                                                       |
+| POST   | `/auth/forgot-password`          | `EmailOnlyRequest`      | `OkResponse`                                                            | public; always ok                                                                             |
+| POST   | `/auth/reset-password`           | `ResetPasswordRequest`  | `OkResponse`                                                            | public; revokes all sessions                                                                  |
+| POST   | `/auth/change-password`          | `ChangePasswordRequest` | `OkResponse`                                                            | revokes other sessions                                                                        |
+| GET    | `/auth/me`                       | –                       | `AuthResponse`                                                          |                                                                                               |
+| GET    | `/auth/sessions`                 | –                       | `SessionDto[]`                                                          |                                                                                               |
+| DELETE | `/auth/sessions/:id`             | –                       | `OkResponse`                                                            |                                                                                               |
+| GET    | `/auth/oauth/:provider`          | `?next=/path`           | 302                                                                     | public; provider = google \| github                                                           |
+| GET    | `/auth/oauth/:provider/callback` | provider params         | 302 → `${WEB_ORIGIN}/auth/callback?status=success\|error&code=…&next=…` | public                                                                                        |
 
 ## Users — `/users`
 

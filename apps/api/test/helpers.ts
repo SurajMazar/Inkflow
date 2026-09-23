@@ -4,7 +4,12 @@ import type { NestExpressApplication } from '@nestjs/platform-express';
 import request from 'supertest';
 import { WebSocket } from 'ws';
 import type { ClientMessage, ServerMessage } from '@inkflow/collaboration';
-import { createElement, type ElementType, type NewElementProps, type SceneElement } from '@inkflow/elements';
+import {
+  createElement,
+  type ElementType,
+  type NewElementProps,
+  type SceneElement,
+} from '@inkflow/elements';
 import type { Operation } from '@inkflow/scene';
 import { CSRF_COOKIE, CSRF_HEADER, type UserDto, type WorkspaceDto } from '@inkflow/shared';
 import { createApp } from '../src/bootstrap';
@@ -98,14 +103,19 @@ export class TestClient {
     }
   }
 
-  async request<T = unknown>(method: string, path: string, options: RequestOptions = {}): Promise<ApiResponse<T>> {
+  async request<T = unknown>(
+    method: string,
+    path: string,
+    options: RequestOptions = {},
+  ): Promise<ApiResponse<T>> {
     const agent = request(this.baseUrl);
     const m = method.toLowerCase() as 'get' | 'post' | 'put' | 'patch' | 'delete';
     let req = agent[m](path);
     const cookie = this.cookieHeader(path);
     if (cookie) req = req.set('Cookie', cookie);
     const csrf = this.cookie(CSRF_COOKIE);
-    if ((options.csrf ?? true) && csrf && !['get', 'head'].includes(m)) req = req.set(CSRF_HEADER, csrf);
+    if ((options.csrf ?? true) && csrf && !['get', 'head'].includes(m))
+      req = req.set(CSRF_HEADER, csrf);
     for (const [k, v] of Object.entries(options.headers ?? {})) req = req.set(k, v);
     if (options.query) req = req.query(options.query);
     const res = options.body !== undefined ? await req.send(options.body as object) : await req;
@@ -143,7 +153,10 @@ export class TestClient {
     if (csrf) req = req.set(CSRF_HEADER, csrf);
     for (const [k, v] of Object.entries(options.headers ?? {})) req = req.set(k, v);
     for (const [k, v] of Object.entries(fields)) req = req.field(k, v);
-    req = req.attach('file', file.buffer, { filename: file.filename, contentType: file.contentType });
+    req = req.attach('file', file.buffer, {
+      filename: file.filename,
+      contentType: file.contentType,
+    });
     const res = await req;
     this.storeCookies(res.headers['set-cookie']);
     return { status: res.status, body: res.body as T, headers: res.headers, text: res.text };
@@ -160,14 +173,20 @@ interface MailpitSummary {
 }
 
 export async function findEmails(to: string): Promise<MailpitSummary[]> {
-  const res = await fetch(`${MAILPIT_URL}/api/v1/search?query=${encodeURIComponent(`to:"${to}"`)}&limit=50`);
+  const res = await fetch(
+    `${MAILPIT_URL}/api/v1/search?query=${encodeURIComponent(`to:"${to}"`)}&limit=50`,
+  );
   if (!res.ok) throw new Error(`Mailpit search failed: ${res.status}`);
   const data = (await res.json()) as { messages: MailpitSummary[] };
   return data.messages;
 }
 
 /** Waits for an email to `to` whose subject contains `subject`; returns its plain-text body. */
-export async function waitForEmail(to: string, subject: string, timeoutMs = 10_000): Promise<{ subject: string; text: string; html: string }> {
+export async function waitForEmail(
+  to: string,
+  subject: string,
+  timeoutMs = 10_000,
+): Promise<{ subject: string; text: string; html: string }> {
   const deadline = Date.now() + timeoutMs;
   for (;;) {
     const messages = await findEmails(to);
@@ -197,17 +216,26 @@ export function uniqueEmail(prefix = 'user'): string {
 }
 
 /** Registers, verifies via the emailed link and returns a signed-in client. */
-export async function signUp(baseUrl: string, name = 'Test User', email = uniqueEmail()): Promise<TestClient> {
+export async function signUp(
+  baseUrl: string,
+  name = 'Test User',
+  email = uniqueEmail(),
+): Promise<TestClient> {
   const client = new TestClient(baseUrl);
   await client.get('/api/auth/csrf');
-  const reg = await client.post<{ user: UserDto; requiresVerification: boolean }>('/api/auth/register', {
-    email,
-    password: PASSWORD,
-    name,
-  });
+  const reg = await client.post<{ user: UserDto; requiresVerification: boolean }>(
+    '/api/auth/register',
+    {
+      email,
+      password: PASSWORD,
+      name,
+    },
+  );
   if (reg.status !== 201) throw new Error(`register failed: ${reg.status} ${reg.text}`);
   const mail = await waitForEmail(email, 'Verify your email');
-  const verify = await client.post<{ user: UserDto }>('/api/auth/verify-email', { token: tokenFromText(mail.text) });
+  const verify = await client.post<{ user: UserDto }>('/api/auth/verify-email', {
+    token: tokenFromText(mail.text),
+  });
   if (verify.status !== 200) throw new Error(`verify failed: ${verify.status} ${verify.text}`);
   client.user = verify.body.user;
   return client;
@@ -218,9 +246,17 @@ export async function personalWorkspace(client: TestClient): Promise<WorkspaceDt
   return res.body[0]!;
 }
 
-export async function createBoard(client: TestClient, body: Record<string, unknown> = {}): Promise<{ id: string; workspaceId: string }> {
-  const workspaceId = (body.workspaceId as string | undefined) ?? (await personalWorkspace(client)).id;
-  const res = await client.post<{ id: string; workspaceId: string }>('/api/boards', { workspaceId, title: 'Test board', ...body });
+export async function createBoard(
+  client: TestClient,
+  body: Record<string, unknown> = {},
+): Promise<{ id: string; workspaceId: string }> {
+  const workspaceId =
+    (body.workspaceId as string | undefined) ?? (await personalWorkspace(client)).id;
+  const res = await client.post<{ id: string; workspaceId: string }>('/api/boards', {
+    workspaceId,
+    title: 'Test board',
+    ...body,
+  });
   if (res.status !== 201) throw new Error(`create board failed: ${res.status} ${res.text}`);
   return res.body;
 }
@@ -229,11 +265,24 @@ export async function createBoard(client: TestClient, body: Record<string, unkno
 
 let opCounter = 0;
 
-export function element<T extends ElementType>(type: T, props: NewElementProps<T> = {}): SceneElement {
-  return createElement(type, { x: 10, y: 20, width: 100, height: 50, ...props } as NewElementProps<T>);
+export function element<T extends ElementType>(
+  type: T,
+  props: NewElementProps<T> = {},
+): SceneElement {
+  return createElement(type, {
+    x: 10,
+    y: 20,
+    width: 100,
+    height: 50,
+    ...props,
+  } as NewElementProps<T>);
 }
 
-export function op(clientId: string, body: Record<string, unknown>, baseVersion: number | null = null): Operation {
+export function op(
+  clientId: string,
+  body: Record<string, unknown>,
+  baseVersion: number | null = null,
+): Operation {
   opCounter++;
   return {
     opId: `op-${randomUUID()}`,
@@ -245,7 +294,8 @@ export function op(clientId: string, body: Record<string, unknown>, baseVersion:
   } as Operation;
 }
 
-export const createOp = (clientId: string, el: SceneElement) => op(clientId, { type: 'CREATE_ELEMENT', element: el });
+export const createOp = (clientId: string, el: SceneElement) =>
+  op(clientId, { type: 'CREATE_ELEMENT', element: el });
 export const moveOp = (clientId: string, elementId: string, x: number, y: number) =>
   op(clientId, { type: 'MOVE_ELEMENT', elementId, x, y });
 
@@ -253,7 +303,10 @@ export const moveOp = (clientId: string, elementId: string, x: number, y: number
 
 export class TestSocket {
   readonly messages: ServerMessage[] = [];
-  private waiters: { predicate: (m: ServerMessage) => boolean; resolve: (m: ServerMessage) => void }[] = [];
+  private waiters: {
+    predicate: (m: ServerMessage) => boolean;
+    resolve: (m: ServerMessage) => void;
+  }[] = [];
   readonly closed: Promise<{ code: number; reason: string }>;
   readonly opened: Promise<void>;
 
@@ -262,7 +315,9 @@ export class TestSocket {
       ws.once('open', () => resolve());
       ws.once('error', reject);
     });
-    this.closed = new Promise((resolve) => ws.once('close', (code, reason) => resolve({ code, reason: reason.toString() })));
+    this.closed = new Promise((resolve) =>
+      ws.once('close', (code, reason) => resolve({ code, reason: reason.toString() })),
+    );
     ws.on('message', (data) => {
       const msg = JSON.parse(data.toString()) as ServerMessage;
       this.messages.push(msg);
@@ -285,7 +340,8 @@ export class TestSocket {
     predicate: (m: Extract<ServerMessage, { t: T }>) => boolean = () => true,
     timeoutMs = 5_000,
   ): Promise<Extract<ServerMessage, { t: T }>> {
-    const test = (m: ServerMessage) => m.t === t && predicate(m as Extract<ServerMessage, { t: T }>);
+    const test = (m: ServerMessage) =>
+      m.t === t && predicate(m as Extract<ServerMessage, { t: T }>);
     const existing = this.messages.find(test);
     if (existing) {
       this.messages.splice(this.messages.indexOf(existing), 1);
@@ -294,7 +350,11 @@ export class TestSocket {
     return new Promise((resolve, reject) => {
       const timer = setTimeout(() => {
         this.waiters = this.waiters.filter((w) => w.resolve !== done);
-        reject(new Error(`Timed out waiting for "${t}" (got: ${this.messages.map((m) => m.t).join(', ')})`));
+        reject(
+          new Error(
+            `Timed out waiting for "${t}" (got: ${this.messages.map((m) => m.t).join(', ')})`,
+          ),
+        );
       }, timeoutMs);
       const done = (m: ServerMessage) => {
         clearTimeout(timer);
@@ -318,7 +378,10 @@ export class TestSocket {
   }
 }
 
-export function openSocket(wsUrl: string, params: { boardId: string; st?: string; cookie?: string; origin?: string }): TestSocket {
+export function openSocket(
+  wsUrl: string,
+  params: { boardId: string; st?: string; cookie?: string; origin?: string },
+): TestSocket {
   const url = new URL(wsUrl);
   url.searchParams.set('boardId', params.boardId);
   if (params.st) url.searchParams.set('st', params.st);
@@ -332,11 +395,21 @@ export function openSocket(wsUrl: string, params: { boardId: string; st?: string
 export async function joinBoard(
   wsUrl: string,
   params: { boardId: string; st?: string; cookie?: string; clientId?: string; lastSeq?: number },
-): Promise<{ socket: TestSocket; welcome: Extract<ServerMessage, { t: 'welcome' }>; clientId: string }> {
+): Promise<{
+  socket: TestSocket;
+  welcome: Extract<ServerMessage, { t: 'welcome' }>;
+  clientId: string;
+}> {
   const socket = openSocket(wsUrl, params);
   await socket.opened;
   const clientId = params.clientId ?? `client-${randomUUID()}`;
-  socket.send({ t: 'hello', protocol: 1, boardId: params.boardId, clientId, lastSeq: params.lastSeq ?? 0 });
+  socket.send({
+    t: 'hello',
+    protocol: 1,
+    boardId: params.boardId,
+    clientId,
+    lastSeq: params.lastSeq ?? 0,
+  });
   const welcome = await socket.next('welcome');
   return { socket, welcome, clientId };
 }
@@ -346,7 +419,10 @@ export function sleep(ms: number): Promise<void> {
 }
 
 /** Polls until `fn` returns a truthy value. */
-export async function eventually<T>(fn: () => Promise<T | null | undefined | false>, timeoutMs = 5_000): Promise<T> {
+export async function eventually<T>(
+  fn: () => Promise<T | null | undefined | false>,
+  timeoutMs = 5_000,
+): Promise<T> {
   const deadline = Date.now() + timeoutMs;
   for (;;) {
     const value = await fn();

@@ -47,9 +47,15 @@ export function readPngChunks(bytes: Uint8Array): PngChunk[] {
     const length = view.getUint32(pos);
     const end = pos + 12 + length;
     if (end > bytes.length) throw new Error('Truncated PNG chunk');
-    const type = String.fromCharCode(bytes[pos + 4]!, bytes[pos + 5]!, bytes[pos + 6]!, bytes[pos + 7]!);
+    const type = String.fromCharCode(
+      bytes[pos + 4]!,
+      bytes[pos + 5]!,
+      bytes[pos + 6]!,
+      bytes[pos + 7]!,
+    );
     const crc = view.getUint32(pos + 8 + length);
-    if (crc32(bytes, pos + 4, pos + 8 + length) !== crc) throw new Error(`Bad CRC in ${type} chunk`);
+    if (crc32(bytes, pos + 4, pos + 8 + length) !== crc)
+      throw new Error(`Bad CRC in ${type} chunk`);
     chunks.push({ type, data: bytes.subarray(pos + 8, pos + 8 + length), offset: pos });
     pos = end;
     if (type === 'IEND') break;
@@ -68,7 +74,10 @@ export function makePngChunk(type: string, data: Uint8Array): Uint8Array {
   return out;
 }
 
-async function pipe(bytes: Uint8Array, transform: CompressionStream | DecompressionStream): Promise<Uint8Array> {
+async function pipe(
+  bytes: Uint8Array,
+  transform: CompressionStream | DecompressionStream,
+): Promise<Uint8Array> {
   const stream = new Blob([bytes as BlobPart]).stream().pipeThrough(transform);
   return new Uint8Array(await new Response(stream).arrayBuffer());
 }
@@ -89,7 +98,11 @@ const latin1 = (s: string): Uint8Array => {
 };
 
 /** Builds an iTXt chunk (keyword, compressed UTF-8 text when CompressionStream is available). */
-export async function makeITXtChunk(keyword: string, text: string, compress = true): Promise<Uint8Array> {
+export async function makeITXtChunk(
+  keyword: string,
+  text: string,
+  compress = true,
+): Promise<Uint8Array> {
   if (!/^[\x20-\x7e]{1,79}$/.test(keyword)) throw new Error('Invalid iTXt keyword');
   const utf8 = new TextEncoder().encode(text);
   const canCompress = compress && typeof CompressionStream !== 'undefined';
@@ -130,7 +143,11 @@ export async function parseITXt(data: Uint8Array): Promise<{ keyword: string; te
 }
 
 /** Inserts (or replaces) an iTXt chunk with `keyword` right before IEND. */
-export async function embedTextInPng(png: Uint8Array, keyword: string, text: string): Promise<Uint8Array> {
+export async function embedTextInPng(
+  png: Uint8Array,
+  keyword: string,
+  text: string,
+): Promise<Uint8Array> {
   const chunks = readPngChunks(png);
   const iend = chunks.find((c) => c.type === 'IEND');
   if (!iend) throw new Error('PNG without IEND');

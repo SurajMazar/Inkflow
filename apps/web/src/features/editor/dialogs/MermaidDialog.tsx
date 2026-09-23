@@ -8,7 +8,9 @@ export function MermaidDialog({ onClose }: { onClose(): void }) {
       <DialogContent className="sm:max-w-xl" data-inkflow-ui data-testid="mermaid-dialog">
         <DialogHeader>
           <DialogTitle>Diagram from text</DialogTitle>
-          <DialogDescription>Write or paste Mermaid and insert it as shapes and connectors you can edit.</DialogDescription>
+          <DialogDescription>
+            Write or paste Mermaid and insert it as shapes and connectors you can edit.
+          </DialogDescription>
         </DialogHeader>
         <DiagramFromText onInserted={onClose} autoFocus />
       </DialogContent>

@@ -13,7 +13,11 @@ const anonymousRoutes: MockRoute[] = [
   { method: 'GET', path: '/auth/csrf', respond: { body: { csrfToken: 'csrf-1' } } },
   { method: 'GET', path: '/auth/me', respond: apiError(401, 'UNAUTHORIZED') },
   { method: 'POST', path: '/auth/refresh', respond: apiError(401, 'SESSION_EXPIRED') },
-  { method: 'GET', path: '/auth/providers', respond: { body: { password: true, google: true, github: false } } },
+  {
+    method: 'GET',
+    path: '/auth/providers',
+    respond: { body: { password: true, google: true, github: false } },
+  },
 ];
 
 beforeEach(() => {
@@ -37,7 +41,10 @@ describe('LoginPage', () => {
   it('shows enabled OAuth providers only', async () => {
     installFetchMock(anonymousRoutes);
     renderWithProviders(<LoginPage />, { route: '/login', path: '/login' });
-    expect(await screen.findByTestId('oauth-google')).toHaveAttribute('href', '/api/auth/oauth/google');
+    expect(await screen.findByTestId('oauth-google')).toHaveAttribute(
+      'href',
+      '/api/auth/oauth/google',
+    );
     expect(screen.queryByTestId('oauth-github')).not.toBeInTheDocument();
   });
 
@@ -66,7 +73,11 @@ describe('LoginPage', () => {
   it('offers to resend the verification email for unverified accounts', async () => {
     const mock = installFetchMock([
       ...anonymousRoutes,
-      { method: 'POST', path: '/auth/login', respond: apiError(403, 'EMAIL_NOT_VERIFIED', 'Verify your email') },
+      {
+        method: 'POST',
+        path: '/auth/login',
+        respond: apiError(403, 'EMAIL_NOT_VERIFIED', 'Verify your email'),
+      },
       { method: 'POST', path: '/auth/resend-verification', respond: { body: { ok: true } } },
     ]);
     const user = userEvent.setup();
@@ -79,13 +90,19 @@ describe('LoginPage', () => {
     expect(await screen.findByText('Please verify your email first.')).toBeInTheDocument();
     await user.click(screen.getByTestId('login-resend-verification'));
     await waitFor(() => expect(mock.callsTo('POST', '/auth/resend-verification')).toHaveLength(1));
-    expect(mock.callsTo('POST', '/auth/resend-verification')[0]!.body).toEqual({ email: 'ada@example.com' });
+    expect(mock.callsTo('POST', '/auth/resend-verification')[0]!.body).toEqual({
+      email: 'ada@example.com',
+    });
   });
 
   it('shows a clear message for wrong credentials', async () => {
     installFetchMock([
       ...anonymousRoutes,
-      { method: 'POST', path: '/auth/login', respond: apiError(401, 'INVALID_CREDENTIALS', 'Invalid credentials') },
+      {
+        method: 'POST',
+        path: '/auth/login',
+        respond: apiError(401, 'INVALID_CREDENTIALS', 'Invalid credentials'),
+      },
     ]);
     const user = userEvent.setup();
     renderWithProviders(<LoginPage />, { route: '/login', path: '/login' });
@@ -146,7 +163,11 @@ describe('RegisterPage', () => {
   it('maps a duplicate email to the email field', async () => {
     installFetchMock([
       ...anonymousRoutes,
-      { method: 'POST', path: '/auth/register', respond: apiError(409, 'CONFLICT', 'Email already registered') },
+      {
+        method: 'POST',
+        path: '/auth/register',
+        respond: apiError(409, 'CONFLICT', 'Email already registered'),
+      },
     ]);
     const user = userEvent.setup();
     renderWithProviders(<RegisterPage />, { route: '/register', path: '/register' });
@@ -154,6 +175,8 @@ describe('RegisterPage', () => {
     await user.type(screen.getByTestId('register-email'), 'ada@example.com');
     await user.type(screen.getByTestId('register-password'), 'analytical-engine-1843');
     await user.click(screen.getByTestId('register-submit'));
-    expect(await screen.findByText('An account with this email already exists.')).toBeInTheDocument();
+    expect(
+      await screen.findByText('An account with this email already exists.'),
+    ).toBeInTheDocument();
   });
 });

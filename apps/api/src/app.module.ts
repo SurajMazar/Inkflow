@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import { Module, type DynamicModule } from '@nestjs/common';
+import { Module, RequestMethod, type DynamicModule } from '@nestjs/common';
 import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { LoggerModule } from 'nestjs-pino';
@@ -51,13 +51,16 @@ export function redactUrl(url: string | undefined): string | undefined {
 function loggerModule(env: ApiEnv): DynamicModule {
   const pretty = env.NODE_ENV === 'development';
   return LoggerModule.forRoot({
+    // Express 5 / path-to-regexp v8 named wildcard (the default '*' is deprecated).
+    forRoutes: [{ path: '{*splat}', method: RequestMethod.ALL }],
     pinoHttp: {
       level: env.LOG_LEVEL,
       genReqId: (req: IncomingMessage, res: ServerResponse) => {
         const existing = (req as IncomingMessage & { id?: unknown }).id;
         if (typeof existing === 'string') return existing;
         const incoming = req.headers['x-request-id'];
-        const id = typeof incoming === 'string' && /^[\w.-]{1,64}$/.test(incoming) ? incoming : randomUUID();
+        const id =
+          typeof incoming === 'string' && /^[\w.-]{1,64}$/.test(incoming) ? incoming : randomUUID();
         res.setHeader('x-request-id', id);
         return id;
       },
@@ -78,7 +81,13 @@ function loggerModule(env: ApiEnv): DynamicModule {
         censor: '[redacted]',
       },
       serializers: {
-        req: (req: { id?: unknown; method?: string; url?: string; remoteAddress?: string; headers?: Record<string, unknown> }) => ({
+        req: (req: {
+          id?: unknown;
+          method?: string;
+          url?: string;
+          remoteAddress?: string;
+          headers?: Record<string, unknown>;
+        }) => ({
           id: req.id,
           method: req.method,
           url: redactUrl(req.url),
@@ -90,7 +99,14 @@ function loggerModule(env: ApiEnv): DynamicModule {
       customLogLevel: (_req: IncomingMessage, res: ServerResponse, err?: Error) =>
         err || res.statusCode >= 500 ? 'error' : res.statusCode >= 400 ? 'warn' : 'info',
       autoLogging: { ignore: (req: IncomingMessage) => (req.url ?? '').startsWith('/api/health') },
-      ...(pretty ? { transport: { target: 'pino-pretty', options: { singleLine: true, colorize: true, translateTime: 'SYS:HH:MM:ss.l' } } } : {}),
+      ...(pretty
+        ? {
+            transport: {
+              target: 'pino-pretty',
+              options: { singleLine: true, colorize: true, translateTime: 'SYS:HH:MM:ss.l' },
+            },
+          }
+        : {}),
     },
   });
 }
@@ -114,7 +130,12 @@ export class AppModule {
               { name: THROTTLER_DEFAULT, ttl: windowMs, limit: env.RATE_LIMIT_MAX },
               { name: THROTTLER_AUTH_IP, ttl: windowMs, limit: env.AUTH_RATE_LIMIT_MAX },
               // Per-account limit (login lockout / reset spam): blocks the address for 5 windows.
-              { name: THROTTLER_AUTH_EMAIL, ttl: windowMs, limit: Math.max(3, Math.ceil(env.AUTH_RATE_LIMIT_MAX / 2)), blockDuration: windowMs * 5 },
+              {
+                name: THROTTLER_AUTH_EMAIL,
+                ttl: windowMs,
+                limit: Math.max(3, Math.ceil(env.AUTH_RATE_LIMIT_MAX / 2)),
+                blockDuration: windowMs * 5,
+              },
             ],
           }),
         }),

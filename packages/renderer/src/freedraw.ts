@@ -85,7 +85,9 @@ function strokePoints(input: readonly PressurePoint[], o: FreedrawOutlineOptions
   // Pressure → radius.
   const size = Math.max(0.1, o.size);
   const thinning = Math.max(-1, Math.min(1, o.thinning));
-  let prevPressure = o.simulatePressure ? Math.min(1, 0.25 + (out[1]?.distance ?? 0) / size) : (out[0]?.pressure ?? 0.5);
+  let prevPressure = o.simulatePressure
+    ? Math.min(1, 0.25 + (out[1]?.distance ?? 0) / size)
+    : (out[0]?.pressure ?? 0.5);
   for (const p of out) {
     let pressure: number;
     if (o.simulatePressure) {
@@ -117,7 +119,10 @@ function circleOutline(c: Point, r: number, steps = 16): Point[] {
  * speed-simulated) mapped to radius, offset left/right along the normal, rounded caps and rounded
  * joins at sharp corners.
  */
-export function getFreedrawOutline(points: readonly PressurePoint[], options: FreedrawOutlineOptions): Point[] {
+export function getFreedrawOutline(
+  points: readonly PressurePoint[],
+  options: FreedrawOutlineOptions,
+): Point[] {
   if (points.length === 0) return [];
   const pts = strokePoints(points, options);
   const first = pts[0]!;
@@ -175,12 +180,14 @@ export function getFreedrawOutline(points: readonly PressurePoint[], options: Fr
   // Start cap: half circle from the right side around the back of the first point to the left.
   const startCap: Point[] = [];
   const s0 = right[0]!;
-  for (let s = 1; s < CAP_STEPS; s++) startCap.push(rotateAround(s0, first, (-Math.PI * s) / CAP_STEPS));
+  for (let s = 1; s < CAP_STEPS; s++)
+    startCap.push(rotateAround(s0, first, (-Math.PI * s) / CAP_STEPS));
   // End cap: half circle from the left side around the front of the last point to the right.
   const endCap: Point[] = [];
   const e0 = left[left.length - 1]!;
   if (options.last) {
-    for (let s = 1; s < CAP_STEPS; s++) endCap.push(rotateAround(e0, last, (-Math.PI * s) / CAP_STEPS));
+    for (let s = 1; s < CAP_STEPS; s++)
+      endCap.push(rotateAround(e0, last, (-Math.PI * s) / CAP_STEPS));
   }
   return [...startCap, ...left, ...endCap, ...right.reverse()];
 }
@@ -222,15 +229,38 @@ export interface BrushSettings {
 }
 
 /** Stroke parameters per brush; sizes scale with the element stroke width. */
-export function getBrushSettings(el: Pick<FreedrawElement, 'brush' | 'strokeWidth' | 'simulatePressure'>): BrushSettings {
+export function getBrushSettings(
+  el: Pick<FreedrawElement, 'brush' | 'strokeWidth' | 'simulatePressure'>,
+): BrushSettings {
   const sw = Math.max(0.5, el.strokeWidth);
   const brush: FreedrawBrush = el.brush;
   switch (brush) {
     case 'brush':
-      return { size: sw * 3 + 2, thinning: 0.75, smoothing: 0.75, streamline: 0.65, alpha: 1, simulatePressure: el.simulatePressure };
+      return {
+        size: sw * 3 + 2,
+        thinning: 0.75,
+        smoothing: 0.75,
+        streamline: 0.65,
+        alpha: 1,
+        simulatePressure: el.simulatePressure,
+      };
     case 'highlighter':
-      return { size: sw * 4 + 4, thinning: 0, smoothing: 0.6, streamline: 0.6, alpha: 0.4, simulatePressure: false };
+      return {
+        size: sw * 4 + 4,
+        thinning: 0,
+        smoothing: 0.6,
+        streamline: 0.6,
+        alpha: 0.4,
+        simulatePressure: false,
+      };
     default:
-      return { size: sw * 1.75 + 1, thinning: 0.6, smoothing: 0.5, streamline: 0.5, alpha: 1, simulatePressure: el.simulatePressure };
+      return {
+        size: sw * 1.75 + 1,
+        thinning: 0.6,
+        smoothing: 0.5,
+        streamline: 0.5,
+        alpha: 1,
+        simulatePressure: el.simulatePressure,
+      };
   }
 }

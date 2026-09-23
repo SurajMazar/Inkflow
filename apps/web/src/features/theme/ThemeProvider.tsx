@@ -39,14 +39,19 @@ function useMediaQuery(query: string): boolean {
     [query],
   );
   const getSnapshot = React.useCallback(
-    () => (typeof window !== 'undefined' && window.matchMedia ? window.matchMedia(query).matches : false),
+    () =>
+      typeof window !== 'undefined' && window.matchMedia ? window.matchMedia(query).matches : false,
     [query],
   );
   return React.useSyncExternalStore(subscribe, getSnapshot, () => false);
 }
 
 /** Applies the theme to `<html>`: `.dark`, `data-contrast`, `data-reduce-motion`, `color-scheme`, theme-color. */
-export function applyThemeToDocument(resolved: ResolvedTheme, highContrast: boolean, reduceMotion: boolean): void {
+export function applyThemeToDocument(
+  resolved: ResolvedTheme,
+  highContrast: boolean,
+  reduceMotion: boolean,
+): void {
   const root = document.documentElement;
   root.classList.toggle('dark', resolved === 'dark');
   root.style.colorScheme = resolved;
@@ -55,7 +60,11 @@ export function applyThemeToDocument(resolved: ResolvedTheme, highContrast: bool
   if (reduceMotion) root.setAttribute('data-reduce-motion', 'true');
   else root.removeAttribute('data-reduce-motion');
   const color =
-    resolved === 'dark' ? (highContrast ? THEME_COLORS.darkHighContrast : THEME_COLORS.dark) : THEME_COLORS.light;
+    resolved === 'dark'
+      ? highContrast
+        ? THEME_COLORS.darkHighContrast
+        : THEME_COLORS.dark
+      : THEME_COLORS.light;
   let meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
   if (!meta) {
     meta = document.createElement('meta');
@@ -77,7 +86,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const theme = preferences.theme;
   const highContrast = preferences.highContrast;
   const reduceMotionPreference = preferences.reduceMotion;
-  const resolvedTheme: ResolvedTheme = theme === 'system' ? (prefersDark ? 'dark' : 'light') : theme;
+  const resolvedTheme: ResolvedTheme =
+    theme === 'system' ? (prefersDark ? 'dark' : 'light') : theme;
   const reduceMotion = reduceMotionPreference || prefersReducedMotion;
 
   React.useLayoutEffect(() => {
@@ -86,10 +96,17 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   React.useEffect(() => {
     // Cache for `public/theme-init.js`, which applies the theme before the app boots.
-    writeJson(STORAGE_KEYS.appearance, { theme, highContrast, reduceMotion: reduceMotionPreference });
+    writeJson(STORAGE_KEYS.appearance, {
+      theme,
+      highContrast,
+      reduceMotion: reduceMotionPreference,
+    });
   }, [theme, highContrast, reduceMotionPreference]);
 
-  const setTheme = React.useCallback((next: ThemePreference) => void updatePreferences({ theme: next }), [updatePreferences]);
+  const setTheme = React.useCallback(
+    (next: ThemePreference) => void updatePreferences({ theme: next }),
+    [updatePreferences],
+  );
   const setHighContrast = React.useCallback(
     (enabled: boolean) => void updatePreferences({ highContrast: enabled }),
     [updatePreferences],
@@ -110,7 +127,16 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       reduceMotionPreference,
       setReduceMotion,
     }),
-    [theme, resolvedTheme, setTheme, highContrast, setHighContrast, reduceMotion, reduceMotionPreference, setReduceMotion],
+    [
+      theme,
+      resolvedTheme,
+      setTheme,
+      highContrast,
+      setHighContrast,
+      reduceMotion,
+      reduceMotionPreference,
+      setReduceMotion,
+    ],
   );
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;

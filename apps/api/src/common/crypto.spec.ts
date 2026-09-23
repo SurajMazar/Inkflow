@@ -13,7 +13,9 @@ import {
 
 describe('crypto helpers', () => {
   it('hashes tokens with SHA-256 hex', () => {
-    expect(sha256Hex('abc')).toBe('ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad');
+    expect(sha256Hex('abc')).toBe(
+      'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad',
+    );
     expect(sha256Hex('abc')).toHaveLength(64);
   });
 
@@ -64,6 +66,8 @@ describe('crypto helpers', () => {
 
   it('computes RFC 7636 S256 challenges', () => {
     // Example from RFC 7636 appendix B.
-    expect(pkceChallenge('dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk')).toBe('E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM');
+    expect(pkceChallenge('dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk')).toBe(
+      'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM',
+    );
   });
 });

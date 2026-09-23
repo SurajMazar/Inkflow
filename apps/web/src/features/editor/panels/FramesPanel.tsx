@@ -18,7 +18,18 @@ import {
   Input,
   cn,
 } from '@inkflow/ui';
-import { ChevronDown, ChevronUp, Download, Ellipsis, Focus, Frame, GripVertical, Pencil, Play, Trash2 } from 'lucide-react';
+import {
+  ChevronDown,
+  ChevronUp,
+  Download,
+  Ellipsis,
+  Focus,
+  Frame,
+  GripVertical,
+  Pencil,
+  Play,
+  Trash2,
+} from 'lucide-react';
 import * as React from 'react';
 import { useBoardSession, useEditorState } from '../hooks/editor-context';
 import { useEditorUi } from '../hooks/ui-store';
@@ -112,7 +123,10 @@ function FrameRow({
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
         const rect = e.currentTarget.getBoundingClientRect();
-        onDragState({ id: frame.id, position: e.clientY < rect.top + rect.height / 2 ? 'before' : 'after' });
+        onDragState({
+          id: frame.id,
+          position: e.clientY < rect.top + rect.height / 2 ? 'before' : 'after',
+        });
       }}
       onDragLeave={() => onDragState(null)}
       onDrop={(e) => {
@@ -120,7 +134,10 @@ function FrameRow({
         onDragState(null);
         if (!id || id === frame.id) return;
         e.preventDefault();
-        const order = editor.getOrderedFrames().map((f) => f.id).filter((f) => f !== id);
+        const order = editor
+          .getOrderedFrames()
+          .map((f) => f.id)
+          .filter((f) => f !== id);
         const target = order.indexOf(frame.id);
         const rect = e.currentTarget.getBoundingClientRect();
         const after = e.clientY >= rect.top + rect.height / 2;
@@ -133,8 +150,12 @@ function FrameRow({
         dragOver === 'after' && 'shadow-[inset_0_-2px_0_0_var(--color-primary)]',
       )}
     >
-      {canEdit && <GripVertical className="size-3.5 shrink-0 cursor-grab text-muted-foreground" aria-hidden />}
-      <span className="w-5 shrink-0 text-right text-xs tabular-nums text-muted-foreground">{index + 1}</span>
+      {canEdit && (
+        <GripVertical className="size-3.5 shrink-0 cursor-grab text-muted-foreground" aria-hidden />
+      )}
+      <span className="w-5 shrink-0 text-right text-xs tabular-nums text-muted-foreground">
+        {index + 1}
+      </span>
       <div className="min-w-0 flex-1">
         {renaming ? (
           <FrameNameInput frame={frame} onDone={() => setRenaming(false)} />
@@ -200,7 +221,11 @@ function FrameRow({
               <DropdownMenuItem onSelect={() => setRenaming(true)}>
                 <Pencil /> Rename
               </DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => onDelete(frame)} className="text-destructive focus:text-destructive" disabled={frame.locked}>
+              <DropdownMenuItem
+                onSelect={() => onDelete(frame)}
+                className="text-destructive focus:text-destructive"
+                disabled={frame.locked}
+              >
                 <Trash2 /> Delete
               </DropdownMenuItem>
             </>
@@ -215,9 +240,14 @@ function FrameRow({
 export function FramesPanel() {
   const { editor, canEdit } = useBoardSession();
   const frames = useOrderedFrames();
-  const [dragState, setDragState] = React.useState<{ id: string; position: 'before' | 'after' } | null>(null);
+  const [dragState, setDragState] = React.useState<{
+    id: string;
+    position: 'before' | 'after';
+  } | null>(null);
   const [deleteTarget, setDeleteTarget] = React.useState<FrameElement | null>(null);
-  const childCount = deleteTarget ? editor.getElements().filter((e) => e.frameId === deleteTarget.id).length : 0;
+  const childCount = deleteTarget
+    ? editor.getElements().filter((e) => e.frameId === deleteTarget.id).length
+    : 0;
 
   return (
     <div data-testid="panel-frames" className="flex min-h-0 flex-1 flex-col">
@@ -227,11 +257,22 @@ export function FramesPanel() {
         </span>
         <div className="flex gap-1">
           {canEdit && (
-            <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => editor.setTool('frame')}>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 text-xs"
+              onClick={() => editor.setTool('frame')}
+            >
               <Frame className="size-3.5" /> New frame
             </Button>
           )}
-          <Button size="sm" className="h-7 text-xs" disabled={frames.length === 0} onClick={() => editor.startPresentation()} data-testid="frames-present">
+          <Button
+            size="sm"
+            className="h-7 text-xs"
+            disabled={frames.length === 0}
+            onClick={() => editor.startPresentation()}
+            data-testid="frames-present"
+          >
             <Play className="size-3.5" /> Present
           </Button>
         </div>
@@ -243,7 +284,11 @@ export function FramesPanel() {
             className="m-3"
             icon={<Frame />}
             title="No frames yet"
-            description={canEdit ? 'Draw a frame (F) around content to use it as a slide or export area.' : 'This board has no frames.'}
+            description={
+              canEdit
+                ? 'Draw a frame (F) around content to use it as a slide or export area.'
+                : 'This board has no frames.'
+            }
           />
         ) : (
           <ul aria-label="Frames in presentation order">

@@ -30,7 +30,10 @@ export function MoveBoardDialog({
 }
 
 function MoveForm({ board, onDone }: { board: BoardSummaryDto; onDone: () => void }) {
-  const [location, setLocation] = React.useState<BoardLocation>({ projectId: board.projectId, folderId: board.folderId });
+  const [location, setLocation] = React.useState<BoardLocation>({
+    projectId: board.projectId,
+    folderId: board.folderId,
+  });
   const { move } = useBoardMutations();
   const unchanged = location.projectId === board.projectId && location.folderId === board.folderId;
   const submit = (event: React.FormEvent) => {

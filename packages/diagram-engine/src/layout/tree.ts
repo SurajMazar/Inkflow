@@ -20,7 +20,14 @@ interface TNode {
   x: number;
 }
 
-function makeNode(node: number, along: number, across: number, parent: TNode | null, number: number, depth: number): TNode {
+function makeNode(
+  node: number,
+  along: number,
+  across: number,
+  parent: TNode | null,
+  number: number,
+  depth: number,
+): TNode {
   const t = {
     node,
     along,
@@ -40,8 +47,10 @@ function makeNode(node: number, along: number, across: number, parent: TNode | n
   return t;
 }
 
-const leftSibling = (v: TNode): TNode | null => (v.parent && v.number > 0 ? v.parent.children[v.number - 1]! : null);
-const leftmostSibling = (v: TNode): TNode | null => (v.parent && v.number > 0 ? v.parent.children[0]! : null);
+const leftSibling = (v: TNode): TNode | null =>
+  v.parent && v.number > 0 ? v.parent.children[v.number - 1]! : null;
+const leftmostSibling = (v: TNode): TNode | null =>
+  v.parent && v.number > 0 ? v.parent.children[0]! : null;
 const nextLeft = (v: TNode): TNode | null => v.children[0] ?? v.thread;
 const nextRight = (v: TNode): TNode | null => v.children[v.children.length - 1] ?? v.thread;
 
@@ -165,7 +174,12 @@ function collect(root: TNode): TNode[] {
 }
 
 /** Spanning forest: roots are nodes without incoming edges (cycles fall back to the first unvisited node). */
-function buildForest(graph: LayoutGraph, alongOf: (i: number) => number, acrossOf: (i: number) => number, orderOf: (i: number) => number): TNode[] {
+function buildForest(
+  graph: LayoutGraph,
+  alongOf: (i: number) => number,
+  acrossOf: (i: number) => number,
+  orderOf: (i: number) => number,
+): TNode[] {
   const n = graph.nodes.length;
   const indeg = new Array<number>(n).fill(0);
   const out: number[][] = Array.from({ length: n }, () => []);
@@ -181,7 +195,9 @@ function buildForest(graph: LayoutGraph, alongOf: (i: number) => number, acrossO
     const queue = [root];
     while (queue.length) {
       const t = queue.shift()!;
-      const kids = out[t.node]!.filter((c) => !visited[c]).sort((a, b) => orderOf(a) - orderOf(b) || a - b);
+      const kids = out[t.node]!.filter((c) => !visited[c]).sort(
+        (a, b) => orderOf(a) - orderOf(b) || a - b,
+      );
       for (const c of kids) {
         if (visited[c]) continue;
         visited[c] = 1;
@@ -199,7 +215,11 @@ function buildForest(graph: LayoutGraph, alongOf: (i: number) => number, acrossO
 }
 
 /** Depth offsets (centre of each level) from level thicknesses. */
-function levelCenters(nodes: readonly TNode[], rankSpacing: number, rootThickness?: number): number[] {
+function levelCenters(
+  nodes: readonly TNode[],
+  rankSpacing: number,
+  rootThickness?: number,
+): number[] {
   const thick: number[] = [];
   for (const v of nodes) thick[v.depth] = Math.max(thick[v.depth] ?? 0, v.across);
   if (rootThickness !== undefined) thick[0] = rootThickness;

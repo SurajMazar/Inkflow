@@ -92,7 +92,8 @@ export class Scene {
 
   /** Non-deleted elements in z-order (bottom first). */
   getElements(): readonly SceneElement[] {
-    if (!this.sortedLive) this.sortedLive = this.getElementsIncludingDeleted().filter((e) => !e.isDeleted);
+    if (!this.sortedLive)
+      this.sortedLive = this.getElementsIncludingDeleted().filter((e) => !e.isDeleted);
     return this.sortedLive;
   }
 
@@ -108,7 +109,12 @@ export class Scene {
   }
 
   queryPoint(x: number, y: number, tolerance: number): SceneElement[] {
-    return this.queryBounds({ minX: x - tolerance, minY: y - tolerance, maxX: x + tolerance, maxY: y + tolerance });
+    return this.queryBounds({
+      minX: x - tolerance,
+      minY: y - tolerance,
+      maxX: x + tolerance,
+      maxY: y + tolerance,
+    });
   }
 
   /** Arrows/connectors attached to the element (either endpoint). */

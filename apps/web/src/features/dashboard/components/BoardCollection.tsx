@@ -39,7 +39,9 @@ export function sortBoards(boards: readonly BoardSummaryDto[], sort: BoardSort):
   const list = [...boards];
   switch (sort) {
     case 'title':
-      return list.sort((a, b) => a.title.localeCompare(b.title, undefined, { sensitivity: 'base', numeric: true }));
+      return list.sort((a, b) =>
+        a.title.localeCompare(b.title, undefined, { sensitivity: 'base', numeric: true }),
+      );
     case 'updated':
       return list.sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt));
     case 'created':
@@ -106,7 +108,10 @@ export function BoardCollection({
 
   if (isError && !boards) {
     return (
-      <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed px-6 py-12 text-center" role="alert">
+      <div
+        className="flex flex-col items-center gap-3 rounded-xl border border-dashed px-6 py-12 text-center"
+        role="alert"
+      >
         <p className="text-sm font-medium">Couldn't load boards</p>
         <p className="text-sm text-muted-foreground">Check your connection and try again.</p>
         {onRetry ? (
@@ -124,7 +129,10 @@ export function BoardCollection({
         <label htmlFor={filterId} className="sr-only">
           Filter boards by title
         </label>
-        <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+        <Search
+          className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground"
+          aria-hidden
+        />
         <Input
           id={filterId}
           type="search"
@@ -138,7 +146,12 @@ export function BoardCollection({
       <div className="ml-auto flex items-center gap-1">
         <DropdownMenu modal={false}>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="text-muted-foreground" data-testid="board-sort">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-muted-foreground"
+              data-testid="board-sort"
+            >
               <ArrowDownUp aria-hidden />
               <span className="hidden sm:inline">{SORT_LABELS[sort]}</span>
               <span className="sr-only sm:hidden">Sort: {SORT_LABELS[sort]}</span>
@@ -146,7 +159,10 @@ export function BoardCollection({
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-44">
             <DropdownMenuLabel>Sort by</DropdownMenuLabel>
-            <DropdownMenuRadioGroup value={sort} onValueChange={(value) => setSort(value as BoardSort)}>
+            <DropdownMenuRadioGroup
+              value={sort}
+              onValueChange={(value) => setSort(value as BoardSort)}
+            >
               {(Object.keys(SORT_LABELS) as BoardSort[]).map((key) => (
                 <DropdownMenuRadioItem key={key} value={key}>
                   {SORT_LABELS[key]}
@@ -176,7 +192,11 @@ export function BoardCollection({
   let body: React.ReactNode;
   if (isLoading && !boards) {
     body = (
-      <div className="grid grid-cols-[repeat(auto-fill,minmax(210px,1fr))] gap-4" aria-busy="true" aria-label="Loading boards">
+      <div
+        className="grid grid-cols-[repeat(auto-fill,minmax(210px,1fr))] gap-4"
+        aria-busy="true"
+        aria-label="Loading boards"
+      >
         {Array.from({ length: 6 }, (_, i) => (
           <div key={i} className="overflow-hidden rounded-xl border">
             <Skeleton className="aspect-[16/10] rounded-none" />
@@ -194,7 +214,11 @@ export function BoardCollection({
     body = (
       <div className="rounded-xl border border-dashed px-6 py-10 text-center text-sm text-muted-foreground">
         No boards match “{filter}”.{' '}
-        <button type="button" className="font-medium text-foreground underline underline-offset-4" onClick={() => setFilter('')}>
+        <button
+          type="button"
+          className="font-medium text-foreground underline underline-offset-4"
+          onClick={() => setFilter('')}
+        >
           Clear filter
         </button>
       </div>
@@ -240,7 +264,11 @@ export function BoardCollection({
       {boards && boards.length > 0 ? toolbar : null}
       {body}
       <p className="sr-only" aria-live="polite">
-        {boards ? (filter ? `${pluralize(visible.length, 'board')} match the filter` : pluralize(boards.length, 'board')) : ''}
+        {boards
+          ? filter
+            ? `${pluralize(visible.length, 'board')} match the filter`
+            : pluralize(boards.length, 'board')
+          : ''}
       </p>
     </div>
   );

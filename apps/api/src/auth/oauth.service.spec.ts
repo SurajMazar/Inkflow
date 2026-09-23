@@ -33,10 +33,15 @@ describe('OAuthService', () => {
     const parsed = new URL(url);
     expect(parsed.origin + parsed.pathname).toBe('https://accounts.google.com/o/oauth2/v2/auth');
     expect(parsed.searchParams.get('client_id')).toBe('google-id');
-    expect(parsed.searchParams.get('redirect_uri')).toBe('https://app.test/api/auth/oauth/google/callback');
+    expect(parsed.searchParams.get('redirect_uri')).toBe(
+      'https://app.test/api/auth/oauth/google/callback',
+    );
     expect(parsed.searchParams.get('scope')).toBe('openid email profile');
     expect(parsed.searchParams.get('code_challenge_method')).toBe('S256');
-    const state = verifySignedPayload<OAuthStateCookie>(deriveKey(env.SESSION_SECRET, 'oauth-state'), cookie)!;
+    const state = verifySignedPayload<OAuthStateCookie>(
+      deriveKey(env.SESSION_SECRET, 'oauth-state'),
+      cookie,
+    )!;
     expect(state).toMatchObject({ provider: 'google', next: '/boards/1' });
     expect(parsed.searchParams.get('state')).toBe(state.state);
     expect(parsed.searchParams.get('code_challenge')).toBe(pkceChallenge(state.verifier));

@@ -8,7 +8,8 @@ import { sanitizeNext } from '../next-param';
 
 const OAUTH_MESSAGES: Record<string, string> = {
   OAUTH_FAILED: 'The provider did not complete the sign-in. Please try again.',
-  CONFLICT: 'An account with this email already exists. Sign in with your password, then connect the provider in Settings.',
+  CONFLICT:
+    'An account with this email already exists. Sign in with your password, then connect the provider in Settings.',
   EMAIL_NOT_VERIFIED: 'Your provider account has no verified email address.',
   FORBIDDEN: 'Sign-in with this provider is not allowed for your account.',
   access_denied: 'You cancelled the sign-in.',
@@ -46,10 +47,15 @@ export function OAuthCallbackPage() {
   return (
     <FullPageMessage
       title="We couldn't sign you in"
-      description={OAUTH_MESSAGES[code] ?? 'Something went wrong while signing in with the provider. Please try again.'}
+      description={
+        OAUTH_MESSAGES[code] ??
+        'Something went wrong while signing in with the provider. Please try again.'
+      }
       actions={
         <Button asChild>
-          <Link to={next !== '/' ? `/login?next=${encodeURIComponent(next)}` : '/login'}>Back to sign in</Link>
+          <Link to={next !== '/' ? `/login?next=${encodeURIComponent(next)}` : '/login'}>
+            Back to sign in
+          </Link>
         </Button>
       }
     />

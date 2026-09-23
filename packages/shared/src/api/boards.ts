@@ -121,7 +121,12 @@ export interface BoardSharingDto {
 export const createShareLinkSchema = z.object({
   role: z.enum(SHARE_LINK_ROLES).default('VIEWER'),
   /** Hours until expiry; omit for a link that never expires. */
-  expiresInHours: z.number().int().min(1).max(24 * 365).optional(),
+  expiresInHours: z
+    .number()
+    .int()
+    .min(1)
+    .max(24 * 365)
+    .optional(),
 });
 export type CreateShareLinkRequest = z.input<typeof createShareLinkSchema>;
 

@@ -35,7 +35,14 @@ const raster = (extra: Partial<RasterExportOptions> = {}): RasterExportOptions =
 
 describe('getExportBounds', () => {
   const a = make('rectangle', { x: 0, y: 0, width: 100, height: 50, roughness: 0, strokeWidth: 2 });
-  const b = make('ellipse', { x: 200, y: 100, width: 50, height: 50, roughness: 0, strokeWidth: 2 });
+  const b = make('ellipse', {
+    x: 200,
+    y: 100,
+    width: 50,
+    height: 50,
+    roughness: 0,
+    strokeWidth: 2,
+  });
   const frame = make('frame', { x: 400, y: 400, width: 300, height: 200, angle: 0, name: 'F' });
   const hidden = make('rectangle', { x: -1000, y: -1000, width: 10, height: 10, hidden: true });
   const deleted = make('rectangle', { x: 5000, y: 5000, width: 10, height: 10, isDeleted: true });
@@ -52,7 +59,12 @@ describe('getExportBounds', () => {
 
   it('crops to a frame (rotated frames use their rotated box)', () => {
     const scope = scopeOf([a, frame]);
-    expect(getExportBounds(scope, { padding: 20, frameId: frame.id })).toEqual({ x: 400, y: 400, width: 300, height: 200 });
+    expect(getExportBounds(scope, { padding: 20, frameId: frame.id })).toEqual({
+      x: 400,
+      y: 400,
+      width: 300,
+      height: 200,
+    });
     const rotated = { ...frame, angle: Math.PI / 2 };
     const r = getExportBounds(scopeOf([rotated]), { padding: 0, frameId: frame.id });
     expect(r.width).toBeCloseTo(200, 6);
@@ -62,26 +74,39 @@ describe('getExportBounds', () => {
 
   it('uses the exact viewport rectangle', () => {
     const scope = scopeOf([a, b]);
-    expect(getExportBounds(scope, { padding: 30, bounds: { x: 10, y: 20, width: -100, height: 50 } })).toEqual({ x: -90, y: 20, width: 100, height: 50 });
+    expect(
+      getExportBounds(scope, { padding: 30, bounds: { x: 10, y: 20, width: -100, height: 50 } }),
+    ).toEqual({ x: -90, y: 20, width: 100, height: 50 });
   });
 
   it('reserves space for frame names and handles empty scopes', () => {
     const scope = scopeOf([frame]);
     const r = getExportBounds(scope, { padding: 0 });
     expect(r.y).toBeLessThan(getElementBounds(frame).minY - 20);
-    expect(getExportBounds(scopeOf([]), { padding: 8 })).toEqual({ x: 0, y: 0, width: 16, height: 16 });
+    expect(getExportBounds(scopeOf([]), { padding: 8 })).toEqual({
+      x: 0,
+      y: 0,
+      width: 16,
+      height: 16,
+    });
   });
 });
 
 describe('PNG iTXt embedding', () => {
   it('round-trips the scene through a synthetic PNG', async () => {
     const png = syntheticPng(3, 2);
-    const json = JSON.stringify({ type: 'inkflow', text: 'ünïcødé ✓ 🎨', n: Array.from({ length: 200 }, (_, i) => i) });
+    const json = JSON.stringify({
+      type: 'inkflow',
+      text: 'ünïcødé ✓ 🎨',
+      n: Array.from({ length: 200 }, (_, i) => i),
+    });
     const out = await embedSceneInPng(png, json);
     const chunks = readPngChunks(out); // verifies CRCs
     expect(chunks.map((c) => c.type)).toEqual(['IHDR', 'IDAT', 'iTXt', 'IEND']);
     expect(await readTextFromPng(out, 'inkflow')).toBe(json);
-    expect(await extractSceneFromPng(new Blob([out as BlobPart], { type: 'image/png' }))).toBe(json);
+    expect(await extractSceneFromPng(new Blob([out as BlobPart], { type: 'image/png' }))).toBe(
+      json,
+    );
     // Compressed payload is smaller than the raw JSON.
     const itxt = chunks.find((c) => c.type === 'iTXt')!;
     expect(itxt.data.length).toBeLessThan(json.length);
@@ -104,10 +129,16 @@ describe('exportToCanvas / exportToPngBlob', () => {
   it('sizes the canvas to bounds × scale and clamps to maxPixels', async () => {
     const el = make('rectangle', { x: 0, y: 0, width: 1000, height: 500, roughness: 0 });
     const scope = scopeOf([el]);
-    const canvas = await exportToCanvas(scope, raster({ scale: 2, padding: 0, bounds: { x: 0, y: 0, width: 1000, height: 500 } }));
+    const canvas = await exportToCanvas(
+      scope,
+      raster({ scale: 2, padding: 0, bounds: { x: 0, y: 0, width: 1000, height: 500 } }),
+    );
     expect(canvas.width).toBe(2000);
     expect(canvas.height).toBe(1000);
-    const clamped = await exportToCanvas(scope, raster({ scale: 4, maxPixels: 1_000_000, bounds: { x: 0, y: 0, width: 1000, height: 500 } }));
+    const clamped = await exportToCanvas(
+      scope,
+      raster({ scale: 4, maxPixels: 1_000_000, bounds: { x: 0, y: 0, width: 1000, height: 500 } }),
+    );
     expect(clamped.width * clamped.height).toBeLessThanOrEqual(1_000_000 + 2000);
     expect(clamped.width / clamped.height).toBeCloseTo(2, 1);
     expect(clampExportScale(100, 100, 3, 1e9)).toBe(3);
@@ -142,14 +173,40 @@ describe('exportToCanvas / exportToPngBlob', () => {
 
   it('loads images through loadImage and exports a frame with its children only', async () => {
     const frame = make('frame', { x: 0, y: 0, width: 200, height: 200 });
-    const img = make('image', { x: 10, y: 10, width: 50, height: 50, fileId: 'f1', frameId: frame.id });
+    const img = make('image', {
+      x: 10,
+      y: 10,
+      width: 50,
+      height: 50,
+      fileId: 'f1',
+      frameId: frame.id,
+    });
     const outside = make('rectangle', { x: 20, y: 20, width: 30, height: 30 });
     const loaded: string[] = [];
     const scope = scopeOf([frame, img, outside], {
-      files: { f1: { id: 'f1', mimeType: 'image/png', url: 'https://example.com/a.png', width: 50, height: 50, size: 1, created: 0 } },
+      files: {
+        f1: {
+          id: 'f1',
+          mimeType: 'image/png',
+          url: 'https://example.com/a.png',
+          width: 50,
+          height: 50,
+          size: 1,
+          created: 0,
+        },
+      },
     });
     created.length = 0;
-    const canvas = await exportToCanvas(scope, raster({ frameId: frame.id, loadImage: async (f) => (loaded.push(f.id), { width: 50, height: 50 } as unknown as CanvasImageSource) }));
+    const canvas = await exportToCanvas(
+      scope,
+      raster({
+        frameId: frame.id,
+        loadImage: async (f) => (
+          loaded.push(f.id),
+          { width: 50, height: 50 } as unknown as CanvasImageSource
+        ),
+      }),
+    );
     expect(loaded).toEqual(['f1']);
     expect(canvas.width).toBe(200);
     const calls = created[0]!.ctx.calls;
@@ -163,9 +220,24 @@ describe('exportToCanvas / exportToPngBlob', () => {
 describe('exportToJson', () => {
   it('round-trips through parseDocument', () => {
     const a = make('rectangle', { x: 1, y: 2, width: 3, height: 4, index: 'a0' });
-    const b = make('arrow', { points: [[0, 0], [10, 10]], width: 10, height: 10, index: 'a1' });
+    const b = make('arrow', {
+      points: [
+        [0, 0],
+        [10, 10],
+      ],
+      width: 10,
+      height: 10,
+      index: 'a1',
+    });
     const gone = make('ellipse', { isDeleted: true, index: 'a2' });
-    const scope = scopeOf([a, b, gone], { appState: { viewBackgroundColor: '#fafafa', gridType: 'square', gridSize: 16, frameOrder: [] } });
+    const scope = scopeOf([a, b, gone], {
+      appState: {
+        viewBackgroundColor: '#fafafa',
+        gridType: 'square',
+        gridSize: 16,
+        frameOrder: [],
+      },
+    });
     const json = exportToJson(scope);
     expect(json).toContain('\n  "type": "inkflow"');
     const parsed = parseDocument(JSON.parse(json));
@@ -178,10 +250,27 @@ describe('exportToJson', () => {
 
 describe('exportToSvgString', () => {
   it('embeds images, fonts and scene metadata', async () => {
-    const text = make('text', { x: 0, y: 0, text: 'Hello <world>', width: 120, height: 30, fontFamily: 'hand' });
+    const text = make('text', {
+      x: 0,
+      y: 0,
+      text: 'Hello <world>',
+      width: 120,
+      height: 30,
+      fontFamily: 'hand',
+    });
     const img = make('image', { x: 0, y: 50, width: 40, height: 40, fileId: 'f1' });
     const scope = scopeOf([text, img], {
-      files: { f1: { id: 'f1', mimeType: 'image/png', url: '/files/f1', width: 40, height: 40, size: 1, created: 0 } },
+      files: {
+        f1: {
+          id: 'f1',
+          mimeType: 'image/png',
+          url: '/files/f1',
+          width: 40,
+          height: 40,
+          size: 1,
+          created: 0,
+        },
+      },
     });
     const svg = await exportToSvgString(scope, {
       background: true,
@@ -199,7 +288,9 @@ describe('exportToSvgString', () => {
     });
     expect(svg).toContain('<image ');
     expect(svg).toContain('href="data:image/png;base64,iVBORw0KGgo="');
-    expect(svg).toContain('@font-face{font-family:"Kalam";src:url(data:font/woff2;base64,AQIDBA==)');
+    expect(svg).toContain(
+      '@font-face{font-family:"Kalam";src:url(data:font/woff2;base64,AQIDBA==)',
+    );
     expect(svg).not.toContain('"Lora";src');
     expect(svg).toContain('Hello &lt;world&gt;');
     const json = extractSceneFromSvg(svg);
@@ -228,12 +319,45 @@ function pdfStreams(src: string): string[] {
 describe('exportToPdfBlob', () => {
   const f1 = make('frame', { x: 0, y: 0, width: 400, height: 300, name: 'One', index: 'a0' });
   const f2 = make('frame', { x: 600, y: 0, width: 800, height: 450, name: 'Two', index: 'a1' });
-  const r1 = make('rectangle', { x: 20, y: 20, width: 100, height: 60, frameId: f1.id, backgroundColor: '#ffc9c9', fillStyle: 'hachure', index: 'a2' });
-  const t2 = make('text', { x: 650, y: 50, text: 'Slide two', width: 200, height: 30, frameId: f2.id, index: 'a3' });
-  const e2 = make('ellipse', { x: 700, y: 100, width: 100, height: 80, frameId: f2.id, opacity: 50, strokeStyle: 'dashed', index: 'a4' });
+  const r1 = make('rectangle', {
+    x: 20,
+    y: 20,
+    width: 100,
+    height: 60,
+    frameId: f1.id,
+    backgroundColor: '#ffc9c9',
+    fillStyle: 'hachure',
+    index: 'a2',
+  });
+  const t2 = make('text', {
+    x: 650,
+    y: 50,
+    text: 'Slide two',
+    width: 200,
+    height: 30,
+    frameId: f2.id,
+    index: 'a3',
+  });
+  const e2 = make('ellipse', {
+    x: 700,
+    y: 100,
+    width: 100,
+    height: 80,
+    frameId: f2.id,
+    opacity: 50,
+    strokeStyle: 'dashed',
+    index: 'a4',
+  });
 
   it('vector mode: one page per frame in presentation order, sized to the frame', async () => {
-    const scope = scopeOf([f1, f2, r1, t2, e2], { appState: { viewBackgroundColor: '#ffffff', gridType: 'dot', gridSize: 20, frameOrder: [f2.id] } });
+    const scope = scopeOf([f1, f2, r1, t2, e2], {
+      appState: {
+        viewBackgroundColor: '#ffffff',
+        gridType: 'dot',
+        gridSize: 20,
+        frameOrder: [f2.id],
+      },
+    });
     const blob = await exportToPdfBlob(scope, { ...raster(), mode: 'vector', pages: 'frames' });
     expect(blob.type).toBe('application/pdf');
     const src = pdfText(new Uint8Array(await blob.arrayBuffer()));
@@ -241,7 +365,10 @@ describe('exportToPdfBlob', () => {
     expect(src.trimEnd().endsWith('%%EOF')).toBe(true);
     const pages = src.match(/\/Type \/Page\b(?!s)/g) ?? [];
     expect(pages).toHaveLength(2);
-    const boxes = [...src.matchAll(/\/MediaBox \[0 0 ([\d.]+) ([\d.]+)\]/g)].map((m) => [Number(m[1]), Number(m[2])]);
+    const boxes = [...src.matchAll(/\/MediaBox \[0 0 ([\d.]+) ([\d.]+)\]/g)].map((m) => [
+      Number(m[1]),
+      Number(m[2]),
+    ]);
     expect(boxes).toEqual([
       [600, 337.5],
       [300, 225],

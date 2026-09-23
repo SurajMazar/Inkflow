@@ -39,7 +39,10 @@ export function measureRenderPadding(el: SceneElement): number {
       return Math.max(1, brush.size / 2 - sw * 2 + 1);
     }
     case 'text':
-      return Math.max(2, el.fontSize * 0.25) + (isTransparentColor(el.backgroundColor) ? 0 : el.fontSize * 0.2);
+      return (
+        Math.max(2, el.fontSize * 0.25) +
+        (isTransparentColor(el.backgroundColor) ? 0 : el.fontSize * 0.2)
+      );
     case 'image':
       return base;
     case 'frame':

@@ -33,7 +33,14 @@ import {
 } from '../common/cookies';
 import { Errors } from '../common/errors';
 import { AuthRateLimit } from '../common/rate-limit';
-import { CurrentUser, Meta, OptionalUser, Public, type AuthInfo, type ClientMeta } from '../common/request';
+import {
+  CurrentUser,
+  Meta,
+  OptionalUser,
+  Public,
+  type AuthInfo,
+  type ClientMeta,
+} from '../common/request';
 import { safeNextPath } from '../common/mappers';
 import { ApiZodBody, ZBody } from '../common/validation';
 import { UsersService } from '../users/users.service';
@@ -94,7 +101,11 @@ export class AuthController {
   @Get('providers')
   @ApiOperation({ summary: 'Available sign-in methods' })
   providers(): AuthProvidersResponse {
-    return { password: true, google: this.oauth.isConfigured('google'), github: this.oauth.isConfigured('github') };
+    return {
+      password: true,
+      google: this.oauth.isConfigured('google'),
+      github: this.oauth.isConfigured('github'),
+    };
   }
 
   @Public()
@@ -251,7 +262,9 @@ export class AuthController {
   @ApiCookieAuth()
   @ApiOperation({ summary: 'Revoke a session' })
   async revokeSession(@CurrentUser() user: AuthInfo, @Param('id') id: string): Promise<OkResponse> {
-    const revoked = isUuid(id) ? await this.sessions.revokeFamily(id, 'user-revoked', user.userId) : false;
+    const revoked = isUuid(id)
+      ? await this.sessions.revokeFamily(id, 'user-revoked', user.userId)
+      : false;
     if (!revoked) throw Errors.notFound('Session');
     return { ok: true };
   }
@@ -261,8 +274,13 @@ export class AuthController {
   @Public()
   @Get('oauth/:provider')
   @ApiOperation({ summary: 'Start OAuth sign-in (302 to the provider)' })
-  oauthStart(@Param('provider') provider: string, @Query('next') next: unknown, @Res() res: Response): void {
-    if (!isOAuthProvider(provider) || !this.oauth.isConfigured(provider)) throw Errors.notFound('OAuth provider');
+  oauthStart(
+    @Param('provider') provider: string,
+    @Query('next') next: unknown,
+    @Res() res: Response,
+  ): void {
+    if (!isOAuthProvider(provider) || !this.oauth.isConfigured(provider))
+      throw Errors.notFound('OAuth provider');
     const { url, cookie } = this.oauth.begin(provider, next);
     res.cookie(OAUTH_STATE_COOKIE, cookie, cookieOptions(this.config.env, 'oauth'));
     res.redirect(302, url);
@@ -278,11 +296,15 @@ export class AuthController {
     @Meta() meta: ClientMeta,
     @Res() res: Response,
   ): Promise<void> {
-    if (!isOAuthProvider(provider) || !this.oauth.isConfigured(provider)) throw Errors.notFound('OAuth provider');
+    if (!isOAuthProvider(provider) || !this.oauth.isConfigured(provider))
+      throw Errors.notFound('OAuth provider');
     const cookie = req.cookies?.[OAUTH_STATE_COOKIE];
     res.clearCookie(OAUTH_STATE_COOKIE, clearCookieOptions(this.config.env, 'oauth'));
     const redirect = (params: Record<string, string>) =>
-      res.redirect(302, `${this.config.webLink('/auth/callback')}?${new URLSearchParams(params).toString()}`);
+      res.redirect(
+        302,
+        `${this.config.webLink('/auth/callback')}?${new URLSearchParams(params).toString()}`,
+      );
     let next = '/';
     try {
       const state = this.oauth.verifyState(provider, cookie, query.state);

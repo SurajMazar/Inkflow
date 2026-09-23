@@ -8,7 +8,13 @@ import { installFetchMock, type MockRoute } from '@/test/fetch-mock';
 import { NOW, makeUser, publicUser } from '@/test/fixtures';
 import { useEditorUi } from '../../hooks/ui-store';
 import { CommentsPanel } from '../CommentsPanel';
-import { decodeMentions, encodeMentions, findMentionQuery, insertMention, parseCommentBody } from '../comments/mentions';
+import {
+  decodeMentions,
+  encodeMentions,
+  findMentionQuery,
+  insertMention,
+  parseCommentBody,
+} from '../comments/mentions';
 import { createTestEditor, renderInSession } from './test-session';
 
 const me = makeUser();
@@ -52,7 +58,9 @@ describe('mention helpers', () => {
   it('round-trips tokens for editing and splits bodies for rendering', () => {
     const decoded = decodeMentions('Ping @[Ann Lee](a1) and @[Ann](a2)');
     expect(decoded.text).toBe('Ping @Ann Lee and @Ann');
-    expect(encodeMentions(decoded.text, decoded.mentions).body).toBe('Ping @[Ann Lee](a1) and @[Ann](a2)');
+    expect(encodeMentions(decoded.text, decoded.mentions).body).toBe(
+      'Ping @[Ann Lee](a1) and @[Ann](a2)',
+    );
     expect(parseCommentBody('x @[Ann](a2) y')).toEqual([
       { type: 'text', text: 'x ' },
       { type: 'mention', name: 'Ann', id: 'a2' },
@@ -75,7 +83,13 @@ describe('CommentsPanel', () => {
         path: '/boards/b1/comments',
         respond: (call) => {
           created.push(call.body);
-          return { body: comment({ id: 'c-new', author: publicUser(me), body: (call.body as { body: string }).body }) };
+          return {
+            body: comment({
+              id: 'c-new',
+              author: publicUser(me),
+              body: (call.body as { body: string }).body,
+            }),
+          };
         },
       },
     ];
@@ -89,7 +103,9 @@ describe('CommentsPanel', () => {
 
   it('composes a comment with an @mention anchored to an element', async () => {
     const mock = installFetchMock(routes());
-    const editor = createTestEditor([createElement('rectangle', { id: 'r1', x: 100, y: 50, width: 80, height: 40 })]);
+    const editor = createTestEditor([
+      createElement('rectangle', { id: 'r1', x: 100, y: 50, width: 80, height: 40 }),
+    ]);
     const user = userEvent.setup();
     renderInSession(<CommentsPanel />, editor);
     act(() => useEditorUi.getState().startComment({ world: { x: 130, y: 60 }, elementId: 'r1' }));
@@ -127,11 +143,20 @@ describe('CommentsPanel', () => {
     expect(input).toHaveValue('@Bob Builder ');
     await user.keyboard('{Enter}');
     await waitFor(() => expect(created).toHaveLength(1));
-    expect(created[0]).toMatchObject({ body: '@[Bob Builder](u2)', mentions: ['u2'], anchor: { type: 'point', x: 5, y: 6 } });
+    expect(created[0]).toMatchObject({
+      body: '@[Bob Builder](u2)',
+      mentions: ['u2'],
+      anchor: { type: 'point', x: 5, y: 6 },
+    });
   });
 
   it('renders mentions as chips and filters resolved threads', async () => {
-    installFetchMock(routes([comment(), comment({ id: 'c2', body: 'Old', resolvedAt: NOW, resolvedBy: publicUser(me) })]));
+    installFetchMock(
+      routes([
+        comment(),
+        comment({ id: 'c2', body: 'Old', resolvedAt: NOW, resolvedBy: publicUser(me) }),
+      ]),
+    );
     const user = userEvent.setup();
     renderInSession(<CommentsPanel />, createTestEditor());
     const thread = await screen.findByTestId('comment-thread');
@@ -144,7 +169,11 @@ describe('CommentsPanel', () => {
 
   it('is read-only for anonymous visitors', async () => {
     installFetchMock([
-      { method: 'GET', path: '/auth/me', respond: { status: 401, body: { error: { code: 'UNAUTHORIZED', message: 'no' } } } },
+      {
+        method: 'GET',
+        path: '/auth/me',
+        respond: { status: 401, body: { error: { code: 'UNAUTHORIZED', message: 'no' } } },
+      },
       { method: 'GET', path: '/boards/b1/comments', respond: { body: [comment()] } },
     ]);
     renderInSession(<CommentsPanel />, createTestEditor(), { canComment: false });

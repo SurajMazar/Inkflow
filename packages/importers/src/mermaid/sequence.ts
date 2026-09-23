@@ -76,7 +76,12 @@ export function importSequence(lines: string[]): MermaidResult {
       autonumber = 1;
       continue;
     }
-    if ((m = /^(create\s+)?(participant|actor|boundary|control|entity|database|collections|queue)\s+(.+?)(?:\s+as\s+(.+))?$/i.exec(line))) {
+    if (
+      (m =
+        /^(create\s+)?(participant|actor|boundary|control|entity|database|collections|queue)\s+(.+?)(?:\s+as\s+(.+))?$/i.exec(
+          line,
+        ))
+    ) {
       const alias = m[3]!.replace(/^"(.*)"$/, '$1');
       ensure(alias, m[4] ?? alias, PARTICIPANT_KINDS[m[2]!.toLowerCase()]!);
       if (m[1]) pendingCreate = alias.trim();
@@ -88,9 +93,18 @@ export function importSequence(lines: string[]): MermaidResult {
     }
     if (/^(activate|deactivate)\s+/i.test(line)) continue; // activations are derived from call nesting
     if ((m = /^note\s+(over|left of|right of)\s+([^:]+):\s*(.*)$/i.exec(line))) {
-      const ids = m[2]!.split(',').map((s) => s.trim()).filter(Boolean).slice(0, 2);
+      const ids = m[2]!
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean)
+        .slice(0, 2);
       const refs = ids.map((id) => ensure(id)).filter((i) => i >= 0);
-      if (refs.length) notes.push({ participants: refs.map((i) => participants[i]!.alias), text: cleanLabel(m[3]!), afterMessage: messages.length - 1 });
+      if (refs.length)
+        notes.push({
+          participants: refs.map((i) => participants[i]!.alias),
+          text: cleanLabel(m[3]!),
+          afterMessage: messages.length - 1,
+        });
       continue;
     }
     if ((m = BLOCK_START.exec(line))) {
@@ -98,7 +112,11 @@ export function importSequence(lines: string[]): MermaidResult {
       if (kind === 'rect' || kind === 'box') continue;
       if (participants.length > 0) {
         const span = [participants[0]!.alias, participants[participants.length - 1]!.alias];
-        notes.push({ participants: [...new Set(span)], text: `${kind}${m[2] ? `: ${cleanLabel(m[2])}` : ''}`, afterMessage: messages.length - 1 });
+        notes.push({
+          participants: [...new Set(span)],
+          text: `${kind}${m[2] ? `: ${cleanLabel(m[2])}` : ''}`,
+          afterMessage: messages.length - 1,
+        });
       }
       issues.add('Mermaid blocks (loop/alt/opt/par/critical/break) are imported as notes');
       continue;
@@ -138,14 +156,17 @@ export function importSequence(lines: string[]): MermaidResult {
     const ids = note.participants.map((alias) => seq.participants[index.get(alias)!]!.id);
     seq = sequenceOps.addNote(seq, ids, note.text, note.afterMessage);
   }
-  if (notes.length > MAX_NOTES) issues.add(`Too many notes; only the first ${MAX_NOTES} were imported`);
+  if (notes.length > MAX_NOTES)
+    issues.add(`Too many notes; only the first ${MAX_NOTES} were imported`);
   const b = new DiagramBuilder();
   if (title) b.text(0, 0, title, { fontSize: 24, fontWeight: 'bold' });
   b.add(seq);
   return { elements: b.finish(), issues: issues.list() };
 }
 
-function parseMessage(line: string): { from: string; to: string; kind: SequenceMessageKind; label: string } | null {
+function parseMessage(
+  line: string,
+): { from: string; to: string; kind: SequenceMessageKind; label: string } | null {
   const colon = line.indexOf(':');
   const head = colon >= 0 ? line.slice(0, colon) : line;
   const label = colon >= 0 ? line.slice(colon + 1).trim() : '';
@@ -153,9 +174,18 @@ function parseMessage(line: string): { from: string; to: string; kind: SequenceM
     const at = head.indexOf(arrow.token);
     if (at <= 0) continue;
     const from = head.slice(0, at).trim();
-    const to = head.slice(at + arrow.token.length).trim().replace(/^[+-]/, '').trim();
+    const to = head
+      .slice(at + arrow.token.length)
+      .trim()
+      .replace(/^[+-]/, '')
+      .trim();
     if (!from || !to || /\s{2,}/.test(from)) continue;
-    return { from: from.replace(/^"(.*)"$/, '$1'), to: to.replace(/^"(.*)"$/, '$1'), kind: arrow.kind, label };
+    return {
+      from: from.replace(/^"(.*)"$/, '$1'),
+      to: to.replace(/^"(.*)"$/, '$1'),
+      kind: arrow.kind,
+      label,
+    };
   }
   return null;
 }

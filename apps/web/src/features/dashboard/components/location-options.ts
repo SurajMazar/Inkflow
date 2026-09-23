@@ -7,11 +7,15 @@ export interface FolderOption {
 }
 
 /** Flattens the folder tree of a project (or the workspace root when `projectId` is null) depth-first. */
-export function folderOptions(folders: readonly FolderDto[], projectId: string | null): FolderOption[] {
+export function folderOptions(
+  folders: readonly FolderDto[],
+  projectId: string | null,
+): FolderOption[] {
   const scoped = folders.filter((f) => (f.projectId ?? null) === projectId);
   const byParent = new Map<string | null, FolderDto[]>();
   for (const folder of scoped) {
-    const parent = folder.parentId && scoped.some((f) => f.id === folder.parentId) ? folder.parentId : null;
+    const parent =
+      folder.parentId && scoped.some((f) => f.id === folder.parentId) ? folder.parentId : null;
     const list = byParent.get(parent) ?? [];
     list.push(folder);
     byParent.set(parent, list);
@@ -31,7 +35,9 @@ export function folderOptions(folders: readonly FolderDto[], projectId: string |
 }
 
 export function sortProjects(projects: readonly ProjectDto[]): ProjectDto[] {
-  return [...projects].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
+  return [...projects].sort((a, b) =>
+    a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }),
+  );
 }
 
 /** Indents option labels for native `<select>`s. */

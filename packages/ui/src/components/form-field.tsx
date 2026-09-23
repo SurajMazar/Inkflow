@@ -23,14 +23,24 @@ export interface FormFieldProps {
   /** Element rendered at the end of the label row (e.g. a "Forgot password?" link). */
   labelAction?: React.ReactNode;
   /** Either a render function receiving the control props, or a single element to clone. */
-  children: ((props: FormFieldControlProps) => React.ReactNode) | React.ReactElement<FormFieldControlProps>;
+  children:
+    ((props: FormFieldControlProps) => React.ReactNode) | React.ReactElement<FormFieldControlProps>;
 }
 
 /**
  * Label + control + description/error text wired together with `htmlFor`, `aria-describedby`
  * and `aria-invalid`.
  */
-export function FormField({ label, description, error, required, id, className, labelAction, children }: FormFieldProps) {
+export function FormField({
+  label,
+  description,
+  error,
+  required,
+  id,
+  className,
+  labelAction,
+  children,
+}: FormFieldProps) {
   const generatedId = React.useId();
   const controlId = id ?? `field-${generatedId}`;
   const descriptionId = description ? `${controlId}-description` : undefined;
@@ -43,7 +53,9 @@ export function FormField({ label, description, error, required, id, className, 
     ...(required ? { 'aria-required': true as const } : {}),
   };
   const control =
-    typeof children === 'function' ? children(controlProps) : React.cloneElement(children, controlProps);
+    typeof children === 'function'
+      ? children(controlProps)
+      : React.cloneElement(children, controlProps);
 
   return (
     <div data-slot="form-field" className={cn('grid gap-2', className)}>

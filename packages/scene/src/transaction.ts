@@ -112,7 +112,12 @@ export class Transaction {
       if (!after) continue;
       if (!before) {
         if (after.isDeleted) continue; // created and deleted within the same transaction
-        deltas.push({ id, before: { isDeleted: true }, after: { isDeleted: false }, snapshot: after });
+        deltas.push({
+          id,
+          before: { isDeleted: true },
+          after: { isDeleted: false },
+          snapshot: after,
+        });
         changes.push({ before: null, after });
         continue;
       }

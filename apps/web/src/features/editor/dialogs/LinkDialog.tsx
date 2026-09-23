@@ -1,4 +1,14 @@
-import { Button, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, Input, Label } from '@inkflow/ui';
+import {
+  Button,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  Input,
+  Label,
+} from '@inkflow/ui';
 import { ExternalLink, Unlink } from 'lucide-react';
 import * as React from 'react';
 import { useNavigate } from 'react-router';
@@ -25,7 +35,11 @@ export function LinkDialog({ onClose }: { onClose(): void }) {
       setError(res.error);
       return;
     }
-    if (res.href !== element.link) editor.updateElements([[element.id, { link: res.href }]], element.link ? 'Edit link' : 'Add link');
+    if (res.href !== element.link)
+      editor.updateElements(
+        [[element.id, { link: res.href }]],
+        element.link ? 'Edit link' : 'Add link',
+      );
     onClose();
   };
 
@@ -43,7 +57,11 @@ export function LinkDialog({ onClose }: { onClose(): void }) {
         <DialogHeader>
           <DialogTitle>{element?.link ? 'Edit link' : 'Add link'}</DialogTitle>
           <DialogDescription>
-            {element ? <>Link for {elementDisplayName(element)}. Web, email and board links are supported.</> : 'The element no longer exists.'}
+            {element ? (
+              <>Link for {elementDisplayName(element)}. Web, email and board links are supported.</>
+            ) : (
+              'The element no longer exists.'
+            )}
           </DialogDescription>
         </DialogHeader>
         {element && (
@@ -77,12 +95,23 @@ export function LinkDialog({ onClose }: { onClose(): void }) {
             <DialogFooter className="mt-2 gap-2 sm:justify-between">
               <div className="flex gap-2">
                 {current?.ok && (
-                  <Button type="button" variant="outline" size="sm" onClick={() => openLink(current.href, navigate)}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => openLink(current.href, navigate)}
+                  >
                     <ExternalLink /> Open
                   </Button>
                 )}
                 {editable && element.link && (
-                  <Button type="button" variant="ghost" size="sm" onClick={remove} data-testid="link-remove">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={remove}
+                    data-testid="link-remove"
+                  >
                     <Unlink /> Remove
                   </Button>
                 )}

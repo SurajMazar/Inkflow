@@ -70,7 +70,8 @@ export class ClipboardManager {
       e.preventDefault();
     };
     const onCut = (e: ClipboardEvent) => {
-      if (!shouldHandle(e) || this.editor.state.selectedIds.length === 0 || this.editor.isReadOnly) return;
+      if (!shouldHandle(e) || this.editor.state.selectedIds.length === 0 || this.editor.isReadOnly)
+        return;
       onCopy(e);
       this.editor.deleteElements(this.editor.state.selectedIds, 'Cut');
     };
@@ -114,7 +115,9 @@ export class ClipboardManager {
     const elements = this.collectForCopy();
     if (elements.length === 0) return null;
     const files: Record<string, FileMetadata> = {};
-    for (const el of elements) if (el.type === 'image' && el.fileId && this.editor.files[el.fileId]) files[el.fileId] = this.editor.files[el.fileId]!;
+    for (const el of elements)
+      if (el.type === 'image' && el.fileId && this.editor.files[el.fileId])
+        files[el.fileId] = this.editor.files[el.fileId]!;
     return { type: CLIPBOARD_TYPE, version: 1, elements: structuredClone(elements), files };
   }
 
@@ -149,7 +152,9 @@ export class ClipboardManager {
           const imageType = item.types.find((t) => t.startsWith('image/'));
           if (imageType) {
             const blob = await item.getType(imageType);
-            files.push(new File([blob], `pasted.${imageType.split('/')[1] ?? 'png'}`, { type: imageType }));
+            files.push(
+              new File([blob], `pasted.${imageType.split('/')[1] ?? 'png'}`, { type: imageType }),
+            );
           } else if (item.types.includes('text/plain')) {
             text = await (await item.getType('text/plain')).text();
           }
@@ -163,7 +168,10 @@ export class ClipboardManager {
     await this.pasteData({ text, files }, options);
   }
 
-  async pasteData(data: { text?: string; files?: File[] }, options: { inPlace?: boolean } = {}): Promise<void> {
+  async pasteData(
+    data: { text?: string; files?: File[] },
+    options: { inPlace?: boolean } = {},
+  ): Promise<void> {
     const editor = this.editor;
     const target = this.pasteTarget();
     if (data.files && data.files.length) {
@@ -180,7 +188,9 @@ export class ClipboardManager {
       this.pastePayload(payload, target, options.inPlace ?? false);
       return;
     }
-    const transformed = editor.host.transformPastedText ? await editor.host.transformPastedText(text) : null;
+    const transformed = editor.host.transformPastedText
+      ? await editor.host.transformPastedText(text)
+      : null;
     if (transformed && transformed.length) {
       this.placeElements(transformed, target, false);
       return;
@@ -189,38 +199,70 @@ export class ClipboardManager {
   }
 
   private pasteTarget(): Point {
-    return this.editor.lastPointerWorld ?? this.editor.screenToWorld(viewportCenter(this.editor.state.viewport));
+    return (
+      this.editor.lastPointerWorld ??
+      this.editor.screenToWorld(viewportCenter(this.editor.state.viewport))
+    );
   }
 
   private pastePayload(payload: ClipboardPayload, target: Point, inPlace: boolean) {
-    for (const [id, meta] of Object.entries(payload.files)) if (!this.editor.files[id]) this.editor.registerFile(meta);
+    for (const [id, meta] of Object.entries(payload.files))
+      if (!this.editor.files[id]) this.editor.registerFile(meta);
     this.pasteCount += 1;
     this.placeElements(payload.elements, target, inPlace);
   }
 
   private placeElements(elements: readonly SceneElement[], target: Point, inPlace: boolean) {
     const editor = this.editor;
-    const valid = elements.map((e) => restoreElement(e)).filter((e): e is SceneElement => !!e && validateElement(e).success);
+    const valid = elements
+      .map((e) => restoreElement(e))
+      .filter((e): e is SceneElement => !!e && validateElement(e).success);
     if (valid.length === 0) return;
     const bounds = getCommonBounds(valid)!;
     const c = boundsCenter(bounds);
     const dx = inPlace ? 0 : target.x - c.x;
     const dy = inPlace ? 0 : target.y - c.y;
     const frameIds = new Set(editor.getFrames().map((f) => f.id));
-    const { elements: copies } = duplicateElements(valid, { dx, dy, existingFrameIds: frameIds, keepExternalBindings: inPlace });
+    const { elements: copies } = duplicateElements(valid, {
+      dx,
+      dy,
+      existingFrameIds: frameIds,
+      keepExternalBindings: inPlace,
+    });
     const created = editor.addElements(copies, { label: 'Paste' });
     // Keep connectors attached to their (copied) endpoints.
     const linearIds = created.filter(isLinearElement).map((e) => e.id);
-    if (linearIds.length) editor.mutate('Paste', (tx) => editor.refreshBindings(tx, created.map((e) => e.id)), { merge: true });
+    if (linearIds.length)
+      editor.mutate(
+        'Paste',
+        (tx) =>
+          editor.refreshBindings(
+            tx,
+            created.map((e) => e.id),
+          ),
+        { merge: true },
+      );
   }
 
   private pastePlainText(text: string, target: Point) {
     const editor = this.editor;
     const trimmed = text.replace(/\r\n/g, '\n').slice(0, 20_000);
     const isUrl = /^https?:\/\/\S+$/i.test(trimmed.trim());
-    const el = createElement('text', { ...(editor.styleProps('text') as object), text: trimmed, x: target.x, y: target.y });
+    const el = createElement('text', {
+      ...(editor.styleProps('text') as object),
+      text: trimmed,
+      x: target.x,
+      y: target.y,
+    });
     const size = measureTextElement(el);
-    const final = { ...el, width: size.width, height: size.height, x: target.x - size.width / 2, y: target.y - size.height / 2, link: isUrl ? trimmed.trim() : null };
+    const final = {
+      ...el,
+      width: size.width,
+      height: size.height,
+      x: target.x - size.width / 2,
+      y: target.y - size.height / 2,
+      link: isUrl ? trimmed.trim() : null,
+    };
     editor.addElements([final], { label: 'Paste text' });
   }
 
@@ -228,9 +270,18 @@ export class ClipboardManager {
     const el = this.editor.getSelectedElements()[0];
     if (!el) return;
     const style: Record<string, unknown> = {};
-    for (const key of STYLE_KEYS) if (key in el) style[key] = (el as unknown as Record<string, unknown>)[key];
+    for (const key of STYLE_KEYS)
+      if (key in el) style[key] = (el as unknown as Record<string, unknown>)[key];
     if ('label' in el && el.label && !isLinearElement(el)) {
-      for (const key of ['fontFamily', 'fontSize', 'fontWeight', 'fontStyle', 'textDecoration', 'textAlign'] as const) style[key] ??= el.label[key];
+      for (const key of [
+        'fontFamily',
+        'fontSize',
+        'fontWeight',
+        'fontStyle',
+        'textDecoration',
+        'textAlign',
+      ] as const)
+        style[key] ??= el.label[key];
     }
     this.copiedStyle = style as ElementPatch;
   }
@@ -250,7 +301,12 @@ export function parseClipboardPayload(text: string): ClipboardPayload | null {
   try {
     const parsed = JSON.parse(text) as Partial<ClipboardPayload>;
     if (parsed.type !== CLIPBOARD_TYPE || !Array.isArray(parsed.elements)) return null;
-    return { type: CLIPBOARD_TYPE, version: 1, elements: parsed.elements, files: parsed.files ?? {} };
+    return {
+      type: CLIPBOARD_TYPE,
+      version: 1,
+      elements: parsed.elements,
+      files: parsed.files ?? {},
+    };
   } catch {
     return null;
   }

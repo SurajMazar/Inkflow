@@ -1,6 +1,14 @@
 import * as React from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router';
-import { ChevronRight, Folder, FolderPlus, MoreHorizontal, Pencil, Plus, Trash2 } from 'lucide-react';
+import {
+  ChevronRight,
+  Folder,
+  FolderPlus,
+  MoreHorizontal,
+  Pencil,
+  Plus,
+  Trash2,
+} from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -25,7 +33,13 @@ import { BoardCollection } from '../components/BoardCollection';
 import { ImportBoardButton } from '../components/ImportBoardButton';
 import { RenameDialog } from '../components/RenameDialog';
 import { ViewContainer, ViewHeader } from '../components/ViewHeader';
-import { useBoards, useFolderMutations, useFolders, useProjectMutations, useProjects } from '../hooks';
+import {
+  useBoards,
+  useFolderMutations,
+  useFolders,
+  useProjectMutations,
+  useProjects,
+} from '../hooks';
 import { useDashboardUi } from '../ui-store';
 import { useCurrentWorkspace } from '../WorkspaceContext';
 
@@ -82,7 +96,11 @@ export function ProjectView() {
   }, [currentFolder, projectFolders]);
 
   const boards = useBoards(
-    { workspaceId: workspace.id, projectId, ...(effectiveFolderId ? { folderId: effectiveFolderId } : {}) },
+    {
+      workspaceId: workspace.id,
+      projectId,
+      ...(effectiveFolderId ? { folderId: effectiveFolderId } : {}),
+    },
     { enabled: !!project },
   );
   const boardsHere = React.useMemo(
@@ -115,7 +133,11 @@ export function ProjectView() {
     <nav aria-label="Breadcrumb" className="mb-1">
       <ol className="flex flex-wrap items-center gap-1 text-[13px] text-muted-foreground">
         <li>
-          <button type="button" className="rounded-sm hover:text-foreground" onClick={() => openFolder(null)}>
+          <button
+            type="button"
+            className="rounded-sm hover:text-foreground"
+            onClick={() => openFolder(null)}
+          >
             {project.name}
           </button>
         </li>
@@ -125,7 +147,11 @@ export function ProjectView() {
             {index === trail.length - 1 ? (
               <span aria-current="page">{folder.name}</span>
             ) : (
-              <button type="button" className="rounded-sm hover:text-foreground" onClick={() => openFolder(folder.id)}>
+              <button
+                type="button"
+                className="rounded-sm hover:text-foreground"
+                onClick={() => openFolder(folder.id)}
+              >
                 {folder.name}
               </button>
             )}
@@ -144,18 +170,35 @@ export function ProjectView() {
         actions={
           project ? (
             <>
-              <Button variant="outline" size="sm" onClick={() => setDialog({ kind: 'create' })} data-testid="folder-create">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setDialog({ kind: 'create' })}
+                data-testid="folder-create"
+              >
                 <FolderPlus aria-hidden />
                 New folder
               </Button>
-              <ImportBoardButton workspaceId={workspace.id} projectId={project.id} folderId={effectiveFolderId} />
-              <Button size="sm" onClick={() => openNewBoard({ projectId: project.id, folderId: effectiveFolderId })}>
+              <ImportBoardButton
+                workspaceId={workspace.id}
+                projectId={project.id}
+                folderId={effectiveFolderId}
+              />
+              <Button
+                size="sm"
+                onClick={() => openNewBoard({ projectId: project.id, folderId: effectiveFolderId })}
+              >
                 <Plus aria-hidden />
                 New board
               </Button>
               <DropdownMenu modal={false}>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon-sm" aria-label="Project actions" data-testid="project-menu">
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    aria-label="Project actions"
+                    data-testid="project-menu"
+                  >
                     <MoreHorizontal aria-hidden />
                   </Button>
                 </DropdownMenuTrigger>
@@ -165,7 +208,10 @@ export function ProjectView() {
                     Rename project…
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem variant="destructive" onSelect={() => setDialog({ kind: 'delete-project' })}>
+                  <DropdownMenuItem
+                    variant="destructive"
+                    onSelect={() => setDialog({ kind: 'delete-project' })}
+                  >
                     <Trash2 aria-hidden />
                     Delete project…
                   </DropdownMenuItem>
@@ -198,7 +244,11 @@ export function ProjectView() {
                 </button>
                 <DropdownMenu modal={false}>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon-sm" aria-label={`Actions for folder ${folder.name}`}>
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      aria-label={`Actions for folder ${folder.name}`}
+                    >
                       <MoreHorizontal aria-hidden />
                     </Button>
                   </DropdownMenuTrigger>
@@ -207,7 +257,10 @@ export function ProjectView() {
                       <Pencil aria-hidden />
                       Rename…
                     </DropdownMenuItem>
-                    <DropdownMenuItem variant="destructive" onSelect={() => setDialog({ kind: 'delete', folder })}>
+                    <DropdownMenuItem
+                      variant="destructive"
+                      onSelect={() => setDialog({ kind: 'delete', folder })}
+                    >
                       <Trash2 aria-hidden />
                       Delete…
                     </DropdownMenuItem>
@@ -238,7 +291,12 @@ export function ProjectView() {
               description="Create a board here, or move existing boards in from their menu."
               action={
                 project ? (
-                  <Button size="sm" onClick={() => openNewBoard({ projectId: project.id, folderId: effectiveFolderId })}>
+                  <Button
+                    size="sm"
+                    onClick={() =>
+                      openNewBoard({ projectId: project.id, folderId: effectiveFolderId })
+                    }
+                  >
                     <Plus aria-hidden />
                     New board
                   </Button>
@@ -257,7 +315,9 @@ export function ProjectView() {
         initialValue=""
         maxLength={120}
         submitLabel="Create folder"
-        onSubmit={(name) => folderMutations.create.mutateAsync({ name, projectId, parentId: effectiveFolderId })}
+        onSubmit={(name) =>
+          folderMutations.create.mutateAsync({ name, projectId, parentId: effectiveFolderId })
+        }
       />
       <RenameDialog
         open={dialog?.kind === 'rename'}
@@ -281,11 +341,16 @@ export function ProjectView() {
         maxLength={120}
         onSubmit={(name) => projectMutations.rename.mutateAsync({ projectId, name })}
       />
-      <AlertDialog open={dialog?.kind === 'delete' || dialog?.kind === 'delete-project'} onOpenChange={(open) => !open && setDialog(null)}>
+      <AlertDialog
+        open={dialog?.kind === 'delete' || dialog?.kind === 'delete-project'}
+        onOpenChange={(open) => !open && setDialog(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {dialog?.kind === 'delete' ? `Delete folder “${dialog.folder.name}”?` : `Delete project “${project?.name ?? ''}”?`}
+              {dialog?.kind === 'delete'
+                ? `Delete folder “${dialog.folder.name}”?`
+                : `Delete project “${project?.name ?? ''}”?`}
             </AlertDialogTitle>
             <AlertDialogDescription>
               {dialog?.kind === 'delete'
@@ -306,7 +371,9 @@ export function ProjectView() {
                     },
                   });
                 } else if (dialog?.kind === 'delete-project') {
-                  projectMutations.remove.mutate(projectId, { onSuccess: () => navigate(`/w/${workspace.id}`) });
+                  projectMutations.remove.mutate(projectId, {
+                    onSuccess: () => navigate(`/w/${workspace.id}`),
+                  });
                 }
                 setDialog(null);
               }}

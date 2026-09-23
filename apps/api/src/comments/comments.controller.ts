@@ -65,7 +65,10 @@ export class CommentsController {
   @Post('comments/:id/resolve')
   @HttpCode(200)
   @ApiOperation({ summary: 'Resolve a comment thread' })
-  resolve(@CurrentPrincipal() principal: Principal, @IdParam('id', 'Comment') id: string): Promise<CommentDto> {
+  resolve(
+    @CurrentPrincipal() principal: Principal,
+    @IdParam('id', 'Comment') id: string,
+  ): Promise<CommentDto> {
     return this.comments.setResolved(principal, id, true);
   }
 
@@ -73,14 +76,20 @@ export class CommentsController {
   @Post('comments/:id/reopen')
   @HttpCode(200)
   @ApiOperation({ summary: 'Reopen a comment thread' })
-  reopen(@CurrentPrincipal() principal: Principal, @IdParam('id', 'Comment') id: string): Promise<CommentDto> {
+  reopen(
+    @CurrentPrincipal() principal: Principal,
+    @IdParam('id', 'Comment') id: string,
+  ): Promise<CommentDto> {
     return this.comments.setResolved(principal, id, false);
   }
 
   @AllowShareToken()
   @Delete('comments/:id')
   @ApiOperation({ summary: 'Delete a comment (author or board OWNER)' })
-  async remove(@CurrentPrincipal() principal: Principal, @IdParam('id', 'Comment') id: string): Promise<OkResponse> {
+  async remove(
+    @CurrentPrincipal() principal: Principal,
+    @IdParam('id', 'Comment') id: string,
+  ): Promise<OkResponse> {
     await this.comments.remove(principal, id);
     return { ok: true };
   }
@@ -112,7 +121,10 @@ export class CommentsController {
   @AllowShareToken()
   @Delete('comment-replies/:id')
   @ApiOperation({ summary: 'Delete a reply (author or board OWNER)' })
-  async removeReply(@CurrentPrincipal() principal: Principal, @IdParam('id', 'Reply') id: string): Promise<OkResponse> {
+  async removeReply(
+    @CurrentPrincipal() principal: Principal,
+    @IdParam('id', 'Reply') id: string,
+  ): Promise<OkResponse> {
     await this.comments.removeReply(principal, id);
     return { ok: true };
   }

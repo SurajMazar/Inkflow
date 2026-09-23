@@ -32,7 +32,12 @@ import { notify, toastApiError } from '@/features/notifications/notify';
 import { useBoardSession, useEditorState } from '../hooks/editor-context';
 import { useEditorUi, type CommentDraft } from '../hooks/ui-store';
 import { MentionTextarea } from './comments/MentionTextarea';
-import { decodeMentions, encodeMentions, parseCommentBody, type MentionRef } from './comments/mentions';
+import {
+  decodeMentions,
+  encodeMentions,
+  parseCommentBody,
+  type MentionRef,
+} from './comments/mentions';
 import { anchorFromDraft, revealComment, useBoardComments } from './comments/use-comments';
 import { elementDisplayName } from './element-labels';
 
@@ -41,11 +46,20 @@ type Filter = 'open' | 'resolved';
 function useInvalidateComments() {
   const { boardId } = useBoardSession();
   const qc = useQueryClient();
-  return React.useCallback(() => qc.invalidateQueries({ queryKey: queryKeys.boards.comments(boardId) }), [qc, boardId]);
+  return React.useCallback(
+    () => qc.invalidateQueries({ queryKey: queryKeys.boards.comments(boardId) }),
+    [qc, boardId],
+  );
 }
 
 /** Renders a comment body with mention tokens as chips. */
-export function CommentBody({ body, currentUserId }: { body: string; currentUserId: string | null }) {
+export function CommentBody({
+  body,
+  currentUserId,
+}: {
+  body: string;
+  currentUserId: string | null;
+}) {
   const segments = React.useMemo(() => parseCommentBody(body), [body]);
   return (
     <p className="text-sm leading-relaxed break-words whitespace-pre-wrap">
@@ -58,7 +72,9 @@ export function CommentBody({ body, currentUserId }: { body: string; currentUser
             data-testid="mention-chip"
             className={cn(
               'rounded px-1 py-px font-medium',
-              s.id === currentUserId ? 'bg-amber-100 text-amber-900 dark:bg-amber-900/40 dark:text-amber-100' : 'bg-primary/10 text-primary',
+              s.id === currentUserId
+                ? 'bg-amber-100 text-amber-900 dark:bg-amber-900/40 dark:text-amber-100'
+                : 'bg-primary/10 text-primary',
             )}
           >
             @{s.name}
@@ -94,7 +110,11 @@ function NewCommentComposer({ draft }: { draft: CommentDraft }) {
   const create = useMutation({
     mutationFn: () => {
       const { body, mentions } = d.encoded();
-      return api.comments.create(boardId, { body, mentions, anchor: anchorFromDraft(editor, draft) }, { shareToken });
+      return api.comments.create(
+        boardId,
+        { body, mentions, anchor: anchorFromDraft(editor, draft) },
+        { shareToken },
+      );
     },
     onSuccess: (comment) => {
       d.reset();
@@ -112,7 +132,14 @@ function NewCommentComposer({ draft }: { draft: CommentDraft }) {
   return (
     <div className="space-y-2 border-b p-3" data-testid="comment-composer">
       <div className="text-xs text-muted-foreground">
-        New comment {target ? <>on <span className="font-medium text-foreground">{elementDisplayName(target)}</span></> : 'on the canvas'}
+        New comment{' '}
+        {target ? (
+          <>
+            on <span className="font-medium text-foreground">{elementDisplayName(target)}</span>
+          </>
+        ) : (
+          'on the canvas'
+        )}
       </div>
       <MentionTextarea
         value={d.text}
@@ -131,7 +158,12 @@ function NewCommentComposer({ draft }: { draft: CommentDraft }) {
         <Button size="sm" variant="ghost" onClick={() => startComment(null)}>
           Cancel
         </Button>
-        <Button size="sm" onClick={submit} disabled={!d.text.trim() || create.isPending} data-testid="comment-submit">
+        <Button
+          size="sm"
+          onClick={submit}
+          disabled={!d.text.trim() || create.isPending}
+          data-testid="comment-submit"
+        >
           {create.isPending && <Spinner className="size-3.5" />}
           Comment
         </Button>
@@ -203,7 +235,11 @@ function MessageHeader({
   const edited = Date.parse(updatedAt) - Date.parse(createdAt) > 1000;
   return (
     <div className="flex items-center gap-2">
-      <UserAvatar name={author.name || author.email} src={author.avatarUrl} className="size-6 text-[10px]" />
+      <UserAvatar
+        name={author.name || author.email}
+        src={author.avatarUrl}
+        className="size-6 text-[10px]"
+      />
       <div className="min-w-0 flex-1">
         <div className="truncate text-xs font-medium">{author.name || author.email}</div>
         <div className="text-[11px] text-muted-foreground" title={formatDateTime(createdAt)}>
@@ -255,7 +291,8 @@ function ReplyItem({
   const [editing, setEditing] = React.useState(false);
   const own = canComment && reply.author.id === currentUserId;
   const update = useMutation({
-    mutationFn: (vars: { body: string; mentions: string[] }) => api.comments.updateReply(reply.id, vars, { shareToken }),
+    mutationFn: (vars: { body: string; mentions: string[] }) =>
+      api.comments.updateReply(reply.id, vars, { shareToken }),
     onSuccess: () => {
       setEditing(false);
       void invalidate();
@@ -279,7 +316,11 @@ function ReplyItem({
               label="Reply actions"
               onEdit={() => setEditing(true)}
               onDelete={() =>
-                onConfirm({ title: 'Delete reply?', description: 'This reply will be removed for everyone.', run: () => remove.mutate() })
+                onConfirm({
+                  title: 'Delete reply?',
+                  description: 'This reply will be removed for everyone.',
+                  run: () => remove.mutate(),
+                })
               }
             />
           ) : null
@@ -321,7 +362,8 @@ function CommentThread({
   useEditorState((s) => s.sceneVersion);
   const own = canComment && comment.author.id === currentUserId;
   const resolved = !!comment.resolvedAt;
-  const anchorEl = comment.anchor.type === 'point' ? null : editor.getElement(comment.anchor.elementId);
+  const anchorEl =
+    comment.anchor.type === 'point' ? null : editor.getElement(comment.anchor.elementId);
 
   React.useEffect(() => {
     if (active) ref.current?.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' });
@@ -329,7 +371,10 @@ function CommentThread({
 
   const onError = (msg: string) => (error: unknown) => toastApiError(error, msg);
   const toggleResolved = useMutation({
-    mutationFn: () => (resolved ? api.comments.reopen(comment.id, { shareToken }) : api.comments.resolve(comment.id, { shareToken })),
+    mutationFn: () =>
+      resolved
+        ? api.comments.reopen(comment.id, { shareToken })
+        : api.comments.resolve(comment.id, { shareToken }),
     onSuccess: () => {
       notify.success(resolved ? 'Thread reopened' : 'Thread resolved');
       void invalidate();
@@ -337,7 +382,8 @@ function CommentThread({
     onError: onError(resolved ? 'Could not reopen the thread' : 'Could not resolve the thread'),
   });
   const update = useMutation({
-    mutationFn: (vars: { body: string; mentions: string[] }) => api.comments.update(comment.id, vars, { shareToken }),
+    mutationFn: (vars: { body: string; mentions: string[] }) =>
+      api.comments.update(comment.id, vars, { shareToken }),
     onSuccess: () => {
       setEditing(false);
       void invalidate();
@@ -375,7 +421,11 @@ function CommentThread({
       data-testid="comment-thread"
       data-comment-id={comment.id}
       aria-current={active ? 'true' : undefined}
-      className={cn('border-b px-3 py-3 transition-colors', active ? 'bg-accent/60' : 'hover:bg-accent/30', resolved && !active && 'opacity-75')}
+      className={cn(
+        'border-b px-3 py-3 transition-colors',
+        active ? 'bg-accent/60' : 'hover:bg-accent/30',
+        resolved && !active && 'opacity-75',
+      )}
     >
       <div
         role="button"
@@ -426,7 +476,8 @@ function CommentThread({
                   onDelete={() =>
                     onConfirm({
                       title: 'Delete comment?',
-                      description: 'The comment and all of its replies will be removed for everyone.',
+                      description:
+                        'The comment and all of its replies will be removed for everyone.',
                       run: () => remove.mutate(),
                     })
                   }
@@ -454,7 +505,8 @@ function CommentThread({
         )}
         {resolved && (
           <div className="text-[11px] text-emerald-700 dark:text-emerald-400">
-            Resolved{comment.resolvedBy ? ` by ${comment.resolvedBy.name}` : ''} {formatRelativeTime(comment.resolvedAt)}
+            Resolved{comment.resolvedBy ? ` by ${comment.resolvedBy.name}` : ''}{' '}
+            {formatRelativeTime(comment.resolvedAt)}
           </div>
         )}
         {!active && comment.replies.length > 0 && (
@@ -469,7 +521,13 @@ function CommentThread({
           {comment.replies.length > 0 && (
             <ul className="space-y-3">
               {comment.replies.map((r) => (
-                <ReplyItem key={r.id} reply={r} currentUserId={currentUserId} canComment={canComment} onConfirm={onConfirm} />
+                <ReplyItem
+                  key={r.id}
+                  reply={r}
+                  currentUserId={currentUserId}
+                  canComment={canComment}
+                  onConfirm={onConfirm}
+                />
               ))}
             </ul>
           )}
@@ -489,7 +547,12 @@ function CommentThread({
               />
               {reply.text.trim() && (
                 <div className="flex justify-end">
-                  <Button size="sm" onClick={() => sendReply.mutate()} disabled={sendReply.isPending} data-testid="comment-reply-submit">
+                  <Button
+                    size="sm"
+                    onClick={() => sendReply.mutate()}
+                    disabled={sendReply.isPending}
+                    data-testid="comment-reply-submit"
+                  >
                     Reply
                   </Button>
                 </div>
@@ -548,10 +611,18 @@ export function CommentsPanel() {
           onValueChange={(v) => v && setFilter(v as Filter)}
           aria-label="Filter comments"
         >
-          <ToggleGroupItem value="open" className="px-2.5 text-xs" data-testid="comments-filter-open">
+          <ToggleGroupItem
+            value="open"
+            className="px-2.5 text-xs"
+            data-testid="comments-filter-open"
+          >
             Open{openCount ? ` · ${openCount}` : ''}
           </ToggleGroupItem>
-          <ToggleGroupItem value="resolved" className="px-2.5 text-xs" data-testid="comments-filter-resolved">
+          <ToggleGroupItem
+            value="resolved"
+            className="px-2.5 text-xs"
+            data-testid="comments-filter-resolved"
+          >
             Resolved{resolvedCount ? ` · ${resolvedCount}` : ''}
           </ToggleGroupItem>
         </ToggleGroup>
@@ -569,7 +640,11 @@ export function CommentsPanel() {
       </div>
       <label className="flex items-center justify-between gap-2 border-b px-3 py-2 text-xs text-muted-foreground">
         Show resolved on canvas
-        <Switch checked={showResolved} onCheckedChange={setShowResolved} aria-label="Show resolved comments on canvas" />
+        <Switch
+          checked={showResolved}
+          onCheckedChange={setShowResolved}
+          aria-label="Show resolved comments on canvas"
+        />
       </label>
 
       {!allowed && (
@@ -578,7 +653,12 @@ export function CommentsPanel() {
         </div>
       )}
 
-      {draft && allowed && <NewCommentComposer key={`${draft.world.x}:${draft.world.y}:${draft.elementId ?? ''}`} draft={draft} />}
+      {draft && allowed && (
+        <NewCommentComposer
+          key={`${draft.world.x}:${draft.world.y}:${draft.elementId ?? ''}`}
+          draft={draft}
+        />
+      )}
 
       <div className="min-h-0 flex-1 overflow-y-auto">
         {query.isPending ? (
@@ -600,7 +680,9 @@ export function CommentsPanel() {
             icon={<MessageSquare />}
             title={filter === 'open' ? 'No open comments' : 'No resolved comments'}
             description={
-              filter === 'open' && allowed ? 'Press M or use the comment tool, then click on the canvas.' : undefined
+              filter === 'open' && allowed
+                ? 'Press M or use the comment tool, then click on the canvas.'
+                : undefined
             }
           />
         ) : (

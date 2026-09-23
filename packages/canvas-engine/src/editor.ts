@@ -15,7 +15,12 @@ import {
 } from '@inkflow/elements';
 import { computeBoundLinearUpdates } from '@inkflow/diagram-engine';
 import { boundsCenter, type Bounds, type Point } from '@inkflow/geometry';
-import { ImageCache, InteractiveRenderer, StaticRenderer, type ViewportState } from '@inkflow/renderer';
+import {
+  ImageCache,
+  InteractiveRenderer,
+  StaticRenderer,
+  type ViewportState,
+} from '@inkflow/renderer';
 import {
   DEFAULT_DOCUMENT_APP_STATE,
   History,
@@ -145,7 +150,8 @@ export class Editor {
     registerDefaultActions(this.actions);
 
     this.scene.subscribe((change) => {
-      if (this.gesture && change.source === 'local') this.events.emit('transient', [...change.elements]);
+      if (this.gesture && change.source === 'local')
+        this.events.emit('transient', [...change.elements]);
       if (change.source === 'remote' || change.source === 'load') this.pruneSelection();
       this.setState({ sceneVersion: change.sceneVersion });
       this.invalidate('all');
@@ -165,7 +171,8 @@ export class Editor {
     if (partial.selectedIds && partial.selectedIds !== prev.selectedIds) {
       this.events.emit('presence', { selectedIds: [...partial.selectedIds] });
     }
-    if (partial.tool && partial.tool !== prev.tool) this.events.emit('presence', { tool: partial.tool });
+    if (partial.tool && partial.tool !== prev.tool)
+      this.events.emit('presence', { tool: partial.tool });
     if (partial.viewport) {
       this.events.emit('presence', { viewport: this.visibleWorldRect() });
     }
@@ -195,7 +202,11 @@ export class Editor {
     const staticRenderer = new StaticRenderer(targets.staticCanvas);
     const interactiveRenderer = new InteractiveRenderer(targets.interactiveCanvas);
     this.renderLoop = new RenderLoop(this, staticRenderer, interactiveRenderer);
-    this.interaction = new InteractionController(this, targets.container, targets.interactiveCanvas);
+    this.interaction = new InteractionController(
+      this,
+      targets.container,
+      targets.interactiveCanvas,
+    );
     const detachInteraction = this.interaction.attach();
     const detachKeys = this.shortcuts.attach(targets.container.ownerDocument.defaultView ?? window);
     const detachClipboard = this.clipboard.attach(targets.container.ownerDocument);
@@ -281,7 +292,8 @@ export class Editor {
     this.files = { ...doc.files };
     this.appState = { ...DEFAULT_DOCUMENT_APP_STATE, ...doc.appState };
     this.scene.replaceAll(doc.elements, 'load');
-    for (const el of doc.elements) if (el.type === 'image' && el.fileId) this.images.ensure(el.fileId);
+    for (const el of doc.elements)
+      if (el.type === 'image' && el.fileId) this.images.ensure(el.fileId);
     if (!options.keepHistory) this.history.clear();
     this.setState({
       selectedIds: [],
@@ -392,7 +404,12 @@ export class Editor {
     if (options.history !== false) {
       const selectionAfter = [...this.state.selectedIds];
       if (!(options.merge && this.history.mergeIntoLast(committed.deltas, selectionAfter))) {
-        this.history.record({ label: committed.label, deltas: committed.deltas, selectionBefore, selectionAfter });
+        this.history.record({
+          label: committed.label,
+          deltas: committed.deltas,
+          selectionBefore,
+          selectionAfter,
+        });
       }
     }
     this.events.emit('commit', committed);
@@ -413,7 +430,9 @@ export class Editor {
     return this.gesture;
   }
 
-  commitGesture(options: { history?: boolean; selectionAfter?: string[] } = {}): CommittedTransaction | null {
+  commitGesture(
+    options: { history?: boolean; selectionAfter?: string[] } = {},
+  ): CommittedTransaction | null {
     const tx = this.gesture;
     if (!tx) return null;
     this.gesture = null;
@@ -427,11 +446,16 @@ export class Editor {
     this.gesture = null;
     tx.rollback();
     this.events.emit('presence', { active: false });
-    this.setState({ selectedIds: this.gestureSelectionBefore.filter((id) => this.scene.getLiveElement(id)) });
+    this.setState({
+      selectedIds: this.gestureSelectionBefore.filter((id) => this.scene.getLiveElement(id)),
+    });
   }
 
   /** Adds elements on top of the scene (assigning fresh indices) and selects them. */
-  addElements(elements: readonly SceneElement[], options: { select?: boolean; label?: string } = {}): SceneElement[] {
+  addElements(
+    elements: readonly SceneElement[],
+    options: { select?: boolean; label?: string } = {},
+  ): SceneElement[] {
     if (elements.length === 0) return [];
     const keys = indicesAbove(this.scene.getElementsIncludingDeleted(), elements.length);
     const indexed = elements.map((el, i) => ({ ...el, index: keys[i]! }));
@@ -446,7 +470,8 @@ export class Editor {
         if (membership.length) tx.updateMany(membership);
         return out;
       }) ?? [];
-    if (options.select !== false) this.setState({ selectedIds: created.map((e) => e.id), editingGroupId: null });
+    if (options.select !== false)
+      this.setState({ selectedIds: created.map((e) => e.id), editingGroupId: null });
     return created;
   }
 
@@ -455,7 +480,10 @@ export class Editor {
     if (patches.length === 0) return;
     this.mutate(label, (tx) => {
       tx.updateMany(patches);
-      this.refreshBindings(tx, patches.map(([id]) => id));
+      this.refreshBindings(
+        tx,
+        patches.map(([id]) => id),
+      );
     });
   }
 
@@ -485,7 +513,9 @@ export class Editor {
       const el = this.scene.getLiveElement(id);
       if (!el || el.locked) continue;
       targets.add(id);
-      if (el.type === 'frame') for (const child of this.scene.getFrameChildren(id)) if (!child.locked) targets.add(child.id);
+      if (el.type === 'frame')
+        for (const child of this.scene.getFrameChildren(id))
+          if (!child.locked) targets.add(child.id);
     }
     if (targets.size === 0) return;
     this.mutate(
@@ -537,7 +567,11 @@ export class Editor {
       case 'text':
         return { ...base, ...text, backgroundColor: 'transparent' } as Partial<SceneElement>;
       case 'line':
-        return { ...base, backgroundColor: 'transparent', pathStyle: s.arrowPathStyle } as Partial<SceneElement>;
+        return {
+          ...base,
+          backgroundColor: 'transparent',
+          pathStyle: s.arrowPathStyle,
+        } as Partial<SceneElement>;
       case 'arrow':
         return {
           ...base,
@@ -552,7 +586,12 @@ export class Editor {
           backgroundColor: 'transparent',
           routing: s.connectorRouting,
           startArrowhead: s.startArrowhead,
-          endArrowhead: s.endArrowhead === 'none' ? 'none' : s.endArrowhead === 'arrow' ? 'triangle' : s.endArrowhead,
+          endArrowhead:
+            s.endArrowhead === 'none'
+              ? 'none'
+              : s.endArrowhead === 'arrow'
+                ? 'triangle'
+                : s.endArrowhead,
           roundness: s.roundness,
         } as Partial<SceneElement>;
       case 'frame':
@@ -589,7 +628,10 @@ export class Editor {
       'Change style',
       (tx) => {
         tx.updateMany(patches);
-        this.refreshBindings(tx, patches.map(([id]) => id));
+        this.refreshBindings(
+          tx,
+          patches.map(([id]) => id),
+        );
       },
       { merge },
     );
@@ -616,7 +658,11 @@ export class Editor {
   }
 
   private applyHistoryEntry(entry: HistoryEntry, direction: 'before' | 'after') {
-    const tx = new Transaction(this.scene, direction === 'before' ? `Undo ${entry.label}` : `Redo ${entry.label}`, 'history');
+    const tx = new Transaction(
+      this.scene,
+      direction === 'before' ? `Undo ${entry.label}` : `Redo ${entry.label}`,
+      'history',
+    );
     for (const d of entry.deltas) {
       const patch = direction === 'before' ? d.before : d.after;
       const existing = this.scene.getElement(d.id);
@@ -631,7 +677,10 @@ export class Editor {
 
   // ───────────────────────────── selection ─────────────────────────────
 
-  select(ids: readonly string[], options: { additive?: boolean; expandGroups?: boolean } = {}): void {
+  select(
+    ids: readonly string[],
+    options: { additive?: boolean; expandGroups?: boolean } = {},
+  ): void {
     const base = options.additive ? new Set(this.state.selectedIds) : new Set<string>();
     const expanded =
       options.expandGroups === false
@@ -653,7 +702,12 @@ export class Editor {
   selectAll(): void {
     const ids = this.scene
       .getElements()
-      .filter((e) => !e.locked && !e.hidden && (!this.state.editingGroupId || e.groupIds.includes(this.state.editingGroupId)))
+      .filter(
+        (e) =>
+          !e.locked &&
+          !e.hidden &&
+          (!this.state.editingGroupId || e.groupIds.includes(this.state.editingGroupId)),
+      )
       .map((e) => e.id);
     this.setState({ selectedIds: ids });
   }
@@ -716,16 +770,27 @@ export class Editor {
     this.zoomAt(1);
   }
 
-  fitToBounds(bounds: Bounds | null, options: { maxZoom?: number; padding?: number; animate?: boolean } = {}): void {
+  fitToBounds(
+    bounds: Bounds | null,
+    options: { maxZoom?: number; padding?: number; animate?: boolean } = {},
+  ): void {
     if (!bounds) return;
-    const target = fitBounds(this.state.viewport, bounds, { padding: options.padding ?? 64, maxZoom: options.maxZoom ?? 1 });
+    const target = fitBounds(this.state.viewport, bounds, {
+      padding: options.padding ?? 64,
+      maxZoom: options.maxZoom ?? 1,
+    });
     this.setViewport(target);
   }
 
   fitToContent(options: { animate?: boolean } = {}): void {
     const elements = this.scene.getElements().filter((e) => !e.hidden);
     if (elements.length === 0) {
-      this.setViewport({ ...this.state.viewport, x: -this.state.viewport.width / 2, y: -this.state.viewport.height / 2, zoom: 1 });
+      this.setViewport({
+        ...this.state.viewport,
+        x: -this.state.viewport.width / 2,
+        y: -this.state.viewport.height / 2,
+        zoom: 1,
+      });
       return;
     }
     this.fitToBounds(getCommonBounds(elements), { animate: options.animate });
@@ -738,7 +803,9 @@ export class Editor {
   }
 
   fitToElements(ids: readonly string[], maxZoom = 2): void {
-    const els = ids.map((id) => this.scene.getLiveElement(id)).filter((e): e is SceneElement => !!e);
+    const els = ids
+      .map((id) => this.scene.getLiveElement(id))
+      .filter((e): e is SceneElement => !!e);
     if (els.length) this.fitToBounds(getCommonBounds(els), { maxZoom });
   }
 
@@ -765,7 +832,10 @@ export class Editor {
       if (!peer) this.setState({ followingClientId: null });
       else if (peer.viewport) {
         const v = peer.viewport;
-        this.fitToBounds({ minX: v.x, minY: v.y, maxX: v.x + v.width, maxY: v.y + v.height }, { padding: 0, maxZoom: 30 });
+        this.fitToBounds(
+          { minX: v.x, minY: v.y, maxX: v.x + v.width, maxY: v.y + v.height },
+          { padding: 0, maxZoom: 30 },
+        );
       }
     }
   }
@@ -930,7 +1000,9 @@ export class Editor {
     const b = getElementBounds(el);
     const vp = this.state.viewport;
     const visible = visibleWorldBounds(vp);
-    const fits = b.maxX - b.minX < visible.maxX - visible.minX && b.maxY - b.minY < visible.maxY - visible.minY;
+    const fits =
+      b.maxX - b.minX < visible.maxX - visible.minX &&
+      b.maxY - b.minY < visible.maxY - visible.minY;
     if (fits) this.scrollToPoint(boundsCenter(b));
     else this.fitToBounds(b, { maxZoom: vp.zoom });
   }
@@ -940,7 +1012,11 @@ export class Editor {
   startPresentation(startFrameId?: string): boolean {
     const frames = this.getOrderedFrames();
     if (frames.length === 0) {
-      this.requestUi({ type: 'toast', level: 'info', message: 'Add frames to present them as slides.' });
+      this.requestUi({
+        type: 'toast',
+        level: 'info',
+        message: 'Add frames to present them as slides.',
+      });
       return false;
     }
     this.commitTextEditIfAny();
@@ -977,7 +1053,9 @@ export class Editor {
 
   /** Moves a frame within the presentation order. */
   reorderFrame(frameId: string, toIndex: number): void {
-    const order = this.getOrderedFrames().map((f) => f.id).filter((id) => id !== frameId);
+    const order = this.getOrderedFrames()
+      .map((f) => f.id)
+      .filter((id) => id !== frameId);
     order.splice(Math.max(0, Math.min(order.length, toIndex)), 0, frameId);
     this.updateAppState({ frameOrder: order });
   }
@@ -1005,17 +1083,39 @@ export class Editor {
 /** Translates a style patch to what makes sense for a given element type. */
 function adaptPatchToElement(el: SceneElement, patch: ElementPatch): ElementPatch {
   const out: Record<string, unknown> = {};
-  const textKeys = ['fontFamily', 'fontSize', 'fontWeight', 'fontStyle', 'textDecoration', 'textAlign', 'verticalAlign', 'lineHeight', 'letterSpacing'];
+  const textKeys = [
+    'fontFamily',
+    'fontSize',
+    'fontWeight',
+    'fontStyle',
+    'textDecoration',
+    'textAlign',
+    'verticalAlign',
+    'lineHeight',
+    'letterSpacing',
+  ];
   for (const [key, value] of Object.entries(patch)) {
     if (textKeys.includes(key)) {
       if (el.type === 'text') out[key] = value;
-      else if ((el.type === 'table' || el.type === 'uml-class' || el.type === 'sequence') && (key === 'fontFamily' || key === 'fontSize')) out[key] = value;
-      else if ('label' in el && el.label) out.label = { ...el.label, ...((out.label as object) ?? {}), [key]: value };
+      else if (
+        (el.type === 'table' || el.type === 'uml-class' || el.type === 'sequence') &&
+        (key === 'fontFamily' || key === 'fontSize')
+      )
+        out[key] = value;
+      else if ('label' in el && el.label)
+        out.label = { ...el.label, ...((out.label as object) ?? {}), [key]: value };
       continue;
     }
     if (key in el) out[key] = value;
   }
-  if (el.type === 'text' && ('fontSize' in out || 'fontFamily' in out || 'letterSpacing' in out || 'lineHeight' in out || 'fontWeight' in out)) {
+  if (
+    el.type === 'text' &&
+    ('fontSize' in out ||
+      'fontFamily' in out ||
+      'letterSpacing' in out ||
+      'lineHeight' in out ||
+      'fontWeight' in out)
+  ) {
     const size = measureTextElement({ ...el, ...(out as Partial<typeof el>) });
     out.width = el.autoResize ? size.width : el.width;
     out.height = size.height;
@@ -1023,7 +1123,12 @@ function adaptPatchToElement(el: SceneElement, patch: ElementPatch): ElementPatc
   return out as ElementPatch;
 }
 
-function textPatch(el: SceneElement, kind: TextEditKind, text: string, style: StyleDefaults): ElementPatch | null {
+function textPatch(
+  el: SceneElement,
+  kind: TextEditKind,
+  text: string,
+  style: StyleDefaults,
+): ElementPatch | null {
   if (kind === 'text' && el.type === 'text') {
     const size = measureTextElement({ ...el, text });
     return { text, width: el.autoResize ? size.width : el.width, height: size.height };
@@ -1057,5 +1162,9 @@ function createLabelDefaults(style: StyleDefaults) {
 }
 
 function createEdgeLabelDefaults(style: StyleDefaults) {
-  return { ...createLabelDefaults(style), fontSize: Math.max(12, style.fontSize - 4), position: 0.5 };
+  return {
+    ...createLabelDefaults(style),
+    fontSize: Math.max(12, style.fontSize - 4),
+    position: 0.5,
+  };
 }

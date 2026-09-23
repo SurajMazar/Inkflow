@@ -2,25 +2,13 @@
  * Public contracts of the diagram engine (shape registry, icons, ports, layouts, library,
  * templates). Implementations live alongside; keep this file free of implementation.
  */
-import type {
-  NodeElement,
-  Port,
-  PortSide,
-  SceneElement,
-} from '@inkflow/elements';
+import type { NodeElement, Port, PortSide, SceneElement } from '@inkflow/elements';
 import type { Path, Point, Rect } from '@inkflow/geometry';
 import type { DocumentAppState } from '@inkflow/scene';
 import type { TemplateCategory } from '@inkflow/shared';
 
 export type ShapeCategory =
-  | 'basic'
-  | 'flowchart'
-  | 'uml'
-  | 'infrastructure'
-  | 'cloud'
-  | 'network'
-  | 'people'
-  | 'misc';
+  'basic' | 'flowchart' | 'uml' | 'infrastructure' | 'cloud' | 'network' | 'people' | 'misc';
 
 /** Geometry of a node shape in local coordinates (0..width, 0..height). */
 export interface ShapeGeometry {
@@ -55,7 +43,9 @@ export interface NodeShapeDefinition {
   category: ShapeCategory;
   keywords: string[];
   defaultSize: { width: number; height: number };
-  defaultStyle?: Partial<Pick<NodeElement, 'backgroundColor' | 'strokeColor' | 'roundness' | 'fillStyle'>>;
+  defaultStyle?: Partial<
+    Pick<NodeElement, 'backgroundColor' | 'strokeColor' | 'roundness' | 'fillStyle'>
+  >;
   defaultIcon?: string | null;
   /** Elliptical outlines attach connectors along the ellipse instead of the polygon. */
   elliptical?: boolean;
@@ -186,8 +176,23 @@ export interface SequenceLayout {
     labelWidth: number;
   }[];
   /** `x` is the left edge of the activation bar; `width` is ACTIVATION_WIDTH. */
-  activations: { participantId: string; x: number; width: number; top: number; bottom: number; depth: number }[];
-  notes: { id: string; x: number; y: number; width: number; height: number; text: string; lines: string[] }[];
+  activations: {
+    participantId: string;
+    x: number;
+    width: number;
+    top: number;
+    bottom: number;
+    depth: number;
+  }[];
+  notes: {
+    id: string;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    text: string;
+    lines: string[];
+  }[];
   /** Font metrics used for labels (so renderers draw exactly what was measured). */
   fontSize: number;
   lineHeight: number;

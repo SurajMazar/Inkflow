@@ -7,7 +7,9 @@ async function main(): Promise<void> {
   const env = loadEnvironment();
   const app = await createApp(env);
   await app.listen(env.PORT, env.HOST);
-  new Logger('Bootstrap').log(`Inkflow API listening on http://${env.HOST}:${env.PORT}/api (docs: /api/docs)`);
+  new Logger('Bootstrap').log(
+    `Inkflow API listening on http://${env.HOST}:${env.PORT}/api (docs: /api/docs)`,
+  );
 }
 
 main().catch((err: unknown) => {

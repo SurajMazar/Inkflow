@@ -12,12 +12,17 @@ import {
 import type { Point } from '@inkflow/geometry';
 import { generateNKeysBetween, type DocumentAppState } from '@inkflow/scene';
 import { generateId } from '@inkflow/shared';
-import { createConnector, createNode, facingPort, type ConnectorProps, type NodeProps } from '../builders';
+import {
+  createConnector,
+  createNode,
+  facingPort,
+  type ConnectorProps,
+  type NodeProps,
+} from '../builders';
 import { autoLayout } from '../layout';
 import { CONTAINER_SHAPE_KEYS } from '../shapes/catalog';
 import { computeConnectorRoute } from '../routing/route';
 import type { AutoLayoutKind, AutoLayoutOptions, TemplateContent } from '../types';
-
 
 export interface TextOptions {
   fontSize?: number;
@@ -62,21 +67,42 @@ export class DiagramBuilder {
   }
 
   /** Node with its top-left at (x, y). */
-  node(shape: string, x: number, y: number, label: string | null, props: NodeProps & { color?: PaletteColor } = {}): NodeElement {
+  node(
+    shape: string,
+    x: number,
+    y: number,
+    label: string | null,
+    props: NodeProps & { color?: PaletteColor } = {},
+  ): NodeElement {
     const { color, ...rest } = props;
-    const colors = color ? { backgroundColor: PALETTE[color].bg, strokeColor: PALETTE[color].stroke } : {};
+    const colors = color
+      ? { backgroundColor: PALETTE[color].bg, strokeColor: PALETTE[color].stroke }
+      : {};
     return this.add(createNode(shape, { ...colors, ...rest, x, y, label: label ?? undefined }));
   }
 
   /** Node centred on (cx, cy). */
-  nodeAt(shape: string, cx: number, cy: number, label: string | null, props: NodeProps & { color?: PaletteColor } = {}): NodeElement {
+  nodeAt(
+    shape: string,
+    cx: number,
+    cy: number,
+    label: string | null,
+    props: NodeProps & { color?: PaletteColor } = {},
+  ): NodeElement {
     const probe = createNode(shape, { width: props.width, height: props.height });
-    return this.node(shape, cx - probe.width / 2, cy - probe.height / 2, label, { ...props, width: probe.width, height: probe.height });
+    return this.node(shape, cx - probe.width / 2, cy - probe.height / 2, label, {
+      ...props,
+      width: probe.width,
+      height: probe.height,
+    });
   }
 
   connect(from: SceneElement, to: SceneElement, props: ConnectorProps = {}): ConnectorElement {
     const c = this.add(createConnector(from, to, { strokeWidth: 1.5, ...props }));
-    this.autoPorts.set(c.id, { start: props.fromPort === undefined, end: props.toPort === undefined });
+    this.autoPorts.set(c.id, {
+      start: props.fromPort === undefined,
+      end: props.toPort === undefined,
+    });
     return c;
   }
 
@@ -99,7 +125,12 @@ export class DiagramBuilder {
   }
 
   /** Frame around `children` (padding on every side); children get the frame id. */
-  frame(name: string, children: readonly SceneElement[], padding = 40, props: Partial<FrameElement> = {}): FrameElement {
+  frame(
+    name: string,
+    children: readonly SceneElement[],
+    padding = 40,
+    props: Partial<FrameElement> = {},
+  ): FrameElement {
     const b = getCommonBounds(children);
     const frame = createElement('frame', {
       name,
@@ -114,7 +145,14 @@ export class DiagramBuilder {
     return frame;
   }
 
-  frameRect(name: string, x: number, y: number, width: number, height: number, props: Partial<FrameElement> = {}): FrameElement {
+  frameRect(
+    name: string,
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    props: Partial<FrameElement> = {},
+  ): FrameElement {
     return this.add(createElement('frame', { name, x, y, width, height, ...props }));
   }
 
@@ -142,11 +180,21 @@ export class DiagramBuilder {
   }
 
   /** Re-positions `nodes` with an auto layout (edges = connectors between them), anchored at `origin`. */
-  layout(nodes: readonly SceneElement[], kind: AutoLayoutKind, options: AutoLayoutOptions = {}, origin?: Point): void {
+  layout(
+    nodes: readonly SceneElement[],
+    kind: AutoLayoutKind,
+    options: AutoLayoutOptions = {},
+    origin?: Point,
+  ): void {
     const ids = new Set(nodes.map((n) => n.id));
     const current = this.items.filter((e) => ids.has(e.id));
     const edges = this.items.filter(
-      (e): e is ConnectorElement => e.type === 'connector' && !!e.startBinding && !!e.endBinding && ids.has(e.startBinding.elementId) && ids.has(e.endBinding.elementId),
+      (e): e is ConnectorElement =>
+        e.type === 'connector' &&
+        !!e.startBinding &&
+        !!e.endBinding &&
+        ids.has(e.startBinding.elementId) &&
+        ids.has(e.endBinding.elementId),
     );
     const pos = autoLayout(current, edges, kind, options);
     let dx = 0;
@@ -167,14 +215,17 @@ export class DiagramBuilder {
     for (let i = 0; i < this.items.length; i++) {
       const el = this.items[i]!;
       const moved = { ...el, x: el.x + dx, y: el.y + dy };
-      if (moved.type === 'connector') moved.waypoints = moved.waypoints.map(([x, y]) => [x + dx, y + dy]);
+      if (moved.type === 'connector')
+        moved.waypoints = moved.waypoints.map(([x, y]) => [x + dx, y + dy]);
       this.items[i] = moved;
     }
   }
 
   /** Routes connectors, orders by layer and assigns fresh ascending fractional indices. */
   finish(): SceneElement[] {
-    const obstacles = this.items.filter((e) => !isLinearElement(e) && e.type !== 'frame' && e.type !== 'text');
+    const obstacles = this.items.filter(
+      (e) => !isLinearElement(e) && e.type !== 'frame' && e.type !== 'text',
+    );
     const byId = new Map(this.items.map((e) => [e.id, e]));
     const get = (id: string) => byId.get(id);
     const repinned = this.items.map((el) => {
@@ -185,11 +236,15 @@ export class DiagramBuilder {
       if (!from || !to) return el;
       return {
         ...el,
-        startBinding: auto.start ? { ...el.startBinding, portId: facingPort(from, to) } : el.startBinding,
+        startBinding: auto.start
+          ? { ...el.startBinding, portId: facingPort(from, to) }
+          : el.startBinding,
         endBinding: auto.end ? { ...el.endBinding, portId: facingPort(to, from) } : el.endBinding,
       };
     });
-    const routed = repinned.map((el) => (el.type === 'connector' ? { ...el, ...computeConnectorRoute(el, get, obstacles) } : el));
+    const routed = repinned.map((el) =>
+      el.type === 'connector' ? { ...el, ...computeConnectorRoute(el, get, obstacles) } : el,
+    );
     const rank = (el: SceneElement) => {
       if (el.type === 'frame') return 0;
       if (el.type === 'node' && CONTAINER_SHAPE_KEYS.has(el.shape)) return 1;
@@ -206,7 +261,10 @@ export class DiagramBuilder {
   }
 
   build(appState: Partial<DocumentAppState> = {}): TemplateContent {
-    return { elements: this.finish(), appState: { viewBackgroundColor: '#ffffff', gridType: 'dot', gridSize: 20, ...appState } };
+    return {
+      elements: this.finish(),
+      appState: { viewBackgroundColor: '#ffffff', gridType: 'dot', gridSize: 20, ...appState },
+    };
   }
 }
 
@@ -218,8 +276,8 @@ export function centerElements(elements: SceneElement[], center: Point): SceneEl
   const dy = center.y - (b.minY + b.maxY) / 2;
   return elements.map((el) => {
     const moved = { ...el, x: el.x + dx, y: el.y + dy };
-    if (moved.type === 'connector') moved.waypoints = moved.waypoints.map(([x, y]) => [x + dx, y + dy]);
+    if (moved.type === 'connector')
+      moved.waypoints = moved.waypoints.map(([x, y]) => [x + dx, y + dy]);
     return moved;
   });
 }
-

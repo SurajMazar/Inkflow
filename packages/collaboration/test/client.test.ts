@@ -31,14 +31,27 @@ class FakeSocket implements WebSocketLike {
     this.onclose?.({ code, reason });
   }
   last<T extends ClientMessage['t']>(t: T): Extract<ClientMessage, { t: T }> | undefined {
-    return [...this.sent].reverse().find((m) => m.t === t) as Extract<ClientMessage, { t: T }> | undefined;
+    return [...this.sent].reverse().find((m) => m.t === t) as
+      Extract<ClientMessage, { t: T }> | undefined;
   }
 }
 
 const user = { id: 'u1', name: 'Ada', avatarUrl: null, color: '#f00', anonymous: false };
 
-function welcome(seq: number, missed: Extract<ServerMessage, { t: 'welcome' }>['missed'] = []): ServerMessage {
-  return { t: 'welcome', protocol: 1, clientId: 'c1', role: 'EDITOR', user, seq, peers: [], missed };
+function welcome(
+  seq: number,
+  missed: Extract<ServerMessage, { t: 'welcome' }>['missed'] = [],
+): ServerMessage {
+  return {
+    t: 'welcome',
+    protocol: 1,
+    clientId: 'c1',
+    role: 'EDITOR',
+    user,
+    seq,
+    peers: [],
+    missed,
+  };
 }
 
 function memoryStorage(): CollabStorage & { data: Map<string, Operation[]> } {
@@ -55,7 +68,14 @@ function memoryStorage(): CollabStorage & { data: Map<string, Operation[]> } {
 describe('CollabClient', () => {
   let sockets: FakeSocket[];
   let applied: SceneElement[][];
-  const base = createElement('rectangle', { id: 'r1', x: 0, y: 0, width: 10, height: 10, index: 'a0' });
+  const base = createElement('rectangle', {
+    id: 'r1',
+    x: 0,
+    y: 0,
+    width: 10,
+    height: 10,
+    index: 'a0',
+  });
 
   beforeEach(() => {
     vi.useFakeTimers();
@@ -100,7 +120,11 @@ describe('CollabClient', () => {
     await vi.advanceTimersByTimeAsync(100);
     const ops = s.last('ops')!;
     expect(ops.ops).toHaveLength(1);
-    s.receive({ t: 'ack', batchId: ops.batchId, results: [{ opId: ops.ops[0]!.opId, status: 'applied', seq: 6 }] });
+    s.receive({
+      t: 'ack',
+      batchId: ops.batchId,
+      results: [{ opId: ops.ops[0]!.opId, status: 'applied', seq: 6 }],
+    });
     expect(client.pendingCount).toBe(0);
     expect(client.currentStatus.save).toBe('saved');
     expect(statuses).toContain('saving');
@@ -116,7 +140,19 @@ describe('CollabClient', () => {
     client.submit([moveOp(client, 99)]);
     // A collaborator changes the color concurrently (server state).
     const remote = { ...base, strokeColor: '#00ff00', version: base.version + 1 };
-    s.receive({ t: 'changes', changes: [{ seq: 6, opId: 'x', clientId: 'c2', userId: 'u2', type: 'UPDATE_ELEMENT', elements: [remote] }] });
+    s.receive({
+      t: 'changes',
+      changes: [
+        {
+          seq: 6,
+          opId: 'x',
+          clientId: 'c2',
+          userId: 'u2',
+          type: 'UPDATE_ELEMENT',
+          elements: [remote],
+        },
+      ],
+    });
     const last = applied.at(-1)![0]!;
     expect(last.strokeColor).toBe('#00ff00');
     expect(last.x).toBe(99);
@@ -134,7 +170,11 @@ describe('CollabClient', () => {
     client.submit([moveOp(client, 42)]);
     await vi.advanceTimersByTimeAsync(100);
     const ops = s.last('ops')!;
-    s.receive({ t: 'ack', batchId: ops.batchId, results: [{ opId: ops.ops[0]!.opId, status: 'rejected', seq: null, reason: 'nope' }] });
+    s.receive({
+      t: 'ack',
+      batchId: ops.batchId,
+      results: [{ opId: ops.ops[0]!.opId, status: 'rejected', seq: null, reason: 'nope' }],
+    });
     expect(rejected).toHaveBeenCalled();
     expect(applied.at(-1)![0]!.x).toBe(0);
     client.stop();
@@ -160,7 +200,11 @@ describe('CollabClient', () => {
     await vi.advanceTimersByTimeAsync(10);
     const ops = s2.last('ops')!;
     expect(ops.ops.map((o) => o.type)).toEqual(['MOVE_ELEMENT', 'MOVE_ELEMENT']);
-    s2.receive({ t: 'ack', batchId: ops.batchId, results: ops.ops.map((o, i) => ({ opId: o.opId, status: 'applied' as const, seq: 6 + i })) });
+    s2.receive({
+      t: 'ack',
+      batchId: ops.batchId,
+      results: ops.ops.map((o, i) => ({ opId: o.opId, status: 'applied' as const, seq: 6 + i })),
+    });
     expect(storage.data.get('b1')).toHaveLength(0);
     expect(client.currentStatus.save).toBe('saved');
     client.stop();
@@ -178,7 +222,13 @@ describe('CollabClient', () => {
       createSocket: () => new FakeSocket(),
       onElements: () => undefined,
     });
-    const op: Operation = { ...seed.nextMeta(1), type: 'MOVE_ELEMENT', elementId: 'r1', x: 300, y: 300 };
+    const op: Operation = {
+      ...seed.nextMeta(1),
+      type: 'MOVE_ELEMENT',
+      elementId: 'r1',
+      x: 300,
+      y: 300,
+    };
     await storage.savePending('b1', [op]);
     const client = makeClient({ storage });
     await client.start();
@@ -203,9 +253,24 @@ describe('CollabClient', () => {
         const map = new Map([[base.id, base]]);
         const changes = body.ops.map((op, i) => {
           const res = applyOperation((id) => map.get(id), op);
-          return { seq: 6 + i, opId: op.opId, clientId: 'c1', userId: 'u1', type: op.type, elements: res.elements };
+          return {
+            seq: 6 + i,
+            opId: op.opId,
+            clientId: 'c1',
+            userId: 'u1',
+            type: op.type,
+            elements: res.elements,
+          };
         });
-        return { results: body.ops.map((o, i) => ({ opId: o.opId, status: 'applied' as const, seq: 6 + i })), changes, seq: 6 + body.ops.length };
+        return {
+          results: body.ops.map((o, i) => ({
+            opId: o.opId,
+            status: 'applied' as const,
+            seq: 6 + i,
+          })),
+          changes,
+          seq: 6 + body.ops.length,
+        };
       }),
       getChanges: vi.fn(),
     };
@@ -227,7 +292,20 @@ describe('CollabClient', () => {
     const s = sockets[0]!;
     s.open();
     s.receive(welcome(5));
-    const peer = { clientId: 'c2', user, role: 'EDITOR' as const, state: { cursor: { x: 1, y: 2 }, selectedIds: [], tool: 'selection', viewport: null, editingId: null, active: false }, lastSeen: 1 };
+    const peer = {
+      clientId: 'c2',
+      user,
+      role: 'EDITOR' as const,
+      state: {
+        cursor: { x: 1, y: 2 },
+        selectedIds: [],
+        tool: 'selection',
+        viewport: null,
+        editingId: null,
+        active: false,
+      },
+      lastSeen: 1,
+    };
     s.receive({ t: 'presence', peer });
     expect(onPeers).toHaveBeenLastCalledWith([peer]);
     s.receive({ t: 'peer-left', clientId: 'c2' });
@@ -248,5 +326,32 @@ describe('CollabClient', () => {
     await vi.advanceTimersByTimeAsync(200);
     expect(s.last('ops')).toBeUndefined();
     client.stop();
+  });
+
+  it('detaches the socket immediately when the browser goes offline and reconnects when online', async () => {
+    const win = new EventTarget();
+    (globalThis as { window?: unknown }).window = win;
+    try {
+      const client = makeClient();
+      await client.start();
+      const s1 = sockets[0]!;
+      s1.open();
+      s1.receive(welcome(5));
+      win.dispatchEvent(new Event('offline'));
+      expect(client.currentStatus.connection).toBe('offline');
+      client.submit([moveOp(client, 3)]);
+      await vi.advanceTimersByTimeAsync(200);
+      expect(client.currentStatus.save).toBe('offline');
+      expect(s1.last('ops')).toBeUndefined();
+      win.dispatchEvent(new Event('online'));
+      const s2 = sockets[1]!;
+      s2.open();
+      s2.receive(welcome(5));
+      await vi.advanceTimersByTimeAsync(10);
+      expect(s2.last('ops')?.ops).toHaveLength(1);
+      client.stop();
+    } finally {
+      delete (globalThis as { window?: unknown }).window;
+    }
   });
 });

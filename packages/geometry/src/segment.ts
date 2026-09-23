@@ -82,7 +82,8 @@ export function pointInPolygon(p: Point, polygon: readonly Point[]): boolean {
 }
 
 export function segmentIntersectsBounds(a: Point, b: Point, bounds: Bounds): boolean {
-  const inside = (p: Point) => p.x >= bounds.minX && p.x <= bounds.maxX && p.y >= bounds.minY && p.y <= bounds.maxY;
+  const inside = (p: Point) =>
+    p.x >= bounds.minX && p.x <= bounds.maxX && p.y >= bounds.minY && p.y <= bounds.maxY;
   if (inside(a) || inside(b)) return true;
   const tl = { x: bounds.minX, y: bounds.minY };
   const tr = { x: bounds.maxX, y: bounds.minY };
@@ -96,7 +97,11 @@ export function segmentIntersectsBounds(a: Point, b: Point, bounds: Bounds): boo
   );
 }
 
-export function polylineIntersectsBounds(points: readonly Point[], bounds: Bounds, closed = false): boolean {
+export function polylineIntersectsBounds(
+  points: readonly Point[],
+  bounds: Bounds,
+  closed = false,
+): boolean {
   const n = points.length;
   if (n === 1) return segmentIntersectsBounds(points[0]!, points[0]!, bounds);
   const last = closed ? n : n - 1;
@@ -113,7 +118,10 @@ export function polylineLength(points: readonly Point[]): number {
 }
 
 /** Point at a normalized distance t ∈ [0,1] along a polyline, with the segment direction angle. */
-export function pointAlongPolyline(points: readonly Point[], t: number): { point: Point; angle: number } {
+export function pointAlongPolyline(
+  points: readonly Point[],
+  t: number,
+): { point: Point; angle: number } {
   if (points.length === 0) return { point: { x: 0, y: 0 }, angle: 0 };
   if (points.length === 1) return { point: { ...points[0]! }, angle: 0 };
   const total = polylineLength(points);

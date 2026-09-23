@@ -16,7 +16,11 @@ export function ResetPasswordPage() {
   const [password, setPassword] = React.useState('');
   const [confirm, setConfirm] = React.useState('');
   const [errors, setErrors] = React.useState<{ password?: string; confirm?: string }>({});
-  const [formError, setFormError] = React.useState<{ title: string; description?: string; invalidToken?: boolean } | null>(null);
+  const [formError, setFormError] = React.useState<{
+    title: string;
+    description?: string;
+    invalidToken?: boolean;
+  } | null>(null);
   const [submitting, setSubmitting] = React.useState(false);
 
   const footer = (
@@ -27,7 +31,11 @@ export function ResetPasswordPage() {
 
   if (token.length < 16) {
     return (
-      <AuthLayout title="This reset link is invalid" description="Request a new link to reset your password." footer={footer}>
+      <AuthLayout
+        title="This reset link is invalid"
+        description="Request a new link to reset your password."
+        footer={footer}
+      >
         <Button asChild className="w-full">
           <Link to="/forgot-password">Request a new link</Link>
         </Button>
@@ -50,7 +58,9 @@ export function ResetPasswordPage() {
       notify.success('Password updated', { description: 'Sign in with your new password.' });
       navigate('/login', { replace: true });
     } catch (error) {
-      const invalidToken = error instanceof ApiError && (error.code === 'TOKEN_INVALID' || error.code === 'TOKEN_EXPIRED');
+      const invalidToken =
+        error instanceof ApiError &&
+        (error.code === 'TOKEN_INVALID' || error.code === 'TOKEN_EXPIRED');
       setFormError({ ...describeApiError(error, "Couldn't reset your password"), invalidToken });
     } finally {
       setSubmitting(false);
@@ -58,14 +68,23 @@ export function ResetPasswordPage() {
   };
 
   return (
-    <AuthLayout title="Choose a new password" description="You'll be signed out of all other devices." footer={footer}>
+    <AuthLayout
+      title="Choose a new password"
+      description="You'll be signed out of all other devices."
+      footer={footer}
+    >
       <form className="grid gap-4" onSubmit={onSubmit} noValidate>
         {formError ? (
           <FormAlert>
             <p className="font-medium">{formError.title}</p>
-            {formError.description ? <p className="mt-0.5 opacity-90">{formError.description}</p> : null}
+            {formError.description ? (
+              <p className="mt-0.5 opacity-90">{formError.description}</p>
+            ) : null}
             {formError.invalidToken ? (
-              <Link to="/forgot-password" className="mt-1 inline-block font-medium underline underline-offset-4">
+              <Link
+                to="/forgot-password"
+                className="mt-1 inline-block font-medium underline underline-offset-4"
+              >
                 Request a new link
               </Link>
             ) : null}

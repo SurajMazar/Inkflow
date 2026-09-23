@@ -10,9 +10,7 @@ export interface AccessClaims {
 }
 
 export type AccessVerification =
-  | { status: 'valid'; claims: AccessClaims }
-  | { status: 'expired' }
-  | { status: 'invalid' };
+  { status: 'valid'; claims: AccessClaims } | { status: 'expired' } | { status: 'invalid' };
 
 const ISSUER = 'inkflow';
 const AUDIENCE = 'inkflow-api';
@@ -49,7 +47,8 @@ export class TokensService {
       });
       if (typeof payload === 'string') return { status: 'invalid' };
       const { sub, sid, typ } = payload as { sub?: unknown; sid?: unknown; typ?: unknown };
-      if (typeof sub !== 'string' || typeof sid !== 'string' || typ !== 'access') return { status: 'invalid' };
+      if (typeof sub !== 'string' || typeof sid !== 'string' || typ !== 'access')
+        return { status: 'invalid' };
       return { status: 'valid', claims: { sub, sid } };
     } catch (err) {
       if (err instanceof jwt.TokenExpiredError) return { status: 'expired' };

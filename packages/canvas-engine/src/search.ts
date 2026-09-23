@@ -36,18 +36,30 @@ function* searchableTexts(el: SceneElement): Generator<[field: string, text: str
   if (el.link) yield ['link', el.link];
 }
 
-function snippet(text: string, start: number, end: number): { text: string; start: number; end: number } {
+function snippet(
+  text: string,
+  start: number,
+  end: number,
+): { text: string; start: number; end: number } {
   const radius = 40;
   const from = Math.max(0, start - radius);
   const to = Math.min(text.length, end + radius);
   const prefix = from > 0 ? '…' : '';
   const suffix = to < text.length ? '…' : '';
   const body = text.slice(from, to).replace(/\s+/g, ' ');
-  return { text: prefix + body + suffix, start: start - from + prefix.length, end: end - from + prefix.length };
+  return {
+    text: prefix + body + suffix,
+    start: start - from + prefix.length,
+    end: end - from + prefix.length,
+  };
 }
 
 /** Case-insensitive search over element text, labels, frame names and diagram models. */
-export function searchScene(elements: readonly SceneElement[], query: string, limit = 200): SearchMatch[] {
+export function searchScene(
+  elements: readonly SceneElement[],
+  query: string,
+  limit = 200,
+): SearchMatch[] {
   const q = query.trim().toLowerCase();
   if (!q) return [];
   const out: SearchMatch[] = [];

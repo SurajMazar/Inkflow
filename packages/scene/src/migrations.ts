@@ -1,7 +1,13 @@
 import { CURRENT_DOCUMENT_VERSION } from './document';
 import { generateNKeysBetween } from './fractional-index';
 
-type RawDocument = { version?: unknown; elements?: unknown; appState?: unknown; files?: unknown; [k: string]: unknown };
+type RawDocument = {
+  version?: unknown;
+  elements?: unknown;
+  appState?: unknown;
+  files?: unknown;
+  [k: string]: unknown;
+};
 type Migration = (doc: RawDocument) => RawDocument;
 
 /**
@@ -23,10 +29,13 @@ const MIGRATIONS: Record<number, Migration> = {
       el.flipY ??= false;
       el.link ??= null;
       el.customData ??= null;
-      if (typeof el.opacity === 'number' && el.opacity <= 1 && el.opacity > 0) el.opacity = el.opacity * 100;
+      if (typeof el.opacity === 'number' && el.opacity <= 1 && el.opacity > 0)
+        el.opacity = el.opacity * 100;
       return el;
     });
-    const appState = (doc.appState && typeof doc.appState === 'object' ? doc.appState : {}) as Record<string, unknown>;
+    const appState = (
+      doc.appState && typeof doc.appState === 'object' ? doc.appState : {}
+    ) as Record<string, unknown>;
     const legacyGrid = appState.gridSize;
     const nextAppState: Record<string, unknown> = { ...appState };
     if (legacyGrid === null) {
@@ -45,7 +54,8 @@ export interface MigrationResult {
 
 export function migrateDocument(input: RawDocument): MigrationResult {
   let doc = { ...input };
-  const fromVersion = typeof doc.version === 'number' && Number.isInteger(doc.version) ? doc.version : 1;
+  const fromVersion =
+    typeof doc.version === 'number' && Number.isInteger(doc.version) ? doc.version : 1;
   if (fromVersion > CURRENT_DOCUMENT_VERSION) {
     throw new Error(
       `This board was saved by a newer version of Inkflow (format v${fromVersion}); please update the app.`,

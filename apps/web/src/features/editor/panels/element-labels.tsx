@@ -1,5 +1,10 @@
 import { shapeRegistry } from '@inkflow/diagram-engine';
-import { getShapeLabel, isLinearElement, type ElementType, type SceneElement } from '@inkflow/elements';
+import {
+  getShapeLabel,
+  isLinearElement,
+  type ElementType,
+  type SceneElement,
+} from '@inkflow/elements';
 import {
   ArrowRight,
   Boxes,
@@ -92,7 +97,8 @@ export function elementDisplayName(el: SceneElement): string {
     case 'freedraw':
       return el.brush === 'highlighter' ? 'Highlight' : 'Drawing';
     default: {
-      if (isLinearElement(el)) return (el.label?.text ? snippet(el.label.text) : '') || TYPE_LABELS[el.type];
+      if (isLinearElement(el))
+        return (el.label?.text ? snippet(el.label.text) : '') || TYPE_LABELS[el.type];
       const label = getShapeLabel(el);
       return (label?.text ? snippet(label.text) : '') || TYPE_LABELS[el.type];
     }

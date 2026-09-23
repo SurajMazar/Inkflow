@@ -16,7 +16,11 @@ export function FavoriteButton({
       variant="ghost"
       size="icon-sm"
       aria-pressed={board.isFavorite}
-      aria-label={board.isFavorite ? `Remove ${board.title} from favorites` : `Add ${board.title} to favorites`}
+      aria-label={
+        board.isFavorite
+          ? `Remove ${board.title} from favorites`
+          : `Add ${board.title} to favorites`
+      }
       data-testid="board-favorite"
       {...props}
       onClick={(event) => {
@@ -25,7 +29,10 @@ export function FavoriteButton({
         event.stopPropagation();
         toggleFavorite.mutate(board);
       }}
-      className={cn(board.isFavorite ? 'text-amber-500 hover:text-amber-600' : 'text-muted-foreground', className)}
+      className={cn(
+        board.isFavorite ? 'text-amber-500 hover:text-amber-600' : 'text-muted-foreground',
+        className,
+      )}
     >
       <Star className={cn('size-4', board.isFavorite && 'fill-current')} aria-hidden />
     </Button>

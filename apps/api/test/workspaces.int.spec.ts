@@ -35,12 +35,19 @@ describe('workspaces', () => {
     const owner = await signUp(t.url, 'Grace Hopper');
     const list = await owner.get<WorkspaceDto[]>('/api/workspaces');
     expect(list.body).toHaveLength(1);
-    expect(list.body[0]).toMatchObject({ name: "Grace's workspace", role: 'OWNER', memberCount: 1, boardCount: 0 });
+    expect(list.body[0]).toMatchObject({
+      name: "Grace's workspace",
+      role: 'OWNER',
+      memberCount: 1,
+      boardCount: 0,
+    });
 
     const created = await owner.post<WorkspaceDto>('/api/workspaces', { name: 'Acme Engineering' });
     expect(created.status).toBe(201);
     expect(created.body.slug).toMatch(/^acme-engineering-[0-9a-f]{6}$/);
-    const renamed = await owner.patch<WorkspaceDto>(`/api/workspaces/${created.body.id}`, { name: 'Acme Eng' });
+    const renamed = await owner.patch<WorkspaceDto>(`/api/workspaces/${created.body.id}`, {
+      name: 'Acme Eng',
+    });
     expect(renamed.body.name).toBe('Acme Eng');
     expect((await owner.delete(`/api/workspaces/${created.body.id}`)).status).toBe(200);
     expect((await owner.get(`/api/workspaces/${created.body.id}`)).status).toBe(404);
@@ -53,13 +60,17 @@ describe('workspaces', () => {
 
     // Existing (verified) user → added directly and notified.
     const bob = await signUp(t.url, 'Bob Builder');
-    const added = await owner.post<InviteMemberResponse>(`/api/workspaces/${ws.id}/invitations`, { email: bob.user!.email });
+    const added = await owner.post<InviteMemberResponse>(`/api/workspaces/${ws.id}/invitations`, {
+      email: bob.user!.email,
+    });
     expect(added.status).toBe(201);
     expect(added.body.status).toBe('added');
     expect(added.body.member?.role).toBe('MEMBER');
     const bobNotes = await bob.get<NotificationListDto>('/api/notifications');
     expect(bobNotes.body.items.some((n) => n.type === 'WORKSPACE_INVITE')).toBe(true);
-    expect((await owner.post(`/api/workspaces/${ws.id}/invitations`, { email: bob.user!.email })).status).toBe(409);
+    expect(
+      (await owner.post(`/api/workspaces/${ws.id}/invitations`, { email: bob.user!.email })).status,
+    ).toBe(409);
 
     // New email → invitation email → register → accept.
     const carolEmail = uniqueEmail('carol');
@@ -73,7 +84,9 @@ describe('workspaces', () => {
     const inviteMail = await waitForEmail(carolEmail, 'invited you to Team');
     const inviteToken = tokenFromText(inviteMail.text, /\/invite\/([A-Za-z0-9_-]+)/);
     const anon = new TestClient(t.url);
-    const preview = await anon.get<{ workspaceName: string; role: string }>(`/api/invitations/${inviteToken}`);
+    const preview = await anon.get<{ workspaceName: string; role: string }>(
+      `/api/invitations/${inviteToken}`,
+    );
     expect(preview.body).toMatchObject({ workspaceName: 'Team', role: 'ADMIN', email: carolEmail });
 
     // A different user cannot accept it.
@@ -81,12 +94,21 @@ describe('workspaces', () => {
 
     const carol = new TestClient(t.url);
     await carol.get('/api/auth/csrf');
-    await carol.post('/api/auth/register', { email: carolEmail, password: PASSWORD, name: 'Carol' });
+    await carol.post('/api/auth/register', {
+      email: carolEmail,
+      password: PASSWORD,
+      name: 'Carol',
+    });
     // Carol has not verified yet, but accepting via the emailed link proves the address.
-    const unverifiedLogin = await carol.post('/api/auth/login', { email: carolEmail, password: PASSWORD });
+    const unverifiedLogin = await carol.post('/api/auth/login', {
+      email: carolEmail,
+      password: PASSWORD,
+    });
     expect(unverifiedLogin.status).toBe(403);
     const verifyMail = await waitForEmail(carolEmail, 'Verify your email');
-    const verified = await carol.post<{ user: { id: string } }>('/api/auth/verify-email', { token: tokenFromText(verifyMail.text) });
+    const verified = await carol.post<{ user: { id: string } }>('/api/auth/verify-email', {
+      token: tokenFromText(verifyMail.text),
+    });
     const carolId = verified.body.user.id;
     // Verification already converted the invitation into a membership.
     const carolWorkspaces = await carol.get<WorkspaceDto[]>('/api/workspaces');
@@ -98,40 +120,71 @@ describe('workspaces', () => {
 
     // ADMIN cannot grant OWNER; OWNER can.
     const bobId = bob.user!.id;
-    expect((await carol.patch(`/api/workspaces/${ws.id}/members/${bobId}`, { role: 'OWNER' })).status).toBe(403);
-    const promoted = await carol.patch<WorkspaceMemberDto>(`/api/workspaces/${ws.id}/members/${bobId}`, { role: 'ADMIN' });
+    expect(
+      (await carol.patch(`/api/workspaces/${ws.id}/members/${bobId}`, { role: 'OWNER' })).status,
+    ).toBe(403);
+    const promoted = await carol.patch<WorkspaceMemberDto>(
+      `/api/workspaces/${ws.id}/members/${bobId}`,
+      { role: 'ADMIN' },
+    );
     expect(promoted.body.role).toBe('ADMIN');
     // Admins can demote other admins; plain members cannot change roles.
-    expect((await bob.patch(`/api/workspaces/${ws.id}/members/${carolId}`, { role: 'MEMBER' })).status).toBe(200);
-    expect((await carol.patch(`/api/workspaces/${ws.id}/members/${bobId}`, { role: 'MEMBER' })).status).toBe(403);
+    expect(
+      (await bob.patch(`/api/workspaces/${ws.id}/members/${carolId}`, { role: 'MEMBER' })).status,
+    ).toBe(200);
+    expect(
+      (await carol.patch(`/api/workspaces/${ws.id}/members/${bobId}`, { role: 'MEMBER' })).status,
+    ).toBe(403);
 
     // The last owner can neither be demoted nor leave.
     const ownerId = owner.user!.id;
-    expect((await owner.patch(`/api/workspaces/${ws.id}/members/${ownerId}`, { role: 'ADMIN' })).status).toBe(409);
+    expect(
+      (await owner.patch(`/api/workspaces/${ws.id}/members/${ownerId}`, { role: 'ADMIN' })).status,
+    ).toBe(409);
     expect((await owner.delete(`/api/workspaces/${ws.id}/members/${ownerId}`)).status).toBe(409);
 
     // Remove a member, and a member leaves by themselves.
     expect((await owner.delete(`/api/workspaces/${ws.id}/members/${carolId}`)).status).toBe(200);
     expect((await carol.get(`/api/workspaces/${ws.id}`)).status).toBe(404);
     expect((await bob.delete(`/api/workspaces/${ws.id}/members/${bobId}`)).status).toBe(200);
-    expect((await owner.get<WorkspaceMemberDto[]>(`/api/workspaces/${ws.id}/members`)).body).toHaveLength(1);
+    expect(
+      (await owner.get<WorkspaceMemberDto[]>(`/api/workspaces/${ws.id}/members`)).body,
+    ).toHaveLength(1);
 
     // Revoke an invitation.
-    const inv = await owner.post<InviteMemberResponse>(`/api/workspaces/${ws.id}/invitations`, { email: uniqueEmail('dave') });
-    expect((await owner.delete(`/api/workspaces/${ws.id}/invitations/${inv.body.invitation!.id}`)).status).toBe(200);
-    expect((await owner.get<unknown[]>(`/api/workspaces/${ws.id}/invitations`)).body).toHaveLength(0);
+    const inv = await owner.post<InviteMemberResponse>(`/api/workspaces/${ws.id}/invitations`, {
+      email: uniqueEmail('dave'),
+    });
+    expect(
+      (await owner.delete(`/api/workspaces/${ws.id}/invitations/${inv.body.invitation!.id}`))
+        .status,
+    ).toBe(200);
+    expect((await owner.get<unknown[]>(`/api/workspaces/${ws.id}/invitations`)).body).toHaveLength(
+      0,
+    );
   });
 
   it('manages projects and folders', async () => {
     const owner = await signUp(t.url, 'Project Person');
     const ws = await personalWorkspace(owner);
-    const project = await owner.post<ProjectDto>(`/api/workspaces/${ws.id}/projects`, { name: 'Roadmap', description: 'Q4' });
+    const project = await owner.post<ProjectDto>(`/api/workspaces/${ws.id}/projects`, {
+      name: 'Roadmap',
+      description: 'Q4',
+    });
     expect(project.status).toBe(201);
-    const folder = await owner.post<FolderDto>(`/api/workspaces/${ws.id}/folders`, { name: 'Drafts', projectId: project.body.id });
-    const sub = await owner.post<FolderDto>(`/api/workspaces/${ws.id}/folders`, { name: 'Old', parentId: folder.body.id });
+    const folder = await owner.post<FolderDto>(`/api/workspaces/${ws.id}/folders`, {
+      name: 'Drafts',
+      projectId: project.body.id,
+    });
+    const sub = await owner.post<FolderDto>(`/api/workspaces/${ws.id}/folders`, {
+      name: 'Old',
+      parentId: folder.body.id,
+    });
     expect(sub.body.projectId).toBe(project.body.id);
     // Cycles are rejected.
-    expect((await owner.patch(`/api/folders/${folder.body.id}`, { parentId: sub.body.id })).status).toBe(400);
+    expect(
+      (await owner.patch(`/api/folders/${folder.body.id}`, { parentId: sub.body.id })).status,
+    ).toBe(400);
 
     const board = await createBoard(owner, { workspaceId: ws.id, folderId: sub.body.id });
     const listed = await owner.get<ProjectDto[]>(`/api/workspaces/${ws.id}/projects`);
@@ -141,7 +194,9 @@ describe('workspaces', () => {
     expect((await owner.delete(`/api/folders/${sub.body.id}`)).status).toBe(200);
     const moved = await owner.get<{ board: BoardSummaryDto }>(`/api/boards/${board.id}`);
     expect(moved.body.board.folderId).toBe(folder.body.id);
-    const renamed = await owner.patch<ProjectDto>(`/api/projects/${project.body.id}`, { name: 'Roadmap 2' });
+    const renamed = await owner.patch<ProjectDto>(`/api/projects/${project.body.id}`, {
+      name: 'Roadmap 2',
+    });
     expect(renamed.body.name).toBe('Roadmap 2');
 
     // Deleting a project moves its boards to the trash.

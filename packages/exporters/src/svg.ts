@@ -1,4 +1,9 @@
-import { FONT_FAMILIES, type FileMetadata, type FontFamily, type SceneElement } from '@inkflow/elements';
+import {
+  FONT_FAMILIES,
+  type FileMetadata,
+  type FontFamily,
+  type SceneElement,
+} from '@inkflow/elements';
 import { renderSceneToSvg } from '@inkflow/renderer';
 import { elementsForExport, getExportBounds } from './bounds';
 import { sceneJsonForEmbedding } from './json';
@@ -62,7 +67,10 @@ async function defaultFetchFont(url: string): Promise<ArrayBuffer> {
 }
 
 /** Standalone SVG (vector shapes, embedded images, optional embedded fonts and scene metadata). */
-export async function exportToSvgString(scope: ExportScope, options: SvgExportOptions): Promise<string> {
+export async function exportToSvgString(
+  scope: ExportScope,
+  options: SvgExportOptions,
+): Promise<string> {
   const bounds = getExportBounds(scope, options);
   const elements = elementsForExport(scope, options.frameId);
   const imageData: Record<string, string> = {};
@@ -84,7 +92,11 @@ export async function exportToSvgString(scope: ExportScope, options: SvgExportOp
   if (options.embedFonts && options.fontSources && options.fontSources.length > 0) {
     const used = usedFontFamilies(elements);
     const css = [...used].map((f) => FONT_FAMILIES[f].css.toLowerCase());
-    const wanted = options.fontSources.filter((src) => css.some((c) => c.includes(`"${src.family.toLowerCase()}"`) || c.includes(src.family.toLowerCase())));
+    const wanted = options.fontSources.filter((src) =>
+      css.some(
+        (c) => c.includes(`"${src.family.toLowerCase()}"`) || c.includes(src.family.toLowerCase()),
+      ),
+    );
     const fetchFont = options.fetchFont ?? defaultFetchFont;
     const loaded = await Promise.all(
       wanted.map(async (src) => {
@@ -126,7 +138,8 @@ export function extractSceneFromSvg(svg: string): string | null {
   if (!m) return null;
   return m[1]!.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (all, e: string) => {
     if (e[0] === '#') {
-      const code = e[1] === 'x' || e[1] === 'X' ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10);
+      const code =
+        e[1] === 'x' || e[1] === 'X' ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10);
       return Number.isFinite(code) ? String.fromCodePoint(code) : all;
     }
     return XML_ENTITIES[e.toLowerCase()] ?? all;

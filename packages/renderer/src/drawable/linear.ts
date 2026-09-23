@@ -1,5 +1,17 @@
-import { isFilled, layoutText, type Arrowhead, type EdgeLabel, type LinearElement } from '@inkflow/elements';
-import { ellipsePath, pointAlongPolyline, polylineLength, type Path, type Point } from '@inkflow/geometry';
+import {
+  isFilled,
+  layoutText,
+  type Arrowhead,
+  type EdgeLabel,
+  type LinearElement,
+} from '@inkflow/elements';
+import {
+  ellipsePath,
+  pointAlongPolyline,
+  polylineLength,
+  type Path,
+  type Point,
+} from '@inkflow/geometry';
 import { roughPath } from '../rough/generator';
 import {
   curvePath,
@@ -20,7 +32,11 @@ const BEND_RADIUS = 12;
 export function linearLocalPath(el: LinearElement): Path {
   const pts: Point[] = el.points.map((p) => ({ x: p[0], y: p[1] }));
   if (pts.length === 0) return [];
-  if (pts.length === 1) return [{ type: 'M', x: pts[0]!.x, y: pts[0]!.y }, { type: 'L', x: pts[0]!.x, y: pts[0]!.y }];
+  if (pts.length === 1)
+    return [
+      { type: 'M', x: pts[0]!.x, y: pts[0]!.y },
+      { type: 'L', x: pts[0]!.x, y: pts[0]!.y },
+    ];
   if (el.type === 'connector') {
     switch (el.routing) {
       case 'bezier':
@@ -35,7 +51,9 @@ export function linearLocalPath(el: LinearElement): Path {
       case 'curved':
         return curvePath(pts);
       default:
-        return el.roundness === 'round' ? roundedPolylinePath(pts, BEND_RADIUS) : polygon(pts, false);
+        return el.roundness === 'round'
+          ? roundedPolylinePath(pts, BEND_RADIUS)
+          : polygon(pts, false);
     }
   }
   const closed = el.type === 'line' && el.closed && pts.length > 2;
@@ -70,13 +88,20 @@ interface HeadGeometry {
 /** Arrowhead geometry for tip `t`, unit direction `u` pointing out of the path. */
 export function arrowheadGeometry(kind: Arrowhead, t: Point, u: Point, len: number): HeadGeometry {
   const n = { x: -u.y, y: u.x };
-  const P = (a: number, b: number): Point => ({ x: t.x - u.x * a + n.x * b, y: t.y - u.y * a + n.y * b });
+  const P = (a: number, b: number): Point => ({
+    x: t.x - u.x * a + n.x * b,
+    y: t.y - u.y * a + n.y * b,
+  });
   const g: HeadGeometry = { strokes: [], filled: [], trim: 0, knockouts: [] };
   const w = len * 0.45;
   const bar = (d: number) => g.strokes.push(polygon([P(d, w), P(d, -w)], false));
   const crow = () => {
     const apex = P(len * 0.9, 0);
-    g.strokes.push(polygon([apex, P(0, w)], false), polygon([apex, t], false), polygon([apex, P(0, -w)], false));
+    g.strokes.push(
+      polygon([apex, P(0, w)], false),
+      polygon([apex, t], false),
+      polygon([apex, P(0, -w)], false),
+    );
   };
   const circle = (d: number) => {
     const r = len * 0.25;
@@ -117,11 +142,15 @@ export function arrowheadGeometry(kind: Arrowhead, t: Point, u: Point, len: numb
       bar(0);
       break;
     case 'diamond':
-      g.filled.push(polygon([t, P(len * 0.6, len * 0.3), P(len * 1.2, 0), P(len * 0.6, -len * 0.3)], true));
+      g.filled.push(
+        polygon([t, P(len * 0.6, len * 0.3), P(len * 1.2, 0), P(len * 0.6, -len * 0.3)], true),
+      );
       g.trim = len * 0.6;
       break;
     case 'diamond-outline':
-      g.strokes.push(polygon([t, P(len * 0.6, len * 0.3), P(len * 1.2, 0), P(len * 0.6, -len * 0.3)], true));
+      g.strokes.push(
+        polygon([t, P(len * 0.6, len * 0.3), P(len * 1.2, 0), P(len * 0.6, -len * 0.3)], true),
+      );
       g.trim = len * 1.2;
       break;
     case 'er-one':
@@ -175,7 +204,12 @@ export function linearLayers(el: LinearElement): { layers: DrawLayer[]; labelLay
       const g = arrowheadGeometry(kind, tangent.point, tangent.dir, len);
       if (g.trim > 0) path = trimPath(path, g.trim, atStart);
       knockouts.push(...g.knockouts);
-      const opts = roughOptionsFor(el, salt, { width: len, height: len, disableMultiStroke: false, fillStyle: 'solid' });
+      const opts = roughOptionsFor(el, salt, {
+        width: len,
+        height: len,
+        disableMultiStroke: false,
+        fillStyle: 'solid',
+      });
       const stroke = strokePaint({ ...el, strokeStyle: 'solid' });
       for (const p of g.filled) {
         headLayers.push({
@@ -188,7 +222,14 @@ export function linearLayers(el: LinearElement): { layers: DrawLayer[]; labelLay
         });
       }
       for (const p of g.strokes) {
-        headLayers.push({ kind: 'shape', sets: roughPath(p, opts, false), stroke, fill: null, sketch: null, fillRule: 'nonzero' });
+        headLayers.push({
+          kind: 'shape',
+          sets: roughPath(p, opts, false),
+          stroke,
+          fill: null,
+          sketch: null,
+          fillRule: 'nonzero',
+        });
       }
     }
   }

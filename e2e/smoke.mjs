@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 // Visual smoke check against the dev stack: `node e2e/smoke.mjs <outDir>`
 import { chromium } from '@playwright/test';
 const out = process.argv[2] ?? '.';
@@ -23,7 +24,11 @@ for (const title of titles.length ? titles : ['Platform architecture']) {
   await page.waitForFunction(() => Boolean(window.__inkflow), null, { timeout: 20000 });
   await page.waitForTimeout(2000);
   await page.screenshot({ path: `${out}/${title.replace(/\W+/g, '-')}.png` });
-  console.log(title, 'elements:', await page.evaluate(() => window.__inkflow.editor.getElements().length));
+  console.log(
+    title,
+    'elements:',
+    await page.evaluate(() => window.__inkflow.editor.getElements().length),
+  );
   await page.goBack();
 }
 console.log(errors.length ? errors.join('\n') : 'no console errors');

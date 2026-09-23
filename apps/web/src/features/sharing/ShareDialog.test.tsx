@@ -17,7 +17,15 @@ function sharing(overrides: Partial<BoardSharingDto> = {}): BoardSharingDto {
       { user: publicUser(me), role: 'OWNER', addedAt: NOW },
       { user: publicUser(bob), role: 'EDITOR', addedAt: NOW },
     ],
-    pending: [{ id: 's1', email: 'carol@example.com', role: 'VIEWER', invitedBy: publicUser(me), createdAt: NOW }],
+    pending: [
+      {
+        id: 's1',
+        email: 'carol@example.com',
+        role: 'VIEWER',
+        invitedBy: publicUser(me),
+        createdAt: NOW,
+      },
+    ],
     workspaceAccess: 'VIEWER',
     links: [],
     ...overrides,
@@ -73,7 +81,9 @@ describe('ShareDialog', () => {
   });
 
   it('creates a share link with the chosen role and expiry, then copies it', async () => {
-    const mock = installFetchMock(routes([{ method: 'POST', path: '/boards/b1/share-links', respond: { body: link } }]));
+    const mock = installFetchMock(
+      routes([{ method: 'POST', path: '/boards/b1/share-links', respond: { body: link } }]),
+    );
     const user = userEvent.setup();
     renderDialog();
     await screen.findAllByTestId('share-member');
@@ -82,7 +92,9 @@ describe('ShareDialog', () => {
     await user.selectOptions(screen.getByTestId('share-link-expiry'), '168');
     await user.click(screen.getByTestId('share-link-create'));
 
-    expect(await screen.findByTestId('share-link-url')).toHaveValue('http://localhost:5173/s/tok123');
+    expect(await screen.findByTestId('share-link-url')).toHaveValue(
+      'http://localhost:5173/s/tok123',
+    );
     const [create] = mock.callsTo('POST', '/boards/b1/share-links');
     expect(create!.body).toEqual({ role: 'EDITOR', expiresInHours: 168 });
     expect(create!.headers.get('x-csrf-token')).toBe('csrf');
@@ -111,10 +123,18 @@ describe('ShareDialog', () => {
     const updated = sharing({
       pending: [
         ...sharing().pending,
-        { id: 's2', email: 'dan@example.com', role: 'VIEWER', invitedBy: publicUser(me), createdAt: NOW },
+        {
+          id: 's2',
+          email: 'dan@example.com',
+          role: 'VIEWER',
+          invitedBy: publicUser(me),
+          createdAt: NOW,
+        },
       ],
     });
-    const mock = installFetchMock(routes([{ method: 'POST', path: '/boards/b1/shares', respond: { body: updated } }]));
+    const mock = installFetchMock(
+      routes([{ method: 'POST', path: '/boards/b1/shares', respond: { body: updated } }]),
+    );
     const user = userEvent.setup();
     renderDialog();
     await screen.findAllByTestId('share-member');
@@ -148,13 +168,19 @@ describe('ShareDialog', () => {
             }),
           },
         },
-        { method: 'PATCH', path: '/boards/b1', respond: { body: makeBoard({ workspaceAccess: 'EDITOR' }) } },
+        {
+          method: 'PATCH',
+          path: '/boards/b1',
+          respond: { body: makeBoard({ workspaceAccess: 'EDITOR' }) },
+        },
       ]),
     );
     const user = userEvent.setup();
     renderDialog();
     await user.selectOptions(await screen.findByLabelText('Role for Bob Builder'), 'VIEWER');
-    await waitFor(() => expect(screen.getByLabelText('Role for Bob Builder')).toHaveValue('VIEWER'));
+    await waitFor(() =>
+      expect(screen.getByLabelText('Role for Bob Builder')).toHaveValue('VIEWER'),
+    );
     expect(mock.callsTo('PATCH', '/boards/b1/members/u2')[0]!.body).toEqual({ role: 'VIEWER' });
 
     await user.selectOptions(screen.getByLabelText('Workspace access'), 'EDITOR');

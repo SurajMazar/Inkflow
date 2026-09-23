@@ -1,6 +1,19 @@
 import type { Arrowhead, TableColumn, TableElement } from '@inkflow/elements';
-import { autoLayout, createErRelationship, createErTable, DiagramBuilder, type LayoutDirection } from '@inkflow/diagram-engine';
-import { cleanLabel, IssueLog, layoutEdge, MAX_MERMAID_EDGES, MAX_MERMAID_NODES, type MermaidResult } from './common';
+import {
+  autoLayout,
+  createErRelationship,
+  createErTable,
+  DiagramBuilder,
+  type LayoutDirection,
+} from '@inkflow/diagram-engine';
+import {
+  cleanLabel,
+  IssueLog,
+  layoutEdge,
+  MAX_MERMAID_EDGES,
+  MAX_MERMAID_NODES,
+  type MermaidResult,
+} from './common';
 
 interface Entity {
   name: string;
@@ -18,9 +31,16 @@ interface Relationship {
 }
 
 const ENTITY_ID = String.raw`[\p{L}\p{N}_-]+|"[^"]+"`;
-const ENTITY_START = new RegExp(String.raw`^(${ENTITY_ID})(?:\s*\[\s*"?([^"\]]*)"?\s*\])?\s*\{(.*)$`, 'u');
-const RELATIONSHIP = new RegExp(String.raw`^(${ENTITY_ID})\s+(\S{2})(--|\.\.)(\S{2})\s+(${ENTITY_ID})\s*(?::\s*(.*))?$`, 'u');
-const ATTRIBUTE = /^([\p{L}\p{N}_()[\],.<>~-]+)\s+(\*?[\p{L}\p{N}_-]+)((?:\s+(?:PK|FK|UK)(?:\s*,\s*(?:PK|FK|UK))*)?)(?:\s+"([^"]*)")?$/iu;
+const ENTITY_START = new RegExp(
+  String.raw`^(${ENTITY_ID})(?:\s*\[\s*"?([^"\]]*)"?\s*\])?\s*\{(.*)$`,
+  'u',
+);
+const RELATIONSHIP = new RegExp(
+  String.raw`^(${ENTITY_ID})\s+(\S{2})(--|\.\.)(\S{2})\s+(${ENTITY_ID})\s*(?::\s*(.*))?$`,
+  'u',
+);
+const ATTRIBUTE =
+  /^([\p{L}\p{N}_()[\],.<>~-]+)\s+(\*?[\p{L}\p{N}_-]+)((?:\s+(?:PK|FK|UK)(?:\s*,\s*(?:PK|FK|UK))*)?)(?:\s+"([^"]*)")?$/iu;
 
 /**
  * Crow's-foot marker → arrowhead. Mermaid writes the left end as `||`, `|o`, `}|`, `}o` and the
@@ -91,7 +111,8 @@ export function importEr(lines: string[]): MermaidResult {
       }
       const close = line.lastIndexOf('}');
       if (close >= 0) {
-        for (const part of line.slice(0, close).split(/\s{2,}|\n/)) if (part.trim()) addAttribute(open, part);
+        for (const part of line.slice(0, close).split(/\s{2,}|\n/))
+          if (part.trim()) addAttribute(open, part);
         open = null;
         continue;
       }
@@ -131,7 +152,14 @@ export function importEr(lines: string[]): MermaidResult {
         issues.add(`Too many relationships; only the first ${MAX_MERMAID_EDGES} were imported`);
         continue;
       }
-      relationships.push({ from: a.name, to: b.name, start, end, identifying: m[3] === '--', label: cleanLabel(m[6] ?? '') });
+      relationships.push({
+        from: a.name,
+        to: b.name,
+        start,
+        end,
+        identifying: m[3] === '--',
+        label: cleanLabel(m[6] ?? ''),
+      });
       continue;
     }
     if ((m = new RegExp(String.raw`^(${ENTITY_ID})$`, 'u').exec(line))) {
@@ -146,7 +174,11 @@ export function importEr(lines: string[]): MermaidResult {
   for (const e of entities.values()) tables.set(e.name, createErTable(e.label, e.columns));
   const byId = new Map([...tables].map(([name, t]) => [t.id, name]));
   const edges = relationships.map((r) => layoutEdge(tables.get(r.from)!.id, tables.get(r.to)!.id));
-  const pos = autoLayout([...tables.values()], edges, 'hierarchical', { direction, nodeSpacing: 60, rankSpacing: 120 });
+  const pos = autoLayout([...tables.values()], edges, 'hierarchical', {
+    direction,
+    nodeSpacing: 60,
+    rankSpacing: 120,
+  });
   const b = new DiagramBuilder();
   const placed = new Map<string, TableElement>();
   for (const t of tables.values()) {

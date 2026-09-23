@@ -135,6 +135,11 @@ export class SpatialIndex {
   }
 
   searchPoint(x: number, y: number, tolerance = 0): string[] {
-    return this.search({ minX: x - tolerance, minY: y - tolerance, maxX: x + tolerance, maxY: y + tolerance });
+    return this.search({
+      minX: x - tolerance,
+      minY: y - tolerance,
+      maxX: x + tolerance,
+      maxY: y + tolerance,
+    });
   }
 }

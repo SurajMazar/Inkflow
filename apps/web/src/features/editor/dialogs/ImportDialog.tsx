@@ -1,5 +1,16 @@
 import { ApiError } from '@inkflow/shared';
-import { Button, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, Spinner, Switch, cn } from '@inkflow/ui';
+import {
+  Button,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  Spinner,
+  Switch,
+  cn,
+} from '@inkflow/ui';
 import { useQueryClient } from '@tanstack/react-query';
 import { FileUp } from 'lucide-react';
 import * as React from 'react';
@@ -12,10 +23,15 @@ import { notify, toastApiError } from '@/features/notifications/notify';
 import { useBoardSession } from '../hooks/editor-context';
 import { importFilesIntoEditor } from './import-files';
 
-const ACCEPT = '.inkflow,.json,.excalidraw,.svg,.png,.jpg,.jpeg,.webp,.gif,.mmd,.mermaid,.txt,application/json,image/*';
+const ACCEPT =
+  '.inkflow,.json,.excalidraw,.svg,.png,.jpg,.jpeg,.webp,.gif,.mmd,.mermaid,.txt,application/json,image/*';
 
 function isBoardFile(file: File): boolean {
-  return /\.(inkflow|excalidraw|json)$/i.test(file.name) || file.type === 'application/json' || file.type === 'application/vnd.inkflow+json';
+  return (
+    /\.(inkflow|excalidraw|json)$/i.test(file.name) ||
+    file.type === 'application/json' ||
+    file.type === 'application/vnd.inkflow+json'
+  );
 }
 
 /** Imports files into the board, or native/Excalidraw files as a new board. */
@@ -43,14 +59,23 @@ export function ImportDialog({ onClose }: { onClose(): void }) {
         for (const file of files) {
           try {
             const parsed = await readBoardFile(file);
-            const created = await api.boards.create({ workspaceId: board.workspaceId, title: parsed.title, document: parsed.document });
+            const created = await api.boards.create({
+              workspaceId: board.workspaceId,
+              title: parsed.title,
+              document: parsed.document,
+            });
             firstId ??= created.id;
             notify.success(`Created “${created.title}”`, {
-              description: parsed.skipped ? `${parsed.skipped} item${parsed.skipped === 1 ? ' was' : 's were'} skipped.` : undefined,
+              description: parsed.skipped
+                ? `${parsed.skipped} item${parsed.skipped === 1 ? ' was' : 's were'} skipped.`
+                : undefined,
             });
           } catch (error) {
             if (error instanceof ApiError) toastApiError(error, `Couldn't import ${file.name}`);
-            else notify.error(`Couldn't import ${file.name}`, { description: error instanceof Error ? error.message : undefined });
+            else
+              notify.error(`Couldn't import ${file.name}`, {
+                description: error instanceof Error ? error.message : undefined,
+              });
           }
         }
         void qc.invalidateQueries({ queryKey: queryKeys.boards.lists });
@@ -77,7 +102,10 @@ export function ImportDialog({ onClose }: { onClose(): void }) {
       <DialogContent className="sm:max-w-md" data-inkflow-ui data-testid="import-dialog">
         <DialogHeader>
           <DialogTitle>Import</DialogTitle>
-          <DialogDescription>Inkflow and Excalidraw files, SVG, PNG (with embedded scenes), JPEG, WebP, GIF and Mermaid text.</DialogDescription>
+          <DialogDescription>
+            Inkflow and Excalidraw files, SVG, PNG (with embedded scenes), JPEG, WebP, GIF and
+            Mermaid text.
+          </DialogDescription>
         </DialogHeader>
         <div
           role="button"
@@ -110,7 +138,9 @@ export function ImportDialog({ onClose }: { onClose(): void }) {
           <FileUp className="size-6 text-muted-foreground" aria-hidden />
           {files.length ? (
             <div className="text-sm">
-              <div className="font-medium">{files.length === 1 ? files[0]!.name : `${files.length} files`}</div>
+              <div className="font-medium">
+                {files.length === 1 ? files[0]!.name : `${files.length} files`}
+              </div>
               <div className="text-xs text-muted-foreground">Click to choose different files</div>
             </div>
           ) : (
@@ -135,14 +165,24 @@ export function ImportDialog({ onClose }: { onClose(): void }) {
           <label className="flex items-center justify-between gap-3 rounded-md border px-3 py-2 text-sm">
             <span>
               Import as a new board
-              <span className="block text-xs text-muted-foreground">Creates a separate board in this workspace instead of adding to this one.</span>
+              <span className="block text-xs text-muted-foreground">
+                Creates a separate board in this workspace instead of adding to this one.
+              </span>
             </span>
-            <Switch checked={asNewBoard} onCheckedChange={setAsNewBoard} aria-label="Import as a new board" data-testid="import-as-new-board" />
+            <Switch
+              checked={asNewBoard}
+              onCheckedChange={setAsNewBoard}
+              aria-label="Import as a new board"
+              data-testid="import-as-new-board"
+            />
           </label>
         )}
         {!canEdit && !newBoard && (
           <p className="text-xs text-muted-foreground" role="note">
-            You can only view this board. {canCreateBoard ? 'Import the file as a new board instead.' : 'Ask an owner for edit access to import.'}
+            You can only view this board.{' '}
+            {canCreateBoard
+              ? 'Import the file as a new board instead.'
+              : 'Ask an owner for edit access to import.'}
           </p>
         )}
         <DialogFooter>

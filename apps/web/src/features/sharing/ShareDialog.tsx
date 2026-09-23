@@ -52,7 +52,10 @@ export const LINK_EXPIRY_OPTIONS = [
 
 const WORKSPACE_ACCESS_LABELS: Record<WorkspaceAccess, { label: string; description: string }> = {
   NONE: { label: 'Only people invited', description: 'Workspace members need an invitation.' },
-  VIEWER: { label: 'Workspace can view', description: 'Everyone in the workspace can open and comment.' },
+  VIEWER: {
+    label: 'Workspace can view',
+    description: 'Everyone in the workspace can open and comment.',
+  },
   EDITOR: { label: 'Workspace can edit', description: 'Everyone in the workspace can edit.' },
 };
 
@@ -69,18 +72,25 @@ export function ShareDialog({ boardId, open, onOpenChange, role, boardTitle }: S
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="gap-0 p-0 sm:max-w-xl" data-testid="share-dialog">
         <DialogHeader className="px-6 pt-6 pb-4">
-          <DialogTitle className="truncate">{title ? `Share “${title}”` : 'Share board'}</DialogTitle>
+          <DialogTitle className="truncate">
+            {title ? `Share “${title}”` : 'Share board'}
+          </DialogTitle>
           <DialogDescription>Invite people, set general access or create a link.</DialogDescription>
         </DialogHeader>
         {query.isPending ? (
-          <div className="grid gap-3 px-6 pb-6" aria-busy="true" aria-label="Loading sharing settings">
+          <div
+            className="grid gap-3 px-6 pb-6"
+            aria-busy="true"
+            aria-label="Loading sharing settings"
+          >
             <Skeleton className="h-9 w-full" />
             <Skeleton className="h-12 w-full" />
             <Skeleton className="h-12 w-full" />
           </div>
         ) : query.isError ? (
           <div className="px-6 pb-6 text-sm text-muted-foreground" role="alert">
-            {query.error instanceof ApiError && (query.error.code === 'FORBIDDEN' || query.error.code === 'NOT_FOUND')
+            {query.error instanceof ApiError &&
+            (query.error.code === 'FORBIDDEN' || query.error.code === 'NOT_FOUND')
               ? 'You need edit access to share this board.'
               : describeApiError(query.error, "Couldn't load sharing settings").title}
           </div>
@@ -102,14 +112,20 @@ export function ShareDialog({ boardId, open, onOpenChange, role, boardTitle }: S
 function InviteForm({ sharingApi }: { sharingApi: BoardSharingApi }) {
   const { invite, myRole } = sharingApi;
   const [email, setEmail] = React.useState('');
-  const [role, setRole] = React.useState<'EDITOR' | 'VIEWER'>(boardRoleAtLeast(myRole, 'EDITOR') ? 'EDITOR' : 'VIEWER');
+  const [role, setRole] = React.useState<'EDITOR' | 'VIEWER'>(
+    boardRoleAtLeast(myRole, 'EDITOR') ? 'EDITOR' : 'VIEWER',
+  );
   const [message, setMessage] = React.useState('');
   const [error, setError] = React.useState<string | undefined>();
   const errorId = React.useId();
 
   const onSubmit = (event: React.FormEvent) => {
     event.preventDefault();
-    const parsed = addBoardShareSchema.safeParse({ email, role, message: message.trim() || undefined });
+    const parsed = addBoardShareSchema.safeParse({
+      email,
+      role,
+      message: message.trim() || undefined,
+    });
     if (!parsed.success) {
       setError(parsed.error.issues[0]?.message);
       return;
@@ -176,7 +192,11 @@ function InviteForm({ sharingApi }: { sharingApi: BoardSharingApi }) {
           data-testid="share-invite-message"
         />
       ) : null}
-      <p id={errorId} aria-live="polite" className={error ? 'text-[13px] font-medium text-destructive' : 'sr-only'}>
+      <p
+        id={errorId}
+        aria-live="polite"
+        className={error ? 'text-[13px] font-medium text-destructive' : 'sr-only'}
+      >
         {error}
       </p>
     </form>
@@ -202,7 +222,11 @@ function PeopleList({ sharingApi }: { sharingApi: BoardSharingApi }) {
           const isMe = member.user.id === user?.id;
           const canChange = isOwner && !isMe;
           return (
-            <li key={member.user.id} className="flex items-center gap-3 rounded-lg px-2 py-1.5" data-testid="share-member">
+            <li
+              key={member.user.id}
+              className="flex items-center gap-3 rounded-lg px-2 py-1.5"
+              data-testid="share-member"
+            >
               <UserAvatar name={member.user.name} src={member.user.avatarUrl} className="size-8" />
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium">
@@ -216,7 +240,12 @@ function PeopleList({ sharingApi }: { sharingApi: BoardSharingApi }) {
                   aria-label={`Role for ${member.user.name}`}
                   value={member.role}
                   disabled={updateMemberRole.isPending}
-                  onChange={(e) => updateMemberRole.mutate({ userId: member.user.id, role: e.target.value as BoardRole })}
+                  onChange={(e) =>
+                    updateMemberRole.mutate({
+                      userId: member.user.id,
+                      role: e.target.value as BoardRole,
+                    })
+                  }
                   className="h-8 text-[13px]"
                   data-testid="share-member-role"
                 >
@@ -226,7 +255,11 @@ function PeopleList({ sharingApi }: { sharingApi: BoardSharingApi }) {
                 </NativeSelect>
               ) : (
                 <span className="text-[13px] text-muted-foreground">
-                  {member.role === 'OWNER' ? 'Owner' : member.role === 'EDITOR' ? 'Can edit' : 'Can view'}
+                  {member.role === 'OWNER'
+                    ? 'Owner'
+                    : member.role === 'EDITOR'
+                      ? 'Can edit'
+                      : 'Can view'}
                 </span>
               )}
               {canChange || (isMe && member.role !== 'OWNER') ? (
@@ -249,7 +282,11 @@ function PeopleList({ sharingApi }: { sharingApi: BoardSharingApi }) {
           );
         })}
         {sharing.pending.map((pending) => (
-          <li key={pending.id} className="flex items-center gap-3 rounded-lg px-2 py-1.5" data-testid="share-pending">
+          <li
+            key={pending.id}
+            className="flex items-center gap-3 rounded-lg px-2 py-1.5"
+            data-testid="share-pending"
+          >
             <div className="flex size-8 shrink-0 items-center justify-center rounded-full border border-dashed text-muted-foreground">
               <Users className="size-3.5" aria-hidden />
             </div>
@@ -328,14 +365,17 @@ function linkMeta(link: ShareLinkDto): string {
       ? 'Expired'
       : `Expires ${formatRelativeTime(link.expiresAt)}`
     : 'Never expires';
-  const used = link.lastUsedAt ? `last used ${formatRelativeTime(link.lastUsedAt)}` : 'not used yet';
+  const used = link.lastUsedAt
+    ? `last used ${formatRelativeTime(link.lastUsedAt)}`
+    : 'not used yet';
   return `${expiry} · ${used}`;
 }
 
 function ShareLinks({ sharingApi }: { sharingApi: BoardSharingApi }) {
   const { sharing, createLink, revokeLink, myRole } = sharingApi;
   const [role, setRole] = React.useState<ShareLinkRole>('VIEWER');
-  const [expiry, setExpiry] = React.useState<(typeof LINK_EXPIRY_OPTIONS)[number]['value']>('never');
+  const [expiry, setExpiry] =
+    React.useState<(typeof LINK_EXPIRY_OPTIONS)[number]['value']>('never');
   const [copiedId, setCopiedId] = React.useState<string | null>(null);
   const [status, setStatus] = React.useState('');
 
@@ -353,7 +393,9 @@ function ShareLinks({ sharingApi }: { sharingApi: BoardSharingApi }) {
       setCopiedId(link.id);
       setStatus('Link copied to clipboard');
     } else {
-      notify.error("Couldn't copy the link", { description: 'Select the link and copy it manually.' });
+      notify.error("Couldn't copy the link", {
+        description: 'Select the link and copy it manually.',
+      });
     }
   };
 
@@ -378,12 +420,18 @@ function ShareLinks({ sharingApi }: { sharingApi: BoardSharingApi }) {
         <h3 id="share-links-heading" className="text-[13px] font-medium text-muted-foreground">
           Share links
         </h3>
-        <p className="text-[13px] text-muted-foreground">Anyone with a link can open the board — no account needed.</p>
+        <p className="text-[13px] text-muted-foreground">
+          Anyone with a link can open the board — no account needed.
+        </p>
       </div>
       {sharing.links.length > 0 ? (
         <ul className="grid gap-2" data-testid="share-links">
           {sharing.links.map((link) => (
-            <li key={link.id} className="grid gap-1.5 rounded-lg border p-2.5" data-testid="share-link">
+            <li
+              key={link.id}
+              className="grid gap-1.5 rounded-lg border p-2.5"
+              data-testid="share-link"
+            >
               <div className="flex items-center gap-2">
                 <Link2 className="size-4 shrink-0 text-muted-foreground" aria-hidden />
                 <Input
@@ -402,7 +450,9 @@ function ShareLinks({ sharingApi }: { sharingApi: BoardSharingApi }) {
                   data-testid="share-link-copy"
                 >
                   {copiedId === link.id ? <Check aria-hidden /> : <Copy aria-hidden />}
-                  <span className="hidden sm:inline">{copiedId === link.id ? 'Copied' : 'Copy'}</span>
+                  <span className="hidden sm:inline">
+                    {copiedId === link.id ? 'Copied' : 'Copy'}
+                  </span>
                 </Button>
                 <SimpleTooltip content="Revoke link">
                   <Button
@@ -436,7 +486,9 @@ function ShareLinks({ sharingApi }: { sharingApi: BoardSharingApi }) {
           wrapperClassName="sm:flex-1"
         >
           <option value="VIEWER">Anyone with the link can view</option>
-          {boardRoleAtLeast(myRole, 'EDITOR') ? <option value="EDITOR">Anyone with the link can edit</option> : null}
+          {boardRoleAtLeast(myRole, 'EDITOR') ? (
+            <option value="EDITOR">Anyone with the link can edit</option>
+          ) : null}
         </NativeSelect>
         <NativeSelect
           aria-label="Link expiry"
@@ -450,8 +502,17 @@ function ShareLinks({ sharingApi }: { sharingApi: BoardSharingApi }) {
             </option>
           ))}
         </NativeSelect>
-        <Button variant="secondary" onClick={create} disabled={createLink.isPending} data-testid="share-link-create">
-          {createLink.isPending ? <Spinner className="text-current" label={null} /> : <Link2 aria-hidden />}
+        <Button
+          variant="secondary"
+          onClick={create}
+          disabled={createLink.isPending}
+          data-testid="share-link-create"
+        >
+          {createLink.isPending ? (
+            <Spinner className="text-current" label={null} />
+          ) : (
+            <Link2 aria-hidden />
+          )}
           Create link
         </Button>
       </div>

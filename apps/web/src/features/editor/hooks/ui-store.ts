@@ -1,8 +1,10 @@
 import type { Point } from '@inkflow/geometry';
 import { create } from 'zustand';
 
-export type EditorPanel = 'comments' | 'versions' | 'search' | 'library' | 'layers' | 'frames' | 'structure';
-export type EditorDialog = 'export' | 'import' | 'shortcuts' | 'command' | 'link' | 'autolayout' | 'mermaid';
+export type EditorPanel =
+  'comments' | 'versions' | 'search' | 'library' | 'layers' | 'frames' | 'structure';
+export type EditorDialog =
+  'export' | 'import' | 'shortcuts' | 'command' | 'link' | 'autolayout' | 'mermaid';
 export type ExportScope = 'board' | 'selection' | 'frame' | 'viewport';
 
 export interface CommentDraft {
@@ -53,9 +55,11 @@ export const useEditorUi = create<EditorUiState>((set, get) => ({
   togglePanel: (panel) => set({ panel: get().panel === panel ? null : panel }),
   openDialog: (dialog) => set({ dialog }),
   closeDialog: () => set({ dialog: null }),
-  openExport: (scope, frameId = null) => set({ dialog: 'export', exportScope: scope, exportFrameId: frameId }),
+  openExport: (scope, frameId = null) =>
+    set({ dialog: 'export', exportScope: scope, exportFrameId: frameId }),
   openLink: (elementId) => set({ dialog: 'link', linkElementId: elementId }),
-  startComment: (draft) => set({ commentDraft: draft, panel: draft ? 'comments' : get().panel, activeCommentId: null }),
+  startComment: (draft) =>
+    set({ commentDraft: draft, panel: draft ? 'comments' : get().panel, activeCommentId: null }),
   setActiveComment: (id) => set({ activeCommentId: id, commentDraft: null }),
   setShowResolved: (show) => set({ showResolvedComments: show }),
   setMobilePropertiesOpen: (open) => set({ mobilePropertiesOpen: open }),

@@ -56,7 +56,8 @@ export interface ResolvedRoughOptions {
 
 export function resolveRoughOptions(o: RoughOptions): ResolvedRoughOptions {
   const strokeWidth = Math.max(0, o.strokeWidth);
-  const gap = o.hachureGap !== undefined && o.hachureGap > 0 ? o.hachureGap : Math.max(strokeWidth, 0.5) * 4;
+  const gap =
+    o.hachureGap !== undefined && o.hachureGap > 0 ? o.hachureGap : Math.max(strokeWidth, 0.5) * 4;
   return {
     seed: o.seed,
     roughness: Math.max(0, o.roughness),
@@ -65,7 +66,10 @@ export function resolveRoughOptions(o: RoughOptions): ResolvedRoughOptions {
     fillStyle: o.fillStyle,
     hachureGap: Math.max(1, gap),
     hachureAngle: o.hachureAngle ?? -41,
-    fillWeight: o.fillWeight !== undefined && o.fillWeight > 0 ? o.fillWeight : Math.max(0.5, strokeWidth / 2),
+    fillWeight:
+      o.fillWeight !== undefined && o.fillWeight > 0
+        ? o.fillWeight
+        : Math.max(0.5, strokeWidth / 2),
     curveStepCount: Math.max(4, o.curveStepCount ?? 9),
     preserveVertices: o.preserveVertices ?? false,
     disableMultiStroke: o.disableMultiStroke ?? false,

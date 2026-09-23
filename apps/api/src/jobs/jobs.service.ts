@@ -1,10 +1,19 @@
-import { Injectable, Logger, type OnApplicationBootstrap, type OnModuleDestroy } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  type OnApplicationBootstrap,
+  type OnModuleDestroy,
+} from '@nestjs/common';
 import { AppConfig } from '../config/app-config';
 import { PurgeService } from '../files/purge.service';
 import { PrismaService } from '../prisma/prisma.service';
 
 /** Advisory lock keys (pg_try_advisory_xact_lock) so only one instance runs each job. */
-export const JOB_LOCKS = { trashPurge: 7_310_001, opCompaction: 7_310_002, tokenCleanup: 7_310_003 } as const;
+export const JOB_LOCKS = {
+  trashPurge: 7_310_001,
+  opCompaction: 7_310_002,
+  tokenCleanup: 7_310_003,
+} as const;
 
 export const JOB_INTERVAL_MS = 3_600_000;
 const FIRST_RUN_DELAY_MS = 60_000;
@@ -46,9 +55,15 @@ export class JobsService implements OnApplicationBootstrap, OnModuleDestroy {
   private runAll(): void {
     if (this.stopped || this.running) return;
     this.running = (async () => {
-      await this.purgeTrash().catch((err: Error) => this.logger.error(`Trash purge failed: ${err.message}`));
-      await this.compactOperations().catch((err: Error) => this.logger.error(`Op-log compaction failed: ${err.message}`));
-      await this.cleanupTokens().catch((err: Error) => this.logger.error(`Token cleanup failed: ${err.message}`));
+      await this.purgeTrash().catch((err: Error) =>
+        this.logger.error(`Trash purge failed: ${err.message}`),
+      );
+      await this.compactOperations().catch((err: Error) =>
+        this.logger.error(`Op-log compaction failed: ${err.message}`),
+      );
+      await this.cleanupTokens().catch((err: Error) =>
+        this.logger.error(`Token cleanup failed: ${err.message}`),
+      );
     })().finally(() => {
       this.running = null;
     });
@@ -61,7 +76,9 @@ export class JobsService implements OnApplicationBootstrap, OnModuleDestroy {
   async withLock<T>(key: number, work: () => Promise<T>): Promise<T | null> {
     return this.prisma.$transaction(
       async (tx) => {
-        const rows = await tx.$queryRaw<{ locked: boolean }[]>`SELECT pg_try_advisory_xact_lock(${key}::bigint) AS locked`;
+        const rows = await tx.$queryRaw<
+          { locked: boolean }[]
+        >`SELECT pg_try_advisory_xact_lock(${key}::bigint) AS locked`;
         if (!rows[0]?.locked) return null;
         return work();
       },
@@ -117,7 +134,9 @@ export class JobsService implements OnApplicationBootstrap, OnModuleDestroy {
   async cleanupTokens(now = new Date()): Promise<void> {
     const weekAgo = new Date(now.getTime() - 7 * 86_400_000);
     await this.withLock(JOB_LOCKS.tokenCleanup, async () => {
-      await this.prisma.session.deleteMany({ where: { OR: [{ expiresAt: { lt: weekAgo } }, { revokedAt: { lt: weekAgo } }] } });
+      await this.prisma.session.deleteMany({
+        where: { OR: [{ expiresAt: { lt: weekAgo } }, { revokedAt: { lt: weekAgo } }] },
+      });
       await this.prisma.emailVerification.deleteMany({ where: { expiresAt: { lt: weekAgo } } });
       await this.prisma.passwordReset.deleteMany({ where: { expiresAt: { lt: weekAgo } } });
       await this.prisma.workspaceInvitation.deleteMany({ where: { expiresAt: { lt: weekAgo } } });

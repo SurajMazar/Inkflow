@@ -16,7 +16,10 @@ export interface LayoutGraph {
   edges: [number, number][];
 }
 
-export function buildLayoutGraph(nodes: readonly SceneElement[], edges: readonly LinearElement[]): LayoutGraph {
+export function buildLayoutGraph(
+  nodes: readonly SceneElement[],
+  edges: readonly LinearElement[],
+): LayoutGraph {
   const list: LayoutNode[] = [];
   const byId = new Map<string, number>();
   for (const el of nodes) {
@@ -75,7 +78,11 @@ export function connectedComponents(n: number, edges: readonly [number, number][
  * Weighted isotonic regression with minimum separations (pool-adjacent-violators). Minimizes
  * Σ wᵢ (xᵢ − dᵢ)² subject to xᵢ₊₁ − xᵢ ≥ gapᵢ, exactly, in O(n).
  */
-export function placeWithSeparation(desired: readonly number[], weights: readonly number[], gaps: readonly number[]): number[] {
+export function placeWithSeparation(
+  desired: readonly number[],
+  weights: readonly number[],
+  gaps: readonly number[],
+): number[] {
   const n = desired.length;
   if (n === 0) return [];
   const offset = new Array<number>(n);

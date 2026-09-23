@@ -48,17 +48,29 @@ export function TemplateCard({
         ) : null}
         <div className="mt-auto flex items-center justify-between gap-2 pt-1">
           <span className="text-xs text-muted-foreground">
-            {templateCategoryLabel(template.category)} · {pluralize(template.elementCount, 'element')}
+            {templateCategoryLabel(template.category)} ·{' '}
+            {pluralize(template.elementCount, 'element')}
           </span>
           <div className="flex items-center gap-1">
             {onDelete && !template.isSystem ? (
               <SimpleTooltip content="Delete template">
-                <Button variant="ghost" size="icon-sm" aria-label={`Delete template ${template.name}`} onClick={() => onDelete(template)}>
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label={`Delete template ${template.name}`}
+                  onClick={() => onDelete(template)}
+                >
                   <Trash2 aria-hidden />
                 </Button>
               </SimpleTooltip>
             ) : null}
-            <Button size="sm" variant="secondary" onClick={() => onUse(template)} disabled={using} data-testid="template-use">
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => onUse(template)}
+              disabled={using}
+              data-testid="template-use"
+            >
               Use template
             </Button>
           </div>

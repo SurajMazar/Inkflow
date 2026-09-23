@@ -61,7 +61,13 @@ function poly(points: [number, number][], closed = false): string {
 }
 
 /** Regular polygon; first vertex at `startDeg`. */
-function regularPolygon(cx: number, cy: number, r: number, sides: number, startDeg: number): string {
+function regularPolygon(
+  cx: number,
+  cy: number,
+  r: number,
+  sides: number,
+  startDeg: number,
+): string {
   const pts: [number, number][] = [];
   for (let i = 0; i < sides; i++) pts.push(polar(cx, cy, r, startDeg + (i * 360) / sides));
   return poly(pts, true);
@@ -116,7 +122,14 @@ function pill(cx: number, cy: number, halfLen: number, r: number, deg: number): 
 }
 
 /** Spokes radiating from (cx, cy) between two radii. */
-function spokes(cx: number, cy: number, r1: number, r2: number, count: number, startDeg: number): string[] {
+function spokes(
+  cx: number,
+  cy: number,
+  r1: number,
+  r2: number,
+  count: number,
+  startDeg: number,
+): string[] {
   const out: string[] = [];
   for (let i = 0; i < count; i++) {
     const deg = startDeg + (i * 360) / count;
@@ -137,7 +150,12 @@ export const BUILTIN_ICONS: IconDefinition[] = [
     label: 'Server',
     category: 'infrastructure',
     keywords: ['server', 'host', 'machine', 'rack', 'backend'],
-    paths: [rect(3, 3, 18, 7, 2), rect(3, 14, 18, 7, 2), line(11, 6.5, 17, 6.5), line(11, 17.5, 17, 17.5)],
+    paths: [
+      rect(3, 3, 18, 7, 2),
+      rect(3, 14, 18, 7, 2),
+      line(11, 6.5, 17, 6.5),
+      line(11, 17.5, 17, 17.5),
+    ],
     fills: [circle(7, 6.5, 1.1), circle(7, 17.5, 1.1)],
   },
   {
@@ -152,7 +170,11 @@ export const BUILTIN_ICONS: IconDefinition[] = [
     label: 'Box',
     category: 'infrastructure',
     keywords: ['box', 'carton', 'storage', 'archive', 'container'],
-    paths: [rect(2, 3, 20, 5, 1), 'M4 8V19A2 2 0 0 0 6 21H18A2 2 0 0 0 20 19V8', line(9.5, 12, 14.5, 12)],
+    paths: [
+      rect(2, 3, 20, 5, 1),
+      'M4 8V19A2 2 0 0 0 6 21H18A2 2 0 0 0 20 19V8',
+      line(9.5, 12, 14.5, 12),
+    ],
   },
   {
     key: 'container',
@@ -211,7 +233,12 @@ export const BUILTIN_ICONS: IconDefinition[] = [
     label: 'Worker',
     category: 'infrastructure',
     keywords: ['worker', 'job', 'process', 'daemon', 'background'],
-    paths: [circle(8, 7.5, 3.5), 'M2 20A6.5 6.5 0 0 1 15 20', circle(17.5, 8.5, 2), ...spokes(17.5, 8.5, 2, 4.5, 6, -90)],
+    paths: [
+      circle(8, 7.5, 3.5),
+      'M2 20A6.5 6.5 0 0 1 15 20',
+      circle(17.5, 8.5, 2),
+      ...spokes(17.5, 8.5, 2, 4.5, 6, -90),
+    ],
   },
   {
     key: 'cpu',
@@ -252,7 +279,13 @@ export const BUILTIN_ICONS: IconDefinition[] = [
     label: 'Queue',
     category: 'data',
     keywords: ['queue', 'messages', 'kafka', 'sqs', 'broker'],
-    paths: [line(2, 6, 22, 6), line(2, 18, 22, 18), rect(4, 9, 4, 6, 1), rect(10, 9, 4, 6, 1), rect(16, 9, 4, 6, 1)],
+    paths: [
+      line(2, 6, 22, 6),
+      line(2, 18, 22, 18),
+      rect(4, 9, 4, 6, 1),
+      rect(10, 9, 4, 6, 1),
+      rect(16, 9, 4, 6, 1),
+    ],
   },
   {
     key: 'cache',
@@ -334,14 +367,24 @@ export const BUILTIN_ICONS: IconDefinition[] = [
     label: 'API',
     category: 'network',
     keywords: ['api', 'endpoint', 'rest', 'integration', 'plug'],
-    paths: [line(9, 3, 9, 8), line(15, 3, 15, 8), 'M6 8H18V11A6 6 0 0 1 6 11Z', line(12, 17, 12, 21)],
+    paths: [
+      line(9, 3, 9, 8),
+      line(15, 3, 15, 8),
+      'M6 8H18V11A6 6 0 0 1 6 11Z',
+      line(12, 17, 12, 21),
+    ],
   },
   {
     key: 'globe',
     label: 'Globe',
     category: 'network',
     keywords: ['globe', 'internet', 'web', 'world', 'public'],
-    paths: [circle(12, 12, 10), ellipse(12, 12, 4, 10), line(2.84, 8, 21.16, 8), line(2.84, 16, 21.16, 16)],
+    paths: [
+      circle(12, 12, 10),
+      ellipse(12, 12, 4, 10),
+      line(2.84, 8, 21.16, 8),
+      line(2.84, 16, 21.16, 16),
+    ],
   },
   {
     key: 'cdn',
@@ -365,7 +408,12 @@ export const BUILTIN_ICONS: IconDefinition[] = [
     label: 'Router',
     category: 'network',
     keywords: ['router', 'gateway', 'modem', 'switch', 'lan'],
-    paths: [rect(2, 13, 20, 7, 2), line(6, 13, 6, 6), line(18, 13, 18, 6), line(14, 16.5, 18, 16.5)],
+    paths: [
+      rect(2, 13, 20, 7, 2),
+      line(6, 13, 6, 6),
+      line(18, 13, 18, 6),
+      line(14, 16.5, 18, 16.5),
+    ],
     fills: [circle(6, 16.5, 1), circle(9.5, 16.5, 1)],
   },
   {
@@ -447,7 +495,12 @@ export const BUILTIN_ICONS: IconDefinition[] = [
     label: 'Key',
     category: 'security',
     keywords: ['key', 'secret', 'credential', 'auth', 'password'],
-    paths: [circle(7.5, 15.5, 4.5), line(10.68, 12.32, 20, 3), line(17, 6, 19, 8), line(14.5, 8.5, 16.5, 10.5)],
+    paths: [
+      circle(7.5, 15.5, 4.5),
+      line(10.68, 12.32, 20, 3),
+      line(17, 6, 19, 8),
+      line(14.5, 8.5, 16.5, 10.5),
+    ],
   },
 
   // ─── People ────────────────────────────────────────────────────────────────────────
@@ -484,7 +537,10 @@ export const BUILTIN_ICONS: IconDefinition[] = [
     label: 'Laptop',
     category: 'devices',
     keywords: ['laptop', 'notebook', 'computer', 'client', 'macbook'],
-    paths: [rect(5, 4, 14, 11, 1.5), 'M2 18.5L4 15H20L22 18.5V19A1 1 0 0 1 21 20H3A1 1 0 0 1 2 19Z'],
+    paths: [
+      rect(5, 4, 14, 11, 1.5),
+      'M2 18.5L4 15H20L22 18.5V19A1 1 0 0 1 21 20H3A1 1 0 0 1 2 19Z',
+    ],
   },
   {
     key: 'monitor',
@@ -558,7 +614,11 @@ export const BUILTIN_ICONS: IconDefinition[] = [
     label: 'Bell',
     category: 'communication',
     keywords: ['bell', 'notification', 'alert', 'alarm', 'reminder'],
-    paths: ['M4 18H20L18 15.5V10A6 6 0 0 0 6 10V15.5Z', 'M10 20A2 2 0 0 0 14 20', line(12, 2, 12, 4)],
+    paths: [
+      'M4 18H20L18 15.5V10A6 6 0 0 0 6 10V15.5Z',
+      'M10 20A2 2 0 0 0 14 20',
+      line(12, 2, 12, 4),
+    ],
   },
   {
     key: 'mail',
@@ -583,7 +643,12 @@ export const BUILTIN_ICONS: IconDefinition[] = [
     label: 'Credit card',
     category: 'commerce',
     keywords: ['credit card', 'payment', 'card', 'billing', 'stripe'],
-    paths: [rect(2, 4.5, 20, 15, 2.5), line(2, 9.5, 22, 9.5), line(6, 15, 11, 15), line(14, 15, 16, 15)],
+    paths: [
+      rect(2, 4.5, 20, 15, 2.5),
+      line(2, 9.5, 22, 9.5),
+      line(6, 15, 11, 15),
+      line(14, 15, 16, 15),
+    ],
   },
   {
     key: 'cart',
@@ -750,7 +815,12 @@ export const BUILTIN_ICONS: IconDefinition[] = [
     label: 'Calendar',
     category: 'ui',
     keywords: ['calendar', 'date', 'schedule', 'event', 'day'],
-    paths: [rect(3, 4.5, 18, 16.5, 2.5), line(7.5, 2.5, 7.5, 6.5), line(16.5, 2.5, 16.5, 6.5), line(3, 9.5, 21, 9.5)],
+    paths: [
+      rect(3, 4.5, 18, 16.5, 2.5),
+      line(7.5, 2.5, 7.5, 6.5),
+      line(16.5, 2.5, 16.5, 6.5),
+      line(3, 9.5, 21, 9.5),
+    ],
     fills: [circle(8, 14, 1), circle(12, 14, 1), circle(16, 14, 1)],
   },
   {
@@ -758,14 +828,21 @@ export const BUILTIN_ICONS: IconDefinition[] = [
     label: 'Home',
     category: 'ui',
     keywords: ['home', 'house', 'start', 'main', 'dashboard'],
-    paths: ['M3 10.5L12 3L21 10.5', 'M5 8.9V19A2 2 0 0 0 7 21H17A2 2 0 0 0 19 19V8.9', 'M10 21V15H14V21'],
+    paths: [
+      'M3 10.5L12 3L21 10.5',
+      'M5 8.9V19A2 2 0 0 0 7 21H17A2 2 0 0 0 19 19V8.9',
+      'M10 21V15H14V21',
+    ],
   },
   {
     key: 'eye',
     label: 'Eye',
     category: 'ui',
     keywords: ['eye', 'view', 'visible', 'watch', 'preview'],
-    paths: ['M2 12C4.5 7 8 5 12 5S19.5 7 22 12C19.5 17 16 19 12 19S4.5 17 2 12Z', circle(12, 12, 3.5)],
+    paths: [
+      'M2 12C4.5 7 8 5 12 5S19.5 7 22 12C19.5 17 16 19 12 19S4.5 17 2 12Z',
+      circle(12, 12, 3.5),
+    ],
   },
   {
     key: 'plus',
@@ -823,7 +900,12 @@ export const BUILTIN_ICONS: IconDefinition[] = [
     label: 'Bar chart',
     category: 'charts',
     keywords: ['chart', 'bar', 'graph', 'metrics', 'analytics'],
-    paths: ['M3 3V21H21', rect(6.5, 11, 3, 7, 0.5), rect(11.5, 6, 3, 12, 0.5), rect(16.5, 9, 3, 9, 0.5)],
+    paths: [
+      'M3 3V21H21',
+      rect(6.5, 11, 3, 7, 0.5),
+      rect(11.5, 6, 3, 12, 0.5),
+      rect(16.5, 9, 3, 9, 0.5),
+    ],
   },
   {
     key: 'pie-chart',
@@ -839,6 +921,9 @@ export const BUILTIN_ICONS: IconDefinition[] = [
     label: 'Map pin',
     category: 'misc',
     keywords: ['map', 'pin', 'location', 'region', 'place'],
-    paths: ['M12 22C12 22 19 15.5 19 9.5A7 7 0 0 0 5 9.5C5 15.5 12 22 12 22Z', circle(12, 9.5, 2.5)],
+    paths: [
+      'M12 22C12 22 19 15.5 19 9.5A7 7 0 0 0 5 9.5C5 15.5 12 22 12 22Z',
+      circle(12, 9.5, 2.5),
+    ],
   },
 ];

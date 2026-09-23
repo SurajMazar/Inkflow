@@ -99,7 +99,11 @@ function RenameForm({
     <form className="grid gap-4" onSubmit={submit} noValidate>
       <DialogHeader>
         <DialogTitle>{title}</DialogTitle>
-        {description ? <DialogDescription>{description}</DialogDescription> : <DialogDescription className="sr-only">{label}</DialogDescription>}
+        {description ? (
+          <DialogDescription>{description}</DialogDescription>
+        ) : (
+          <DialogDescription className="sr-only">{label}</DialogDescription>
+        )}
       </DialogHeader>
       <FormField label={label} error={error}>
         <Input

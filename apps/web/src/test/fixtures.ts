@@ -23,7 +23,9 @@ export function makeUser(overrides: Partial<UserDto> = {}): UserDto {
   };
 }
 
-export function publicUser(user: Pick<UserDto, 'id' | 'name' | 'email' | 'avatarUrl'>): PublicUserDto {
+export function publicUser(
+  user: Pick<UserDto, 'id' | 'name' | 'email' | 'avatarUrl'>,
+): PublicUserDto {
   return { id: user.id, name: user.name, email: user.email, avatarUrl: user.avatarUrl };
 }
 

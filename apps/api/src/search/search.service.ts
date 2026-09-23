@@ -15,7 +15,10 @@ export class SearchService {
    * Boards the user can open whose title matches (ILIKE) or whose element text/labels/frame names
    * match (`search_text`, trigram-indexed ILIKE), with snippets of the matching elements.
    */
-  async search(userId: string, query: { q: string; workspaceId?: string; limit: number }): Promise<SearchResultDto[]> {
+  async search(
+    userId: string,
+    query: { q: string; workspaceId?: string; limit: number },
+  ): Promise<SearchResultDto[]> {
     if (query.workspaceId && !isUuid(query.workspaceId)) throw Errors.notFound('Workspace');
     const q = query.q.trim();
     const pattern = `%${escapeLike(q)}%`;
@@ -50,7 +53,9 @@ export class SearchService {
     if (boards.length === 0) return [];
 
     const ids = boards.map((b) => b.id);
-    const matches = await this.prisma.$queryRaw<{ board_id: string; element_id: string; type: string; search_text: string }[]>`
+    const matches = await this.prisma.$queryRaw<
+      { board_id: string; element_id: string; type: string; search_text: string }[]
+    >`
       SELECT board_id, element_id, type, search_text FROM (
         SELECT e.board_id, e.element_id, e.type, e.search_text,
                row_number() OVER (PARTITION BY e.board_id ORDER BY similarity(e.search_text, ${q}) DESC, e.element_id) AS rn
@@ -61,7 +66,11 @@ export class SearchService {
     const byBoard = new Map<string, SearchResultDto['matches']>();
     for (const m of matches) {
       const list = byBoard.get(m.board_id) ?? [];
-      list.push({ elementId: m.element_id, elementType: m.type, text: snippetAround(m.search_text, q) });
+      list.push({
+        elementId: m.element_id,
+        elementType: m.type,
+        text: snippetAround(m.search_text, q),
+      });
       byBoard.set(m.board_id, list);
     }
     return boards.map((b) => ({

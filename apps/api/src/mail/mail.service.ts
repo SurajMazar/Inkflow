@@ -39,14 +39,24 @@ export class MailService implements OnApplicationShutdown {
   /** Sends an email. Never throws: delivery problems must not fail the triggering request. */
   async send(email: OutgoingEmail): Promise<boolean> {
     if (!this.transport) {
-      this.logger.log(`[mail disabled] to=${email.to} subject="${email.subject}"${email.link ? ` link=${email.link}` : ''}`);
+      this.logger.log(
+        `[mail disabled] to=${email.to} subject="${email.subject}"${email.link ? ` link=${email.link}` : ''}`,
+      );
       return false;
     }
     try {
-      await this.transport.sendMail({ from: this.from, to: email.to, subject: email.subject, html: email.html, text: email.text });
+      await this.transport.sendMail({
+        from: this.from,
+        to: email.to,
+        subject: email.subject,
+        html: email.html,
+        text: email.text,
+      });
       return true;
     } catch (err) {
-      this.logger.error(`Failed to send "${email.subject}" to ${email.to}: ${(err as Error).message}`);
+      this.logger.error(
+        `Failed to send "${email.subject}" to ${email.to}: ${(err as Error).message}`,
+      );
       return false;
     }
   }

@@ -21,7 +21,10 @@ describe('rate limiting', () => {
     const statuses: number[] = [];
     let limited: { headers: Record<string, unknown>; body: unknown } | null = null;
     for (let i = 0; i < 8; i++) {
-      const res = await client.post('/api/auth/login', { email: uniqueEmail('rl'), password: 'wrong-password-1' });
+      const res = await client.post('/api/auth/login', {
+        email: uniqueEmail('rl'),
+        password: 'wrong-password-1',
+      });
       statuses.push(res.status);
       if (res.status === 429 && !limited) limited = res;
     }
@@ -37,7 +40,8 @@ describe('rate limiting', () => {
     const client = new TestClient(t.url);
     const email = uniqueEmail('rl-email');
     const statuses: number[] = [];
-    for (let i = 0; i < 5; i++) statuses.push((await client.post('/api/auth/forgot-password', { email })).status);
+    for (let i = 0; i < 5; i++)
+      statuses.push((await client.post('/api/auth/forgot-password', { email })).status);
     expect(statuses.slice(0, 3)).toEqual([200, 200, 200]);
     expect(statuses[3]).toBe(429);
   });

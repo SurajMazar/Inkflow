@@ -13,7 +13,10 @@ const UNITS: [Intl.RelativeTimeFormatUnit, number][] = [
 ];
 
 /** "just now", "5 minutes ago", "in 3 days"… */
-export function formatRelativeTime(iso: string | Date | null | undefined, now: number = Date.now()): string {
+export function formatRelativeTime(
+  iso: string | Date | null | undefined,
+  now: number = Date.now(),
+): string {
   if (!iso) return '';
   const time = typeof iso === 'string' ? Date.parse(iso) : iso.getTime();
   if (!Number.isFinite(time)) return '';
@@ -23,7 +26,9 @@ export function formatRelativeTime(iso: string | Date | null | undefined, now: n
   for (const [unit, seconds] of UNITS) {
     if (abs >= seconds || unit === 'minute') {
       const value = Math.round(diffSeconds / seconds);
-      return rtf ? rtf.format(value, unit) : `${Math.abs(value)} ${unit}${Math.abs(value) === 1 ? '' : 's'} ${value < 0 ? 'ago' : ''}`.trim();
+      return rtf
+        ? rtf.format(value, unit)
+        : `${Math.abs(value)} ${unit}${Math.abs(value) === 1 ? '' : 's'} ${value < 0 ? 'ago' : ''}`.trim();
     }
   }
   return '';
@@ -33,7 +38,8 @@ const dateTimeFormat =
   typeof Intl !== 'undefined'
     ? new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' })
     : null;
-const dateFormat = typeof Intl !== 'undefined' ? new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }) : null;
+const dateFormat =
+  typeof Intl !== 'undefined' ? new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }) : null;
 
 /** "Sep 23, 2026, 1:40 PM" */
 export function formatDateTime(iso: string | null | undefined): string {

@@ -10,7 +10,12 @@ export {
   base64ToBytes,
   SAFE_SVG_IMAGE_DATA_URL,
 } from './svg-sanitize';
-export { importSvgAsElements, parseSvgTransform, type SvgImportOptions, type SvgImportResult } from './svg-import';
+export {
+  importSvgAsElements,
+  parseSvgTransform,
+  type SvgImportOptions,
+  type SvgImportResult,
+} from './svg-import';
 export {
   tokenizeXml,
   parseXml,
@@ -32,4 +37,10 @@ export {
   type ImageFileData,
   type ImageDimensions,
 } from './image';
-export { importMermaid, formatMember, cleanLabel, mermaidLines, type MermaidResult } from './mermaid';
+export {
+  importMermaid,
+  formatMember,
+  cleanLabel,
+  mermaidLines,
+  type MermaidResult,
+} from './mermaid';

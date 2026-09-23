@@ -45,7 +45,9 @@ const ALLOWED_ELEMENTS = [
 ] as const;
 
 /** Lower-cased element name → canonical SVG spelling. */
-const ELEMENT_LOOKUP = new Map<string, string>(ALLOWED_ELEMENTS.map((name) => [name.toLowerCase(), name]));
+const ELEMENT_LOOKUP = new Map<string, string>(
+  ALLOWED_ELEMENTS.map((name) => [name.toLowerCase(), name]),
+);
 
 /** Elements whose character data is kept (and escaped) in the output. */
 const TEXT_CONTENT_ELEMENTS = new Set(['text', 'tspan', 'title', 'desc']);
@@ -124,7 +126,9 @@ const ALLOWED_ATTRIBUTES = [
 ] as const;
 
 /** Lower-cased attribute name → canonical SVG spelling. */
-const ATTRIBUTE_LOOKUP = new Map<string, string>(ALLOWED_ATTRIBUTES.map((name) => [name.toLowerCase(), name]));
+const ATTRIBUTE_LOOKUP = new Map<string, string>(
+  ALLOWED_ATTRIBUTES.map((name) => [name.toLowerCase(), name]),
+);
 
 /** CSS properties kept inside `style="…"`. */
 const ALLOWED_CSS_PROPERTIES = new Set([
@@ -174,7 +178,11 @@ function normalizeForInspection(value: string): string {
 }
 
 function hasDangerousScheme(normalized: string): boolean {
-  return normalized.includes('javascript:') || normalized.includes('vbscript:') || normalized.includes('livescript:');
+  return (
+    normalized.includes('javascript:') ||
+    normalized.includes('vbscript:') ||
+    normalized.includes('livescript:')
+  );
 }
 
 /** True when every `url(…)` in the value is a local fragment reference. */
@@ -200,7 +208,12 @@ function isSafeValue(value: string): boolean {
   const normalized = normalizeForInspection(value);
   if (hasDangerousScheme(normalized)) return false;
   if (normalized.includes('data:')) return false;
-  if (normalized.includes('expression(') || normalized.includes('@import') || normalized.includes('<')) return false;
+  if (
+    normalized.includes('expression(') ||
+    normalized.includes('@import') ||
+    normalized.includes('<')
+  )
+    return false;
   return urlsAreLocal(value);
 }
 
@@ -230,7 +243,11 @@ interface SanitizeContext {
   usesXlink: boolean;
 }
 
-function sanitizeAttributes(el: XmlElement, tag: string, ctx: SanitizeContext): XmlAttribute[] | null {
+function sanitizeAttributes(
+  el: XmlElement,
+  tag: string,
+  ctx: SanitizeContext,
+): XmlAttribute[] | null {
   const out: XmlAttribute[] = [];
   const seen = new Set<string>();
   for (const attr of el.attrs) {
@@ -323,7 +340,8 @@ export function sanitizeSvg(svgText: string): string {
   if (typeof svgText !== 'string') throw new Error('SVG must be text');
   if (svgText.length > MAX_SVG_CHARS) throw new Error('SVG is too large to import (max 5 MB)');
   const root = findSvgRoot(parseXml(svgText.replace(/^\uFEFF/, '').replace(INVALID_XML_CHARS, '')));
-  if (!root || canonicalTag(root) !== 'svg') throw new Error('Not an SVG image: missing <svg> root element');
+  if (!root || canonicalTag(root) !== 'svg')
+    throw new Error('Not an SVG image: missing <svg> root element');
   const ctx: SanitizeContext = { usesXlink: false };
   const attrs = sanitizeAttributes(root, 'svg', ctx) ?? [];
   const inner = serializeChildren(root, 'svg', ctx);

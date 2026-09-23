@@ -12,7 +12,10 @@ export const OAUTH_STATE_TTL_SECONDS = 600;
 
 export type CookieKind = 'access' | 'refresh' | 'csrf' | 'oauth';
 
-type CookieEnv = Pick<ApiEnv, 'COOKIE_SECURE' | 'COOKIE_DOMAIN' | 'ACCESS_TOKEN_TTL_SECONDS' | 'REFRESH_TOKEN_TTL_DAYS'>;
+type CookieEnv = Pick<
+  ApiEnv,
+  'COOKIE_SECURE' | 'COOKIE_DOMAIN' | 'ACCESS_TOKEN_TTL_SECONDS' | 'REFRESH_TOKEN_TTL_DAYS'
+>;
 
 /** Options used when setting each cookie. */
 export function cookieOptions(env: CookieEnv, kind: CookieKind): CookieOptions {
@@ -25,12 +28,27 @@ export function cookieOptions(env: CookieEnv, kind: CookieKind): CookieOptions {
     case 'access':
       return { ...base, httpOnly: true, path: '/', maxAge: env.ACCESS_TOKEN_TTL_SECONDS * 1000 };
     case 'refresh':
-      return { ...base, httpOnly: true, path: REFRESH_COOKIE_PATH, maxAge: env.REFRESH_TOKEN_TTL_DAYS * 86_400_000 };
+      return {
+        ...base,
+        httpOnly: true,
+        path: REFRESH_COOKIE_PATH,
+        maxAge: env.REFRESH_TOKEN_TTL_DAYS * 86_400_000,
+      };
     case 'csrf':
       // Readable by the web app (double-submit); it carries no authority on its own.
-      return { ...base, httpOnly: false, path: '/', maxAge: env.REFRESH_TOKEN_TTL_DAYS * 86_400_000 };
+      return {
+        ...base,
+        httpOnly: false,
+        path: '/',
+        maxAge: env.REFRESH_TOKEN_TTL_DAYS * 86_400_000,
+      };
     case 'oauth':
-      return { ...base, httpOnly: true, path: OAUTH_COOKIE_PATH, maxAge: OAUTH_STATE_TTL_SECONDS * 1000 };
+      return {
+        ...base,
+        httpOnly: true,
+        path: OAUTH_COOKIE_PATH,
+        maxAge: OAUTH_STATE_TTL_SECONDS * 1000,
+      };
   }
 }
 

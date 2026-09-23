@@ -40,7 +40,9 @@ function Highlight({ text, query }: { text: string; query: string }) {
   return (
     <>
       {text.slice(0, index)}
-      <mark className="rounded-[3px] bg-brand-subtle px-0.5 text-brand-subtle-foreground">{text.slice(index, index + q.length)}</mark>
+      <mark className="rounded-[3px] bg-brand-subtle px-0.5 text-brand-subtle-foreground">
+        {text.slice(index, index + q.length)}
+      </mark>
       {text.slice(index + q.length)}
     </>
   );
@@ -74,7 +76,8 @@ export function SearchDialog() {
 
   const results = useQuery({
     queryKey: queryKeys.search(workspace.id, debounced),
-    queryFn: ({ signal }) => api.search({ q: debounced, workspaceId: workspace.id, limit: 20 }, { signal }),
+    queryFn: ({ signal }) =>
+      api.search({ q: debounced, workspaceId: workspace.id, limit: 20 }, { signal }),
     enabled: open && debounced.length > 0,
     placeholderData: keepPreviousData,
     staleTime: 15_000,
@@ -88,9 +91,19 @@ export function SearchDialog() {
   const q = query.trim().toLowerCase();
   const actions = [
     { id: 'new-board', label: 'New board', icon: Plus, run: () => openNewBoard() },
-    { id: 'templates', label: 'Browse templates', icon: LayoutTemplate, run: () => navigate(`/w/${workspace.id}/templates`) },
+    {
+      id: 'templates',
+      label: 'Browse templates',
+      icon: LayoutTemplate,
+      run: () => navigate(`/w/${workspace.id}/templates`),
+    },
     { id: 'import', label: 'Import board from file', icon: Upload, run: requestImport },
-    { id: 'members', label: 'Invite members', icon: Users, run: () => navigate(`/w/${workspace.id}/settings`) },
+    {
+      id: 'members',
+      label: 'Invite members',
+      icon: Users,
+      run: () => navigate(`/w/${workspace.id}/settings`),
+    },
     { id: 'settings', label: 'Settings', icon: Settings, run: () => navigate('/settings/account') },
     {
       id: 'theme',
@@ -146,7 +159,9 @@ export function SearchDialog() {
                       </span>
                     ) : null}
                   </div>
-                  <span className="shrink-0 text-xs text-muted-foreground">{formatRelativeTime(result.updatedAt)}</span>
+                  <span className="shrink-0 text-xs text-muted-foreground">
+                    {formatRelativeTime(result.updatedAt)}
+                  </span>
                 </CommandItem>
               );
             })}
@@ -156,7 +171,12 @@ export function SearchDialog() {
         {actions.length > 0 ? (
           <CommandGroup heading="Quick actions">
             {actions.map((action) => (
-              <CommandItem key={action.id} value={`action-${action.id}`} onSelect={() => run(action.run)} data-testid={`search-action-${action.id}`}>
+              <CommandItem
+                key={action.id}
+                value={`action-${action.id}`}
+                onSelect={() => run(action.run)}
+                data-testid={`search-action-${action.id}`}
+              >
                 <action.icon aria-hidden />
                 {action.label}
                 {action.id === 'new-board' ? <CommandShortcut>N</CommandShortcut> : null}
@@ -166,7 +186,9 @@ export function SearchDialog() {
         ) : null}
       </CommandList>
       <p className="sr-only" aria-live="polite">
-        {debounced && settled ? `${boards.length} board${boards.length === 1 ? '' : 's'} found` : ''}
+        {debounced && settled
+          ? `${boards.length} board${boards.length === 1 ? '' : 's'} found`
+          : ''}
       </p>
     </CommandDialog>
   );

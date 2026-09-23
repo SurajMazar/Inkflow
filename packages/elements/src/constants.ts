@@ -1,14 +1,11 @@
-import type {
-  Arrowhead,
-  FillStyle,
-  FontFamily,
-  StrokeStyle,
-  TextStyle,
-} from './types';
+import type { Arrowhead, FillStyle, FontFamily, StrokeStyle, TextStyle } from './types';
 
 export const FONT_FAMILIES: Record<FontFamily, { label: string; css: string }> = {
   hand: { label: 'Hand-drawn', css: '"Kalam", "Segoe Print", "Comic Sans MS", cursive' },
-  sans: { label: 'Normal', css: '"Inter Variable", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif' },
+  sans: {
+    label: 'Normal',
+    css: '"Inter Variable", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif',
+  },
   serif: { label: 'Serif', css: '"Lora", Georgia, "Times New Roman", serif' },
   mono: { label: 'Code', css: '"JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace' },
 };
@@ -57,7 +54,13 @@ export const COLOR_PALETTE = {
 } as const;
 
 export const QUICK_STROKE_COLORS = ['#1e1e1e', '#e03131', '#2f9e44', '#1971c2', '#f08c00'] as const;
-export const QUICK_BACKGROUND_COLORS = ['transparent', '#ffc9c9', '#b2f2bb', '#a5d8ff', '#ffec99'] as const;
+export const QUICK_BACKGROUND_COLORS = [
+  'transparent',
+  '#ffc9c9',
+  '#b2f2bb',
+  '#a5d8ff',
+  '#ffec99',
+] as const;
 
 export const DEFAULT_TEXT_STYLE: TextStyle = {
   fontFamily: 'hand',

@@ -18,8 +18,11 @@ export function scorePassword(password: string): PasswordScore {
   if (!meetsMinimum) return { score: 1, label: 'Too short', meetsMinimum, hasLetterAndNumber };
   if (!hasLetterAndNumber) return { score: 1, label: 'Weak', meetsMinimum, hasLetterAndNumber };
   const extras =
-    Number(password.length >= 14) + Number(/[a-z]/.test(password) && /[A-Z]/.test(password)) + Number(/[^A-Za-z0-9]/.test(password));
-  const common = /(password|qwerty|123456|abcdef|letmein|welcome)/i.test(password) || /(.)\1{3,}/.test(password);
+    Number(password.length >= 14) +
+    Number(/[a-z]/.test(password) && /[A-Z]/.test(password)) +
+    Number(/[^A-Za-z0-9]/.test(password));
+  const common =
+    /(password|qwerty|123456|abcdef|letmein|welcome)/i.test(password) || /(.)\1{3,}/.test(password);
   const score: PasswordScore['score'] = common ? 2 : extras >= 2 ? 4 : extras === 1 ? 3 : 2;
   const label = score === 4 ? 'Strong' : score === 3 ? 'Good' : 'Fair';
   return { score, label, meetsMinimum, hasLetterAndNumber };
@@ -48,7 +51,9 @@ export function PasswordStrength({ password, id }: { password: string; id?: stri
         </span>
       </div>
       <ul className="grid gap-1 text-xs text-muted-foreground">
-        <Requirement met={result.meetsMinimum}>At least {PASSWORD_MIN_LENGTH} characters</Requirement>
+        <Requirement met={result.meetsMinimum}>
+          At least {PASSWORD_MIN_LENGTH} characters
+        </Requirement>
         <Requirement met={result.hasLetterAndNumber}>A letter and a number</Requirement>
       </ul>
     </div>

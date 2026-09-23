@@ -1,4 +1,12 @@
-import { parseSvgPath, pathBounds, regularPolygonPoints, starPoints, transformPath, type Path, type Point } from '@inkflow/geometry';
+import {
+  parseSvgPath,
+  pathBounds,
+  regularPolygonPoints,
+  starPoints,
+  transformPath,
+  type Path,
+  type Point,
+} from '@inkflow/geometry';
 import type { NodeElement, Port } from '@inkflow/elements';
 import type { NodeShapeDefinition, ShapeGeometry } from '../types';
 import {
@@ -30,11 +38,7 @@ function fitPath(p: Path, w: number, h: number): Path {
 }
 
 function fitPoints(points: Point[], w: number, h: number): Path {
-  return fitPath(
-    polygon(points.map((p) => [p.x, p.y] as [number, number])),
-    w,
-    h,
-  );
+  return fitPath(polygon(points.map((p) => [p.x, p.y] as [number, number])), w, h);
 }
 
 function arrowHead(tip: Point, from: Point, size: number): Path {
@@ -123,7 +127,11 @@ function cylinder(w: number, h: number, rims: number): ShapeGeometry {
 }
 
 /** Rounded box with a symbol drawn in a square area on the left and the label on the right. */
-function symbolCard(w: number, h: number, symbol: (x: number, y: number, s: number) => { details: Path[]; fills?: Path[] }) {
+function symbolCard(
+  w: number,
+  h: number,
+  symbol: (x: number, y: number, s: number) => { details: Path[]; fills?: Path[] },
+) {
   const s = Math.max(0, Math.min(h - PAD * 2, w * 0.36));
   const sx = PAD;
   const sy = (h - s) / 2;
@@ -157,7 +165,10 @@ const basic: Def[] = [
     defaultSize: { width: 160, height: 80 },
     defaultStyle: { roundness: 'sharp' },
     geometry: (w, h, el) => ({
-      outline: el?.roundness === 'round' ? roundRect(0, 0, w, h, getCornerRadius(w, h)) : rectPath(0, 0, w, h),
+      outline:
+        el?.roundness === 'round'
+          ? roundRect(0, 0, w, h, getCornerRadius(w, h))
+          : rectPath(0, 0, w, h),
       labelBox: fullLabel(w, h),
     }),
   },
@@ -183,7 +194,11 @@ const basic: Def[] = [
     geometry: (w, h) => {
       const r = Math.min(w, h) / 2;
       const k = r * Math.SQRT1_2;
-      return { outline: circlePath(w / 2, h / 2, r), labelBox: box(w / 2 - k, h / 2 - k, k * 2, k * 2), elliptical: true };
+      return {
+        outline: circlePath(w / 2, h / 2, r),
+        labelBox: box(w / 2 - k, h / 2 - k, k * 2, k * 2),
+        elliptical: true,
+      };
     },
   },
   {
@@ -378,7 +393,10 @@ const flowchart: Def[] = [
       const d = Math.min(w * 0.1, 16);
       return {
         outline: rectPath(0, 0, w, h),
-        details: [linePath({ x: d, y: 0 }, { x: d, y: h }), linePath({ x: w - d, y: 0 }, { x: w - d, y: h })],
+        details: [
+          linePath({ x: d, y: 0 }, { x: d, y: h }),
+          linePath({ x: w - d, y: 0 }, { x: w - d, y: h }),
+        ],
         labelBox: box(d + 6, 6, w - d * 2 - 12, h - 12),
       };
     },
@@ -575,7 +593,10 @@ const flowchart: Def[] = [
       const d = Math.min(16, w * 0.12, h * 0.18);
       return {
         outline: rectPath(0, 0, w, h),
-        details: [linePath({ x: d, y: 0 }, { x: d, y: h }), linePath({ x: 0, y: d }, { x: w, y: d })],
+        details: [
+          linePath({ x: d, y: 0 }, { x: d, y: h }),
+          linePath({ x: 0, y: d }, { x: w, y: d }),
+        ],
         labelBox: box(d + 4, d + 4, w - d - 8, h - d - 8),
       };
     },
@@ -730,7 +751,11 @@ const infrastructure: Def[] = [
         .build();
       return {
         outline,
-        details: [path().arc(w - rx, h / 2, rx, h / 2, -PI / 2, -1.5 * PI).build()],
+        details: [
+          path()
+            .arc(w - rx, h / 2, rx, h / 2, -PI / 2, -1.5 * PI)
+            .build(),
+        ],
         labelBox: box(rx + 2, 4, w - rx * 3 - 4, h - 8),
       };
     },
@@ -765,7 +790,8 @@ const infrastructure: Def[] = [
       const dots = w >= 40 ? 3 : 0;
       const fills: Path[] = [];
       for (let i = 0; i < dots; i++) fills.push(circlePath(10 + i * 8, tb / 2, r));
-      if (w > 70) details.push(roundRect(10 + dots * 8, tb * 0.22, w - 18 - dots * 8, tb * 0.56, tb * 0.28));
+      if (w > 70)
+        details.push(roundRect(10 + dots * 8, tb * 0.22, w - 18 - dots * 8, tb * 0.56, tb * 0.28));
       return {
         outline: roundRect(0, 0, w, h, Math.min(6, getCornerRadius(w, h))),
         details,
@@ -862,12 +888,18 @@ const network: Def[] = [
       const rh = wallH / rows;
       const brick = Math.max(12, Math.min(w / 3, rh * 2.4));
       const details: Path[] = [];
-      for (let r = 1; r <= rows; r++) details.push(linePath({ x: 0, y: r * rh }, { x: w, y: r * rh }));
+      for (let r = 1; r <= rows; r++)
+        details.push(linePath({ x: 0, y: r * rh }, { x: w, y: r * rh }));
       for (let r = 0; r < rows; r++) {
         const offset = r % 2 === 0 ? brick : brick / 2;
-        for (let x = offset; x < w - 2; x += brick) details.push(linePath({ x, y: r * rh }, { x, y: (r + 1) * rh }));
+        for (let x = offset; x < w - 2; x += brick)
+          details.push(linePath({ x, y: r * rh }, { x, y: (r + 1) * rh }));
       }
-      return { outline: rectPath(0, 0, w, h), details, labelBox: box(6, wallH + 4, w - 12, h - wallH - 8) };
+      return {
+        outline: rectPath(0, 0, w, h),
+        details,
+        labelBox: box(6, wallH + 4, w - 12, h - wallH - 8),
+      };
     },
   },
   {
@@ -892,7 +924,9 @@ const network: Def[] = [
         const inner = { x: center.x + dx * c * 0.12, y: center.y + dy * c * 0.12 };
         const outer = { x: center.x + dx * c * 0.45, y: center.y + dy * c * 0.45 };
         details.push(linePath(inner, outer));
-        details.push(outward ? arrowHead(outer, inner, c * 0.14) : arrowHead(inner, outer, c * 0.14));
+        details.push(
+          outward ? arrowHead(outer, inner, c * 0.14) : arrowHead(inner, outer, c * 0.14),
+        );
       }
       return {
         outline: path()
@@ -915,7 +949,10 @@ const cloud: Def[] = [
     keywords: ['internet', 'aws', 'gcp', 'azure', 'saas', 'external'],
     defaultSize: { width: 180, height: 110 },
     defaultStyle: { backgroundColor: '#e7f5ff', strokeColor: '#1971c2' },
-    geometry: (w, h) => ({ outline: cloudOutline(w, h), labelBox: box(w * 0.18, h * 0.3, w * 0.64, h * 0.5) }),
+    geometry: (w, h) => ({
+      outline: cloudOutline(w, h),
+      labelBox: box(w * 0.18, h * 0.3, w * 0.64, h * 0.5),
+    }),
   },
   {
     key: 'api-gateway',
@@ -985,7 +1022,11 @@ const cloud: Def[] = [
         .build();
       return {
         outline,
-        details: [path().arc(w / 2, ry, w / 2, ry, 0, PI).build()],
+        details: [
+          path()
+            .arc(w / 2, ry, w / 2, ry, 0, PI)
+            .build(),
+        ],
         labelBox: box(inset + 4, ry * 2 + 6, w - inset * 2 - 8, h - ry * 2 - ry2 - 12),
       };
     },
@@ -1076,8 +1117,18 @@ const uml: Def[] = [
       return {
         outline,
         details: [
-          linePath({ x: o, y: t1 }, { x: 2 * o, y: t1 }, { x: 2 * o, y: t1 + th }, { x: o, y: t1 + th }),
-          linePath({ x: o, y: t2 }, { x: 2 * o, y: t2 }, { x: 2 * o, y: t2 + th }, { x: o, y: t2 + th }),
+          linePath(
+            { x: o, y: t1 },
+            { x: 2 * o, y: t1 },
+            { x: 2 * o, y: t1 + th },
+            { x: o, y: t1 + th },
+          ),
+          linePath(
+            { x: o, y: t2 },
+            { x: 2 * o, y: t2 },
+            { x: 2 * o, y: t2 + th },
+            { x: o, y: t2 + th },
+          ),
         ],
         labelBox: box(2 * o + PAD, PAD, w - 2 * o - PAD * 2, h - PAD * 2),
       };
@@ -1137,7 +1188,10 @@ const uml: Def[] = [
     keywords: ['status', 'stage', 'state machine', 'rounded'],
     defaultSize: { width: 150, height: 70 },
     defaultStyle: { backgroundColor: '#e7f5ff', strokeColor: '#1971c2' },
-    geometry: (w, h) => ({ outline: roundRect(0, 0, w, h, Math.min(16, h / 3, w / 3)), labelBox: fullLabel(w, h) }),
+    geometry: (w, h) => ({
+      outline: roundRect(0, 0, w, h, Math.min(16, h / 3, w / 3)),
+      labelBox: fullLabel(w, h),
+    }),
   },
   {
     key: 'initial-state',
@@ -1147,7 +1201,11 @@ const uml: Def[] = [
     defaultSize: { width: 30, height: 30 },
     defaultStyle: { backgroundColor: '#1e1e1e', strokeColor: '#1e1e1e' },
     elliptical: true,
-    geometry: (w, h) => ({ outline: circlePath(w / 2, h / 2, Math.min(w, h) / 2), labelBox: box(0, 0, w, h), elliptical: true }),
+    geometry: (w, h) => ({
+      outline: circlePath(w / 2, h / 2, Math.min(w, h) / 2),
+      labelBox: box(0, 0, w, h),
+      elliptical: true,
+    }),
   },
   {
     key: 'final-state',
@@ -1210,7 +1268,10 @@ const uml: Def[] = [
     keywords: ['system', 'boundary', 'subject', 'use case', 'scope'],
     defaultSize: { width: 320, height: 380 },
     defaultStyle: { backgroundColor: 'transparent', roundness: 'sharp' },
-    geometry: (w, h) => ({ outline: rectPath(0, 0, w, h), labelBox: box(PAD, 6, w - PAD * 2, Math.min(28, h * 0.15)) }),
+    geometry: (w, h) => ({
+      outline: rectPath(0, 0, w, h),
+      labelBox: box(PAD, 6, w - PAD * 2, Math.min(28, h * 0.15)),
+    }),
   },
   {
     key: 'swimlane',
@@ -1278,7 +1339,13 @@ const people: Def[] = [
       return {
         outline: roundRect(0, 0, w, h, Math.min(8, getCornerRadius(w, h))),
         details: [circlePath(acx, h / 2, ar)],
-        fills: [circlePath(acx, h / 2 - ar * 0.25, ar * 0.32), path().arc(acx, h / 2 + ar * 0.62, ar * 0.55, ar * 0.32, PI, 2 * PI).close().build()],
+        fills: [
+          circlePath(acx, h / 2 - ar * 0.25, ar * 0.32),
+          path()
+            .arc(acx, h / 2 + ar * 0.62, ar * 0.55, ar * 0.32, PI, 2 * PI)
+            .close()
+            .build(),
+        ],
         labelBox: box(tx, 6, tw, h / 2 - 6),
         subtitleBox: box(tx, h / 2, tw, h / 2 - 6),
         iconBox: box(acx - ar, h / 2 - ar, ar * 2, ar * 2),
@@ -1305,7 +1372,12 @@ const misc: Def[] = [
           [w - c, h],
           [0, h],
         ]),
-        details: [path().moveTo(w, h - c).quadTo(w - c * 0.95, h - c * 0.95, w - c, h).build()],
+        details: [
+          path()
+            .moveTo(w, h - c)
+            .quadTo(w - c * 0.95, h - c * 0.95, w - c, h)
+            .build(),
+        ],
         labelBox: box(10, 10, w - 20, h - c - 12),
       };
     },
@@ -1349,12 +1421,16 @@ export function customGeometry(w: number, h: number, el?: NodeElement): ShapeGeo
   return { outline, labelBox: box(w * 0.15, h * 0.15, w * 0.7, h * 0.7) };
 }
 
-
 /**
  * Shapes that group other nodes. They are drawn beneath their contents and connectors may cross
  * them freely (they are never routing obstacles).
  */
-export const CONTAINER_SHAPE_KEYS: ReadonlySet<string> = new Set(['container', 'swimlane', 'system-boundary', 'package']);
+export const CONTAINER_SHAPE_KEYS: ReadonlySet<string> = new Set([
+  'container',
+  'swimlane',
+  'system-boundary',
+  'package',
+]);
 
 export const BUILTIN_SHAPES: NodeShapeDefinition[] = [
   ...basic,

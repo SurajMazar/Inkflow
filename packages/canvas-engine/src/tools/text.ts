@@ -15,7 +15,9 @@ export class TextTool extends BaseTool {
     const editor = this.editor;
     if (editor.isReadOnly) return;
     editor.commitTextEditIfAny();
-    const hit = hitTestTop(editor.scene, e.world, { tolerance: hitTolerancePx(e.pointerType) / this.zoom });
+    const hit = hitTestTop(editor.scene, e.world, {
+      tolerance: hitTolerancePx(e.pointerType) / this.zoom,
+    });
     if (hit?.type === 'text') {
       editor.startTextEdit(hit.id, 'text');
     } else if (hit && hasShapeLabel(hit)) {

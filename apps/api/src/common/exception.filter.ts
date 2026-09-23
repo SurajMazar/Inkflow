@@ -1,4 +1,10 @@
-import { Catch, HttpException, Logger, type ArgumentsHost, type ExceptionFilter } from '@nestjs/common';
+import {
+  Catch,
+  HttpException,
+  Logger,
+  type ArgumentsHost,
+  type ExceptionFilter,
+} from '@nestjs/common';
 import { ThrottlerException } from '@nestjs/throttler';
 import type { Response } from 'express';
 import { Prisma } from '@inkflow/database';
@@ -55,7 +61,12 @@ export function renderException(exception: unknown): Rendered {
     return { status: 429, code: 'RATE_LIMITED', message: 'Too many requests, please slow down' };
   }
   if (exception instanceof ZodError) {
-    return { status: 400, code: 'VALIDATION_FAILED', message: 'Request validation failed', details: formatZodIssues(exception) };
+    return {
+      status: 400,
+      code: 'VALIDATION_FAILED',
+      message: 'Request validation failed',
+      details: formatZodIssues(exception),
+    };
   }
   if (exception instanceof Prisma.PrismaClientKnownRequestError) {
     switch (exception.code) {
@@ -70,7 +81,11 @@ export function renderException(exception: unknown): Rendered {
       case 'P2023':
         return { status: 404, code: 'NOT_FOUND', message: 'Resource not found' };
       case 'P2003':
-        return { status: 409, code: 'CONFLICT', message: 'The operation conflicts with related records' };
+        return {
+          status: 409,
+          code: 'CONFLICT',
+          message: 'The operation conflicts with related records',
+        };
       default:
         break;
     }
@@ -79,17 +94,27 @@ export function renderException(exception: unknown): Rendered {
     const status = exception.getStatus();
     const code = STATUS_CODES[status] ?? (status >= 500 ? 'INTERNAL' : 'VALIDATION_FAILED');
     if (status >= 500) {
-      return { status, code: status === 503 ? 'SERVICE_UNAVAILABLE' : 'INTERNAL', message: 'Internal server error' };
+      return {
+        status,
+        code: status === 503 ? 'SERVICE_UNAVAILABLE' : 'INTERNAL',
+        message: 'Internal server error',
+      };
     }
     return { status, code, message: messageOf(exception.getResponse(), exception.message) };
   }
   // Errors raised by Express middleware (body parser) carry `status`/`type`.
   if (exception && typeof exception === 'object' && 'status' in exception && 'type' in exception) {
     const e = exception as { status: number; type: string };
-    if (e.type === 'entity.too.large') return { status: 413, code: 'PAYLOAD_TOO_LARGE', message: 'Request body is too large' };
-    if (e.type === 'entity.parse.failed') return { status: 400, code: 'VALIDATION_FAILED', message: 'Malformed JSON body' };
+    if (e.type === 'entity.too.large')
+      return { status: 413, code: 'PAYLOAD_TOO_LARGE', message: 'Request body is too large' };
+    if (e.type === 'entity.parse.failed')
+      return { status: 400, code: 'VALIDATION_FAILED', message: 'Malformed JSON body' };
     if (typeof e.status === 'number' && e.status >= 400 && e.status < 500) {
-      return { status: e.status, code: STATUS_CODES[e.status] ?? 'VALIDATION_FAILED', message: 'Bad request' };
+      return {
+        status: e.status,
+        code: STATUS_CODES[e.status] ?? 'VALIDATION_FAILED',
+        message: 'Bad request',
+      };
     }
   }
   return { status: 500, code: 'INTERNAL', message: 'Internal server error' };
@@ -119,7 +144,12 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const reqId = requestId(req);
     if (rendered.status >= 500) {
       this.logger.error(
-        { err: exception, requestId: reqId, method: req.method, url: req.originalUrl?.split('?')[0] },
+        {
+          err: exception,
+          requestId: reqId,
+          method: req.method,
+          url: req.originalUrl?.split('?')[0],
+        },
         'Unhandled error',
       );
     }
@@ -127,7 +157,11 @@ export class AllExceptionsFilter implements ExceptionFilter {
       res.end();
       return;
     }
-    if (rendered.status === 429 && !rendered.headers?.['Retry-After'] && !res.getHeader('Retry-After')) {
+    if (
+      rendered.status === 429 &&
+      !rendered.headers?.['Retry-After'] &&
+      !res.getHeader('Retry-After')
+    ) {
       res.setHeader('Retry-After', '60');
     }
     for (const [name, value] of Object.entries(rendered.headers ?? {})) res.setHeader(name, value);

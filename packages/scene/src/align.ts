@@ -12,7 +12,11 @@ function translateUnit(unit: SceneElement[], dx: number, dy: number): Patch[] {
 }
 
 /** Aligns selection units (groups move as one) to the selection's common bounds. */
-export function alignElements(elements: readonly SceneElement[], mode: AlignMode, editingGroupId: string | null = null): Patch[] {
+export function alignElements(
+  elements: readonly SceneElement[],
+  mode: AlignMode,
+  editingGroupId: string | null = null,
+): Patch[] {
   const units = selectionUnits(elements, editingGroupId);
   const all = getCommonBounds(elements);
   if (!all || units.length < 2) return [];
@@ -52,13 +56,19 @@ export function distributeElements(
   mode: DistributeMode,
   editingGroupId: string | null = null,
 ): Patch[] {
-  const units = selectionUnits(elements, editingGroupId).map((u) => ({ unit: u, bounds: getCommonBounds(u)! }));
+  const units = selectionUnits(elements, editingGroupId).map((u) => ({
+    unit: u,
+    bounds: getCommonBounds(u)!,
+  }));
   if (units.length < 3) return [];
   const horizontal = mode === 'horizontal';
   units.sort((a, b) =>
-    horizontal ? a.bounds.minX + a.bounds.maxX - (b.bounds.minX + b.bounds.maxX) : a.bounds.minY + a.bounds.maxY - (b.bounds.minY + b.bounds.maxY),
+    horizontal
+      ? a.bounds.minX + a.bounds.maxX - (b.bounds.minX + b.bounds.maxX)
+      : a.bounds.minY + a.bounds.maxY - (b.bounds.minY + b.bounds.maxY),
   );
-  const size = (b: (typeof units)[number]['bounds']) => (horizontal ? b.maxX - b.minX : b.maxY - b.minY);
+  const size = (b: (typeof units)[number]['bounds']) =>
+    horizontal ? b.maxX - b.minX : b.maxY - b.minY;
   const first = units[0]!.bounds;
   const last = units[units.length - 1]!.bounds;
   const span = horizontal ? last.maxX - first.minX : last.maxY - first.minY;

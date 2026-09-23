@@ -3,7 +3,13 @@ import { rectToBounds } from '@inkflow/geometry';
 import { DrawableCache } from '../drawable/generate';
 import { planRender, type RenderPlan } from '../plan';
 import type { SceneRenderOptions } from '../types';
-import { DARK_MODE_FILTER, applyDarkModeToCanvas, createScratchCanvas, getScratchContext, supportsCanvasFilter } from './dark';
+import {
+  DARK_MODE_FILTER,
+  applyDarkModeToCanvas,
+  createScratchCanvas,
+  getScratchContext,
+  supportsCanvasFilter,
+} from './dark';
 import {
   FRAME_NAME_FONT_SIZE,
   FRAME_NAME_GAP,
@@ -25,7 +31,12 @@ export function frameTitleHeight(zoom: number): number {
  * (children clipped to their frame, consecutive siblings sharing one clip), then frame names.
  * Returns the number of elements drawn.
  */
-export function drawPlan(ctx: Ctx, plan: RenderPlan, env: DrawEnv, showFrameNames: boolean): number {
+export function drawPlan(
+  ctx: Ctx,
+  plan: RenderPlan,
+  env: DrawEnv,
+  showFrameNames: boolean,
+): number {
   for (const frame of plan.frames) drawElementInto(ctx, frame, env);
   const content = plan.content;
   let i = 0;
@@ -86,7 +97,11 @@ export function renderSceneToCanvas(
   renderSceneInto(ctx, elements, options);
 }
 
-export function renderSceneInto(ctx: Ctx, elements: readonly SceneElement[], options: SceneRenderOptions & { cache?: DrawableCache }): void {
+export function renderSceneInto(
+  ctx: Ctx,
+  elements: readonly SceneElement[],
+  options: SceneRenderOptions & { cache?: DrawableCache },
+): void {
   const { bounds, scale } = options;
   const width = Math.max(1, Math.round(bounds.width * scale));
   const height = Math.max(1, Math.round(bounds.height * scale));

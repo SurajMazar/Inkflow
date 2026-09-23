@@ -46,7 +46,11 @@ export interface BoardMenuOptions {
   workspaceId: string;
 }
 
-function BoardMenuItems({ board, kit, workspaceId }: { board: BoardSummaryDto; kit: MenuKit } & BoardMenuOptions) {
+function BoardMenuItems({
+  board,
+  kit,
+  workspaceId,
+}: { board: BoardSummaryDto; kit: MenuKit } & BoardMenuOptions) {
   const navigate = useNavigate();
   const { toggleFavorite, duplicate, trash } = useBoardMutations();
   const { setRenameBoard, setMoveBoard, setShareBoard } = useDashboardUi();
@@ -107,7 +111,10 @@ export function BoardMenu({
         <Button
           variant="ghost"
           size="icon-sm"
-          className={cn('text-muted-foreground data-[state=open]:bg-accent data-[state=open]:text-foreground', className)}
+          className={cn(
+            'text-muted-foreground data-[state=open]:bg-accent data-[state=open]:text-foreground',
+            className,
+          )}
           aria-label={`Actions for ${board.title}`}
           data-testid="board-card-menu"
         >
@@ -118,7 +125,11 @@ export function BoardMenu({
         <BoardMenuItems
           board={board}
           workspaceId={workspaceId}
-          kit={{ Item: DropdownMenuItem, Separator: DropdownMenuSeparator, testIdPrefix: 'board-menu' }}
+          kit={{
+            Item: DropdownMenuItem,
+            Separator: DropdownMenuSeparator,
+            testIdPrefix: 'board-menu',
+          }}
         />
       </DropdownMenuContent>
     </DropdownMenu>
@@ -126,13 +137,20 @@ export function BoardMenu({
 }
 
 /** Right-click menu content with the same actions (wrap the card in `<ContextMenu>`). */
-export function BoardContextMenuContent({ board, workspaceId }: { board: BoardSummaryDto } & BoardMenuOptions) {
+export function BoardContextMenuContent({
+  board,
+  workspaceId,
+}: { board: BoardSummaryDto } & BoardMenuOptions) {
   return (
     <ContextMenuContent className="w-52">
       <BoardMenuItems
         board={board}
         workspaceId={workspaceId}
-        kit={{ Item: ContextMenuItem, Separator: ContextMenuSeparator, testIdPrefix: 'board-context' }}
+        kit={{
+          Item: ContextMenuItem,
+          Separator: ContextMenuSeparator,
+          testIdPrefix: 'board-context',
+        }}
       />
     </ContextMenuContent>
   );

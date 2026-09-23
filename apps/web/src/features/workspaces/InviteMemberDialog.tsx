@@ -23,7 +23,13 @@ export interface InviteMemberDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export function InviteMemberDialog({ workspaceId, workspaceName, myRole, open, onOpenChange }: InviteMemberDialogProps) {
+export function InviteMemberDialog({
+  workspaceId,
+  workspaceName,
+  myRole,
+  open,
+  onOpenChange,
+}: InviteMemberDialogProps) {
   const [email, setEmail] = React.useState('');
   const [role, setRole] = React.useState<'ADMIN' | 'MEMBER'>('MEMBER');
   const [error, setError] = React.useState<string | undefined>();
@@ -86,12 +92,15 @@ export function InviteMemberDialog({ workspaceId, workspaceName, myRole, open, o
                 data-testid="workspace-invite-role"
               >
                 <option value="MEMBER">Member</option>
-                {myRole === 'OWNER' || myRole === 'ADMIN' ? <option value="ADMIN">Admin</option> : null}
+                {myRole === 'OWNER' || myRole === 'ADMIN' ? (
+                  <option value="ADMIN">Admin</option>
+                ) : null}
               </NativeSelect>
             </FormField>
           </div>
           <p className="text-[13px] text-muted-foreground">
-            Members can create boards and see boards shared with the workspace. Admins can also manage members and settings.
+            Members can create boards and see boards shared with the workspace. Admins can also
+            manage members and settings.
           </p>
           <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <Button variant="outline" onClick={() => onOpenChange(false)}>

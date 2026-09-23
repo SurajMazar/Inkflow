@@ -27,7 +27,8 @@ export interface AuthRateLimitOptions {
   perEmail?: boolean;
 }
 /** Applies the stricter auth limits (per IP, optionally also per email). */
-export const AuthRateLimit = (options: AuthRateLimitOptions = {}) => SetMetadata(AUTH_RATE_LIMIT, options);
+export const AuthRateLimit = (options: AuthRateLimitOptions = {}) =>
+  SetMetadata(AUTH_RATE_LIMIT, options);
 
 const INCREMENT_SCRIPT = `
 local hits_key = KEYS[1]
@@ -115,10 +116,10 @@ export class AppThrottlerGuard extends ThrottlerGuard {
   protected override async handleRequest(props: ThrottlerRequest): Promise<boolean> {
     const name = props.throttler.name;
     if (name === THROTTLER_AUTH_IP || name === THROTTLER_AUTH_EMAIL) {
-      const options = this.reflector.getAllAndOverride<AuthRateLimitOptions | undefined>(AUTH_RATE_LIMIT, [
-        props.context.getHandler(),
-        props.context.getClass(),
-      ]);
+      const options = this.reflector.getAllAndOverride<AuthRateLimitOptions | undefined>(
+        AUTH_RATE_LIMIT,
+        [props.context.getHandler(), props.context.getClass()],
+      );
       if (!options) return true;
       if (name === THROTTLER_AUTH_EMAIL) {
         if (!options.perEmail) return true;

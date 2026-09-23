@@ -4,7 +4,10 @@ import type { ViewportState } from '@inkflow/renderer';
 export const MIN_ZOOM = 0.05;
 export const MAX_ZOOM = 30;
 /** Discrete zoom steps used by zoom in/out buttons and shortcuts. */
-export const ZOOM_STEPS = [0.05, 0.1, 0.15, 0.2, 0.25, 0.33, 0.5, 0.67, 0.75, 0.9, 1, 1.25, 1.5, 2, 3, 4, 5, 6, 8, 12, 16, 24, 30];
+export const ZOOM_STEPS = [
+  0.05, 0.1, 0.15, 0.2, 0.25, 0.33, 0.5, 0.67, 0.75, 0.9, 1, 1.25, 1.5, 2, 3, 4, 5, 6, 8, 12, 16,
+  24, 30,
+];
 
 export function screenToWorld(viewport: ViewportState, p: Point): Point {
   return { x: p.x / viewport.zoom + viewport.x, y: p.y / viewport.zoom + viewport.y };
@@ -37,7 +40,11 @@ export function visibleWorldBounds(viewport: ViewportState, padding = 0): Bounds
 export const clampZoom = (zoom: number) => clamp(zoom, MIN_ZOOM, MAX_ZOOM);
 
 /** Zooms so that the world point under `screenPoint` stays fixed. */
-export function zoomAtPoint(viewport: ViewportState, nextZoom: number, screenPoint: Point): ViewportState {
+export function zoomAtPoint(
+  viewport: ViewportState,
+  nextZoom: number,
+  screenPoint: Point,
+): ViewportState {
   const zoom = clampZoom(nextZoom);
   const world = screenToWorld(viewport, screenPoint);
   return {
@@ -49,7 +56,11 @@ export function zoomAtPoint(viewport: ViewportState, nextZoom: number, screenPoi
 }
 
 export function panBy(viewport: ViewportState, dxScreen: number, dyScreen: number): ViewportState {
-  return { ...viewport, x: viewport.x - dxScreen / viewport.zoom, y: viewport.y - dyScreen / viewport.zoom };
+  return {
+    ...viewport,
+    x: viewport.x - dxScreen / viewport.zoom,
+    y: viewport.y - dyScreen / viewport.zoom,
+  };
 }
 
 export function viewportCenter(viewport: ViewportState): Point {
@@ -72,7 +83,11 @@ export function fitBounds(
   const height = Math.max(1, bounds.maxY - bounds.minY);
   const availW = Math.max(1, viewport.width - padding * 2);
   const availH = Math.max(1, viewport.height - padding * 2);
-  const zoom = clamp(Math.min(availW / width, availH / height), options.minZoom ?? MIN_ZOOM, options.maxZoom ?? 1);
+  const zoom = clamp(
+    Math.min(availW / width, availH / height),
+    options.minZoom ?? MIN_ZOOM,
+    options.maxZoom ?? 1,
+  );
   const cx = (bounds.minX + bounds.maxX) / 2;
   const cy = (bounds.minY + bounds.maxY) / 2;
   return {
@@ -85,11 +100,18 @@ export function fitBounds(
 
 /** Viewport centered on a world point at the current zoom. */
 export function centerOn(viewport: ViewportState, world: Point): ViewportState {
-  return { ...viewport, x: world.x - viewport.width / 2 / viewport.zoom, y: world.y - viewport.height / 2 / viewport.zoom };
+  return {
+    ...viewport,
+    x: world.x - viewport.width / 2 / viewport.zoom,
+    y: world.y - viewport.height / 2 / viewport.zoom,
+  };
 }
 
 /** Normalizes wheel deltas across browsers/devices to pixels. */
-export function normalizeWheel(e: { deltaX: number; deltaY: number; deltaMode: number }): { dx: number; dy: number } {
+export function normalizeWheel(e: { deltaX: number; deltaY: number; deltaMode: number }): {
+  dx: number;
+  dy: number;
+} {
   const factor = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 400 : 1;
   return { dx: e.deltaX * factor, dy: e.deltaY * factor };
 }

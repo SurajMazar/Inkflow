@@ -1,6 +1,11 @@
 import { randomUUID } from 'node:crypto';
 import { Injectable, Logger, type OnModuleInit } from '@nestjs/common';
-import { boardChannel, presenceKey, type BoardEvent, type ServerMessage } from '@inkflow/collaboration';
+import {
+  boardChannel,
+  presenceKey,
+  type BoardEvent,
+  type ServerMessage,
+} from '@inkflow/collaboration';
 import { RedisService } from '../redis/redis.service';
 
 /** Instructions for gateways (not forwarded to clients). */
@@ -86,7 +91,10 @@ export class RealtimeService implements OnModuleInit {
 
   async publish(boardId: string, envelope: Omit<BusEnvelope, 'origin'>): Promise<void> {
     try {
-      await this.redis.publisher.publish(boardChannel(boardId), JSON.stringify({ origin: this.instanceId, ...envelope }));
+      await this.redis.publisher.publish(
+        boardChannel(boardId),
+        JSON.stringify({ origin: this.instanceId, ...envelope }),
+      );
     } catch (err) {
       this.logger.error(`Failed to publish to board ${boardId}: ${(err as Error).message}`);
     }
@@ -99,7 +107,11 @@ export class RealtimeService implements OnModuleInit {
   /** Broadcasts a board event; permission changes and deletion also instruct the gateways. */
   emitEvent(boardId: string, event: BoardEvent): Promise<void> {
     const control: BusControl | undefined =
-      event.kind === 'permissions-changed' ? 'recheck-access' : event.kind === 'board-deleted' ? 'board-deleted' : undefined;
+      event.kind === 'permissions-changed'
+        ? 'recheck-access'
+        : event.kind === 'board-deleted'
+          ? 'board-deleted'
+          : undefined;
     return this.publish(boardId, { msg: { t: 'event', event }, ...(control ? { control } : {}) });
   }
 

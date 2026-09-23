@@ -3,7 +3,12 @@ import { isLinearElement, type SceneElement } from '@inkflow/elements';
 import type { InteractiveRenderState, RemoteCursor, RemoteSelection } from '@inkflow/renderer';
 import type { Editor } from './editor';
 import { elementOutline } from './outline';
-import { computeLinearHandles, computeTransformHandles, frameCorners, getSelectionFrame } from './transform/handles';
+import {
+  computeLinearHandles,
+  computeTransformHandles,
+  frameCorners,
+  getSelectionFrame,
+} from './transform/handles';
 
 const ACCENT = '#6965db';
 
@@ -62,12 +67,15 @@ export function buildOverlayState(editor: Editor, pixelRatio = 1): InteractiveRe
     // Selection chrome
     if (selected.length > 0) {
       const showHandles = !s.readOnly && interaction !== 'moving' && !s.cropId;
-      overlay.selectionOutlines = selected.length > 1 || isLinearElement(selected[0]!) ? selected.map(outlineFor) : [];
+      overlay.selectionOutlines =
+        selected.length > 1 || isLinearElement(selected[0]!) ? selected.map(outlineFor) : [];
       const single = selected.length === 1 ? selected[0]! : null;
       const lockedAll = selected.every((e) => e.locked);
       if (single && isLinearElement(single)) {
         if (showHandles && !single.locked) {
-          overlay.handles = computeLinearHandles(single, { endpointsOnly: single.type === 'connector' });
+          overlay.handles = computeLinearHandles(single, {
+            endpointsOnly: single.type === 'connector',
+          });
           const pts = single.points.length;
           if (pts > 2 && single.type !== 'connector') {
             const frame = getSelectionFrame([single]);
@@ -91,7 +99,9 @@ export function buildOverlayState(editor: Editor, pixelRatio = 1): InteractiveRe
       // Group outlines (dashed) for selected groups.
       const groups = new Set<string>();
       for (const el of selected) {
-        const g = s.editingGroupId ? el.groupIds[el.groupIds.indexOf(s.editingGroupId) - 1] : el.groupIds.at(-1);
+        const g = s.editingGroupId
+          ? el.groupIds[el.groupIds.indexOf(s.editingGroupId) - 1]
+          : el.groupIds.at(-1);
         if (g) groups.add(g);
       }
       if (selected.length > 1 && groups.size > 1) {
@@ -122,7 +132,12 @@ export function buildOverlayState(editor: Editor, pixelRatio = 1): InteractiveRe
       const sx = el.width / Math.max(1, crop.width);
       const sy = el.height / Math.max(1, crop.height);
       overlay.cropEditor = {
-        imageRect: { x: el.x - crop.x * sx, y: el.y - crop.y * sy, width: el.naturalWidth * sx, height: el.naturalHeight * sy },
+        imageRect: {
+          x: el.x - crop.x * sx,
+          y: el.y - crop.y * sy,
+          width: el.naturalWidth * sx,
+          height: el.naturalHeight * sy,
+        },
         cropRect: { x: el.x, y: el.y, width: el.width, height: el.height },
         angle: el.angle,
         center: { x: el.x + el.width / 2, y: el.y + el.height / 2 },
@@ -141,14 +156,23 @@ export function buildOverlayState(editor: Editor, pixelRatio = 1): InteractiveRe
   const remoteSelections: RemoteSelection[] = [];
   for (const c of s.collaborators) {
     if (c.cursor) {
-      cursors.push({ clientId: c.clientId, name: c.name, color: c.color, x: c.cursor.x, y: c.cursor.y, active: c.active, tool: c.tool });
+      cursors.push({
+        clientId: c.clientId,
+        name: c.name,
+        color: c.color,
+        x: c.cursor.x,
+        y: c.cursor.y,
+        active: c.active,
+        tool: c.tool,
+      });
     }
     if (c.selectedIds.length && !presenting) {
       const outlines = c.selectedIds
         .map((id) => editor.scene.getLiveElement(id))
         .filter((e): e is SceneElement => !!e)
         .map((e) => elementOutline(e, 3 / s.viewport.zoom));
-      if (outlines.length) remoteSelections.push({ clientId: c.clientId, name: c.name, color: c.color, outlines });
+      if (outlines.length)
+        remoteSelections.push({ clientId: c.clientId, name: c.name, color: c.color, outlines });
     }
   }
   overlay.remoteCursors = cursors;

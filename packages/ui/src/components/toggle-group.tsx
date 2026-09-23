@@ -21,7 +21,11 @@ export function ToggleGroup({
     <ToggleGroupPrimitive.Root
       data-slot="toggle-group"
       data-variant={variant}
-      className={cn('group/toggle-group flex w-fit items-center gap-0.5 rounded-md', variant === 'outline' && 'gap-0 shadow-xs', className)}
+      className={cn(
+        'group/toggle-group flex w-fit items-center gap-0.5 rounded-md',
+        variant === 'outline' && 'gap-0 shadow-xs',
+        className,
+      )}
       {...props}
     >
       <ToggleGroupContext.Provider value={ctx}>{children}</ToggleGroupContext.Provider>

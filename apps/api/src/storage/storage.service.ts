@@ -21,7 +21,12 @@ export interface StoredObject {
 
 function isNotFound(err: unknown): boolean {
   if (err instanceof S3ServiceException) {
-    return err.$metadata.httpStatusCode === 404 || err.name === 'NotFound' || err.name === 'NoSuchKey' || err.name === 'NoSuchBucket';
+    return (
+      err.$metadata.httpStatusCode === 404 ||
+      err.name === 'NotFound' ||
+      err.name === 'NoSuchKey' ||
+      err.name === 'NoSuchBucket'
+    );
   }
   return false;
 }
@@ -82,7 +87,13 @@ export class StorageService implements OnModuleInit, OnApplicationShutdown {
 
   async put(key: string, body: Buffer, contentType: string): Promise<void> {
     await this.s3.send(
-      new PutObjectCommand({ Bucket: this.bucket, Key: key, Body: body, ContentType: contentType, ContentLength: body.length }),
+      new PutObjectCommand({
+        Bucket: this.bucket,
+        Key: key,
+        Body: body,
+        ContentType: contentType,
+        ContentLength: body.length,
+      }),
     );
   }
 
@@ -101,8 +112,15 @@ export class StorageService implements OnModuleInit, OnApplicationShutdown {
     try {
       const out = await this.s3.send(new GetObjectCommand({ Bucket: this.bucket, Key: key }));
       if (!out.Body) return null;
-      const body = out.Body instanceof Readable ? out.Body : Readable.fromWeb(out.Body.transformToWebStream() as never);
-      return { body, contentLength: out.ContentLength ?? null, contentType: out.ContentType ?? null };
+      const body =
+        out.Body instanceof Readable
+          ? out.Body
+          : Readable.fromWeb(out.Body.transformToWebStream() as never);
+      return {
+        body,
+        contentLength: out.ContentLength ?? null,
+        contentType: out.ContentType ?? null,
+      };
     } catch (err) {
       if (isNotFound(err)) return null;
       throw err;
@@ -113,7 +131,8 @@ export class StorageService implements OnModuleInit, OnApplicationShutdown {
     const obj = await this.get(key);
     if (!obj) return null;
     const chunks: Buffer[] = [];
-    for await (const chunk of obj.body) chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk as Uint8Array));
+    for await (const chunk of obj.body)
+      chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk as Uint8Array));
     return Buffer.concat(chunks);
   }
 
@@ -128,7 +147,10 @@ export class StorageService implements OnModuleInit, OnApplicationShutdown {
       const chunk = unique.slice(i, i + 1000);
       try {
         await this.s3.send(
-          new DeleteObjectsCommand({ Bucket: this.bucket, Delete: { Objects: chunk.map((Key) => ({ Key })), Quiet: true } }),
+          new DeleteObjectsCommand({
+            Bucket: this.bucket,
+            Delete: { Objects: chunk.map((Key) => ({ Key })), Quiet: true },
+          }),
         );
       } catch (err) {
         this.logger.warn(`Failed to delete ${chunk.length} objects: ${(err as Error).message}`);

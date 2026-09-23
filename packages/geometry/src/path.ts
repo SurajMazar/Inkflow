@@ -13,7 +13,18 @@ export type Path = PathCommand[];
 
 const NUMBER_RE = /-?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?/g;
 const COMMAND_RE = /([MmLlHhVvCcSsQqTtAaZz])([^MmLlHhVvCcSsQqTtAaZz]*)/g;
-const PARAM_COUNT: Record<string, number> = { M: 2, L: 2, H: 1, V: 1, C: 6, S: 4, Q: 4, T: 2, A: 7, Z: 0 };
+const PARAM_COUNT: Record<string, number> = {
+  M: 2,
+  L: 2,
+  H: 1,
+  V: 1,
+  C: 6,
+  S: 4,
+  Q: 4,
+  T: 2,
+  A: 7,
+  Z: 0,
+};
 
 /** Converts an SVG elliptical arc into cubic bezier commands (SVG spec F.6). */
 function arcToCubics(
@@ -122,7 +133,8 @@ export function parseSvgPath(d: string): Path {
       prevType = 'Z';
       continue;
     }
-    if (nums.length === 0 || nums.length % count !== 0) throw new Error(`Malformed path segment "${raw}"`);
+    if (nums.length === 0 || nums.length % count !== 0)
+      throw new Error(`Malformed path segment "${raw}"`);
     for (let i = 0; i < nums.length; i += count) {
       const a = nums.slice(i, i + count);
       let type = upper;
@@ -155,7 +167,14 @@ export function parseSvgPath(d: string): Path {
           lastCtrl = lastQuad = null;
           break;
         case 'C': {
-          const c = { x1: a[0]! + ox, y1: a[1]! + oy, x2: a[2]! + ox, y2: a[3]! + oy, x: a[4]! + ox, y: a[5]! + oy };
+          const c = {
+            x1: a[0]! + ox,
+            y1: a[1]! + oy,
+            x2: a[2]! + ox,
+            y2: a[3]! + oy,
+            x: a[4]! + ox,
+            y: a[5]! + oy,
+          };
           out.push({ type: 'C', ...c });
           lastCtrl = { x: c.x2, y: c.y2 };
           lastQuad = null;
@@ -164,8 +183,18 @@ export function parseSvgPath(d: string): Path {
           break;
         }
         case 'S': {
-          const r: Point = lastCtrl && /[CS]/.test(prevType) ? { x: 2 * cx - lastCtrl.x, y: 2 * cy - lastCtrl.y } : { x: cx, y: cy };
-          const c: Omit<Extract<PathCommand, { type: 'C' }>, 'type'> = { x1: r.x, y1: r.y, x2: a[0]! + ox, y2: a[1]! + oy, x: a[2]! + ox, y: a[3]! + oy };
+          const r: Point =
+            lastCtrl && /[CS]/.test(prevType)
+              ? { x: 2 * cx - lastCtrl.x, y: 2 * cy - lastCtrl.y }
+              : { x: cx, y: cy };
+          const c: Omit<Extract<PathCommand, { type: 'C' }>, 'type'> = {
+            x1: r.x,
+            y1: r.y,
+            x2: a[0]! + ox,
+            y2: a[1]! + oy,
+            x: a[2]! + ox,
+            y: a[3]! + oy,
+          };
           out.push({ type: 'C', ...c });
           lastCtrl = { x: c.x2, y: c.y2 };
           lastQuad = null;
@@ -232,7 +261,10 @@ export function pathToSvg(path: Path, precision = 2): string {
 }
 
 /** Splits a path into polylines (one per subpath). `closed` reflects a trailing Z. */
-export function flattenPath(path: Path, curveSegments = 12): { points: Point[]; closed: boolean }[] {
+export function flattenPath(
+  path: Path,
+  curveSegments = 12,
+): { points: Point[]; closed: boolean }[] {
   const subpaths: { points: Point[]; closed: boolean }[] = [];
   let current: Point[] = [];
   let cursor: Point = { x: 0, y: 0 };
@@ -252,7 +284,15 @@ export function flattenPath(path: Path, curveSegments = 12): { points: Point[]; 
         current.push(cursor);
         break;
       case 'C': {
-        const pts = flattenCubic({ p0: cursor, c1: { x: c.x1, y: c.y1 }, c2: { x: c.x2, y: c.y2 }, p1: { x: c.x, y: c.y } }, curveSegments);
+        const pts = flattenCubic(
+          {
+            p0: cursor,
+            c1: { x: c.x1, y: c.y1 },
+            c2: { x: c.x2, y: c.y2 },
+            p1: { x: c.x, y: c.y },
+          },
+          curveSegments,
+        );
         current.push(...pts.slice(1));
         cursor = { x: c.x, y: c.y };
         break;

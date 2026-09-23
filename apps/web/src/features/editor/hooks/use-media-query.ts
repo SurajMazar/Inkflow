@@ -1,7 +1,10 @@
 import * as React from 'react';
 
 export function useMediaQuery(query: string): boolean {
-  const get = () => (typeof window !== 'undefined' && typeof window.matchMedia === 'function' ? window.matchMedia(query).matches : false);
+  const get = () =>
+    typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+      ? window.matchMedia(query).matches
+      : false;
   const [matches, setMatches] = React.useState(get);
   React.useEffect(() => {
     if (typeof window.matchMedia !== 'function') return;

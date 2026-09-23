@@ -1,11 +1,26 @@
 import { detectPlatform, formatShortcut } from '@inkflow/canvas-engine';
-import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandShortcut } from '@inkflow/ui';
+import {
+  CommandDialog,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandShortcut,
+} from '@inkflow/ui';
 import * as React from 'react';
 import { useBoardSession } from '../hooks/editor-context';
 import { useEditorUi, type EditorPanel } from '../hooks/ui-store';
 
 /** Actions that need a payload or are too granular to be useful as commands. */
-const HIDDEN_ACTIONS = new Set(['arrange.show', 'view.commandPalette', 'nav.nudgeLeft', 'nav.nudgeRight', 'nav.nudgeUp', 'nav.nudgeDown']);
+const HIDDEN_ACTIONS = new Set([
+  'arrange.show',
+  'view.commandPalette',
+  'nav.nudgeLeft',
+  'nav.nudgeRight',
+  'nav.nudgeUp',
+  'nav.nudgeDown',
+]);
 
 const GROUPS: { prefix: string; label: string }[] = [
   { prefix: 'tool.', label: 'Tools' },
@@ -57,7 +72,8 @@ export function CommandPalette({ onClose }: { onClose(): void }) {
       const def = shortcuts.get(action.id);
       const group = GROUPS.find((g) => action.id.startsWith(g.prefix))?.label ?? 'Other';
       const base = def?.label ?? titleCase(action.label);
-      const label = action.id.startsWith('tool.') && action.id !== 'tool.lock' ? `Tool: ${base}` : base;
+      const label =
+        action.id.startsWith('tool.') && action.id !== 'tool.lock' ? `Tool: ${base}` : base;
       const checked = editor.actions.isChecked(action.id);
       out.push({
         id: action.id,
@@ -70,17 +86,53 @@ export function CommandPalette({ onClose }: { onClose(): void }) {
     }
     for (const p of PANELS) {
       if (p.id === 'structure' && !canEdit) continue;
-      out.push({ id: `panel.${p.id}`, label: `Show ${p.label.toLowerCase()}`, group: 'Panels', keywords: p.keywords, run: () => ui.setPanel(p.id) });
+      out.push({
+        id: `panel.${p.id}`,
+        label: `Show ${p.label.toLowerCase()}`,
+        group: 'Panels',
+        keywords: p.keywords,
+        run: () => ui.setPanel(p.id),
+      });
     }
     out.push(
-      { id: 'dialog.export', label: 'Export…', group: 'File', keywords: ['png', 'svg', 'pdf', 'json', 'download'], run: () => ui.openExport('board') },
-      { id: 'dialog.present', label: 'Present frames', group: 'File', keywords: ['slides', 'presentation', 'fullscreen'], run: () => editor.startPresentation() },
-      { id: 'dialog.shortcuts', label: 'Keyboard shortcuts', group: 'Help', keywords: ['keys', 'help'], run: () => ui.openDialog('shortcuts') },
+      {
+        id: 'dialog.export',
+        label: 'Export…',
+        group: 'File',
+        keywords: ['png', 'svg', 'pdf', 'json', 'download'],
+        run: () => ui.openExport('board'),
+      },
+      {
+        id: 'dialog.present',
+        label: 'Present frames',
+        group: 'File',
+        keywords: ['slides', 'presentation', 'fullscreen'],
+        run: () => editor.startPresentation(),
+      },
+      {
+        id: 'dialog.shortcuts',
+        label: 'Keyboard shortcuts',
+        group: 'Help',
+        keywords: ['keys', 'help'],
+        run: () => ui.openDialog('shortcuts'),
+      },
     );
     if (canEdit) {
       out.push(
-        { id: 'dialog.import', label: 'Import file…', group: 'File', keywords: ['open', 'excalidraw', 'svg', 'mermaid', 'image'], run: () => ui.openDialog('import') },
-        { id: 'dialog.mermaid', label: 'Insert diagram from text (Mermaid)…', group: 'File', keywords: ['mermaid', 'text', 'code'], run: () => ui.openDialog('mermaid') },
+        {
+          id: 'dialog.import',
+          label: 'Import file…',
+          group: 'File',
+          keywords: ['open', 'excalidraw', 'svg', 'mermaid', 'image'],
+          run: () => ui.openDialog('import'),
+        },
+        {
+          id: 'dialog.mermaid',
+          label: 'Insert diagram from text (Mermaid)…',
+          group: 'File',
+          keywords: ['mermaid', 'text', 'code'],
+          run: () => ui.openDialog('mermaid'),
+        },
       );
     }
     return out;
@@ -103,7 +155,12 @@ export function CommandPalette({ onClose }: { onClose(): void }) {
   };
 
   return (
-    <CommandDialog open onOpenChange={(open) => !open && onClose()} title="Command palette" description="Search for an action to run">
+    <CommandDialog
+      open
+      onOpenChange={(open) => !open && onClose()}
+      title="Command palette"
+      description="Search for an action to run"
+    >
       <div data-testid="command-palette" data-inkflow-ui className="contents">
         <CommandInput placeholder="Type a command or search…" />
         <CommandList className="max-h-[60dvh]">
@@ -111,7 +168,13 @@ export function CommandPalette({ onClose }: { onClose(): void }) {
           {groups.map(([group, list]) => (
             <CommandGroup key={group} heading={group}>
               {list.map((c) => (
-                <CommandItem key={c.id} value={`${c.label} ${c.id}`} keywords={c.keywords} onSelect={() => run(c)} data-testid={`command-${c.id}`}>
+                <CommandItem
+                  key={c.id}
+                  value={`${c.label} ${c.id}`}
+                  keywords={c.keywords}
+                  onSelect={() => run(c)}
+                  data-testid={`command-${c.id}`}
+                >
                   <span className="truncate">{c.label}</span>
                   {c.shortcut && <CommandShortcut>{c.shortcut}</CommandShortcut>}
                 </CommandItem>

@@ -14,7 +14,16 @@ const LABELS = {
 export function SyncStatusBadge() {
   const { sync, canEdit } = useBoardSession();
   const state = sync.save;
-  const Icon = state === 'saved' ? Check : state === 'offline' ? CloudOff : state === 'error' ? AlertTriangle : state === 'syncing' ? RefreshCw : Loader2;
+  const Icon =
+    state === 'saved'
+      ? Check
+      : state === 'offline'
+        ? CloudOff
+        : state === 'error'
+          ? AlertTriangle
+          : state === 'syncing'
+            ? RefreshCw
+            : Loader2;
   const detail =
     state === 'offline'
       ? sync.pendingOps > 0
@@ -31,7 +40,10 @@ export function SyncStatusBadge() {
               : 'All changes saved';
   if (!canEdit && state === 'saved') {
     return (
-      <span className="rounded-md bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground" data-testid="save-status">
+      <span
+        className="rounded-md bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground"
+        data-testid="save-status"
+      >
         View only
       </span>
     );
@@ -46,11 +58,15 @@ export function SyncStatusBadge() {
           data-state={state}
           className={cn(
             'inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground',
-            state === 'offline' && 'bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200',
+            state === 'offline' &&
+              'bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200',
             state === 'error' && 'bg-destructive/10 text-destructive',
           )}
         >
-          <Icon className={cn('size-3', (state === 'saving' || state === 'syncing') && 'animate-spin')} aria-hidden="true" />
+          <Icon
+            className={cn('size-3', (state === 'saving' || state === 'syncing') && 'animate-spin')}
+            aria-hidden="true"
+          />
           {LABELS[state]}
         </span>
       </TooltipTrigger>

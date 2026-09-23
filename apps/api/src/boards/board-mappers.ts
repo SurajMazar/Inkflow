@@ -1,7 +1,13 @@
 import type { Board, BoardRole, Prisma } from '@inkflow/database';
 import type { BoardSummaryDto } from '@inkflow/shared';
 import { computeEffectiveRole } from '../access/effective-role';
-import { iso, NIL_UUID, publicUserSelect, toPublicUser, type PublicUserRow } from '../common/mappers';
+import {
+  iso,
+  NIL_UUID,
+  publicUserSelect,
+  toPublicUser,
+  type PublicUserRow,
+} from '../common/mappers';
 
 /** Relations needed to render a `BoardSummaryDto` for a given viewer. */
 export function summaryInclude(userId: string | null) {
@@ -67,7 +73,10 @@ export function accessibleBoardsWhere(userId: string): Prisma.BoardWhereInput {
       { ownerId: userId },
       { members: { some: { userId } } },
       { workspace: { members: { some: { userId, role: { in: ['OWNER', 'ADMIN'] } } } } },
-      { workspaceAccess: { in: ['VIEWER', 'EDITOR'] }, workspace: { members: { some: { userId } } } },
+      {
+        workspaceAccess: { in: ['VIEWER', 'EDITOR'] },
+        workspace: { members: { some: { userId } } },
+      },
     ],
   };
 }

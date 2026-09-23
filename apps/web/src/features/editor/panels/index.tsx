@@ -12,14 +12,41 @@ import { VersionHistoryPanel } from './VersionHistoryPanel';
 
 export { handleLibraryDrop, LIBRARY_DRAG_MIME } from './library-drop';
 
-const PANELS: Record<EditorPanel, { title: string; description: string; Component: React.ComponentType }> = {
-  comments: { title: 'Comments', description: 'Discuss this board with collaborators.', Component: CommentsPanel },
-  versions: { title: 'Version history', description: 'Saved versions of this board.', Component: VersionHistoryPanel },
-  search: { title: 'Find on canvas', description: 'Search text, labels and diagram content.', Component: SearchPanel },
-  library: { title: 'Library', description: 'Shapes, templates and diagrams from text.', Component: LibraryPanel },
-  layers: { title: 'Layers', description: 'Every element on the board, top-most first.', Component: LayersPanel },
+const PANELS: Record<
+  EditorPanel,
+  { title: string; description: string; Component: React.ComponentType }
+> = {
+  comments: {
+    title: 'Comments',
+    description: 'Discuss this board with collaborators.',
+    Component: CommentsPanel,
+  },
+  versions: {
+    title: 'Version history',
+    description: 'Saved versions of this board.',
+    Component: VersionHistoryPanel,
+  },
+  search: {
+    title: 'Find on canvas',
+    description: 'Search text, labels and diagram content.',
+    Component: SearchPanel,
+  },
+  library: {
+    title: 'Library',
+    description: 'Shapes, templates and diagrams from text.',
+    Component: LibraryPanel,
+  },
+  layers: {
+    title: 'Layers',
+    description: 'Every element on the board, top-most first.',
+    Component: LayersPanel,
+  },
   frames: { title: 'Frames', description: 'Frames in presentation order.', Component: FramesPanel },
-  structure: { title: 'Edit diagram', description: 'Edit the model of a table, class or sequence diagram.', Component: StructuredEditorPanel },
+  structure: {
+    title: 'Edit diagram',
+    description: 'Edit the model of a table, class or sequence diagram.',
+    Component: StructuredEditorPanel,
+  },
 };
 
 /**
@@ -35,7 +62,13 @@ export function PanelHost({ compact }: { compact: boolean }) {
     const meta = panel ? PANELS[panel] : null;
     return (
       <Sheet open={!!panel} onOpenChange={(open) => !open && close()}>
-        <SheetContent side="bottom" className="h-[75dvh] gap-0 p-0" data-inkflow-ui data-inkflow-ui-keys aria-describedby={undefined}>
+        <SheetContent
+          side="bottom"
+          className="h-[75dvh] gap-0 p-0"
+          data-inkflow-ui
+          data-inkflow-ui-keys
+          aria-describedby={undefined}
+        >
           {meta && (
             <>
               <SheetHeader className="border-b px-4 pt-2 pb-3">

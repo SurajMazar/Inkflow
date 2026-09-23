@@ -4,7 +4,13 @@ import type { BoardSummaryDto } from '@inkflow/shared';
 import { BoardPlaceholder } from './BoardPlaceholder';
 
 /** Board preview: the server thumbnail when available, otherwise a generated doodle. */
-export function BoardThumbnail({ board, className }: { board: Pick<BoardSummaryDto, 'id' | 'thumbnailUrl' | 'updatedAt'>; className?: string }) {
+export function BoardThumbnail({
+  board,
+  className,
+}: {
+  board: Pick<BoardSummaryDto, 'id' | 'thumbnailUrl' | 'updatedAt'>;
+  className?: string;
+}) {
   const [failed, setFailed] = React.useState(false);
   const src = board.thumbnailUrl;
   React.useEffect(() => setFailed(false), [src]);

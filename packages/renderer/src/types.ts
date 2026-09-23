@@ -140,7 +140,14 @@ export interface InteractiveRenderState {
   /** Image crop editor: full image rect and the crop rect (world, unrotated) plus element angle. */
   cropEditor: { imageRect: Rect; cropRect: Rect; angle: number; center: Point } | null;
   /** Pending comment pins, drawn as markers (world). */
-  commentPins: { id: string; x: number; y: number; resolved: boolean; active: boolean; count: number }[];
+  commentPins: {
+    id: string;
+    x: number;
+    y: number;
+    resolved: boolean;
+    active: boolean;
+    count: number;
+  }[];
   /** Search result highlights. */
   searchHighlights: Point[][];
   /** Laser-pointer trail for presentations. */

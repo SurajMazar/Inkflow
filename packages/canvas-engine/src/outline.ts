@@ -6,7 +6,13 @@ import {
   getLinearWorldPoints,
   type SceneElement,
 } from '@inkflow/elements';
-import { boundsFromPoints, ellipsePoints, rotatePoint, rotatedRectCorners, type Point } from '@inkflow/geometry';
+import {
+  boundsFromPoints,
+  ellipsePoints,
+  rotatePoint,
+  rotatedRectCorners,
+  type Point,
+} from '@inkflow/geometry';
 
 /** World-space outline polygon used for selection/hover chrome. */
 export function elementOutline(el: SceneElement, padding = 0): Point[] {
@@ -22,12 +28,19 @@ export function elementOutline(el: SceneElement, padding = 0): Point[] {
   }
   const c = getElementCenter(el);
   if (el.type === 'ellipse' && padding === 0) {
-    return ellipsePoints(c, el.width / 2, el.height / 2, 40).map((p) => rotatePoint(p, c, el.angle));
+    return ellipsePoints(c, el.width / 2, el.height / 2, 40).map((p) =>
+      rotatePoint(p, c, el.angle),
+    );
   }
   const poly = padding === 0 ? getPolygonOutline(el) : null;
   if (poly) return poly.map((p) => rotatePoint(p, c, el.angle));
   return rotatedRectCorners(
-    { x: el.x - padding, y: el.y - padding, width: el.width + padding * 2, height: el.height + padding * 2 },
+    {
+      x: el.x - padding,
+      y: el.y - padding,
+      width: el.width + padding * 2,
+      height: el.height + padding * 2,
+    },
     el.angle,
   );
 }

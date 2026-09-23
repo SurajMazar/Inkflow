@@ -24,7 +24,8 @@ export const Errors = {
   validation: (message = 'Request validation failed', details?: unknown) =>
     new AppError(400, 'VALIDATION_FAILED', message, details),
   unauthorized: (message = 'Authentication required') => new AppError(401, 'UNAUTHORIZED', message),
-  sessionExpired: (message = 'Your session has expired') => new AppError(401, 'SESSION_EXPIRED', message),
+  sessionExpired: (message = 'Your session has expired') =>
+    new AppError(401, 'SESSION_EXPIRED', message),
   invalidCredentials: () => new AppError(401, 'INVALID_CREDENTIALS', 'Invalid email or password'),
   emailNotVerified: () =>
     new AppError(403, 'EMAIL_NOT_VERIFIED', 'Please verify your email address before signing in'),
@@ -36,12 +37,21 @@ export const Errors = {
   tokenInvalid: (message = 'This link is invalid or has already been used') =>
     new AppError(400, 'TOKEN_INVALID', message),
   tokenExpired: (message = 'This link has expired') => new AppError(400, 'TOKEN_EXPIRED', message),
-  payloadTooLarge: (message = 'Payload too large') => new AppError(413, 'PAYLOAD_TOO_LARGE', message),
+  payloadTooLarge: (message = 'Payload too large') =>
+    new AppError(413, 'PAYLOAD_TOO_LARGE', message),
   unsupportedMediaType: (message: string) => new AppError(415, 'UNSUPPORTED_MEDIA_TYPE', message),
   rateLimited: (retryAfterSeconds: number) =>
-    new AppError(429, 'RATE_LIMITED', 'Too many requests, please slow down', { retryAfter: retryAfterSeconds }, {
-      'Retry-After': String(Math.max(1, Math.ceil(retryAfterSeconds))),
-    }),
-  oauthFailed: (message = 'Sign-in with the provider failed') => new AppError(400, 'OAUTH_FAILED', message),
-  unavailable: (message = 'Service temporarily unavailable') => new AppError(503, 'SERVICE_UNAVAILABLE', message),
+    new AppError(
+      429,
+      'RATE_LIMITED',
+      'Too many requests, please slow down',
+      { retryAfter: retryAfterSeconds },
+      {
+        'Retry-After': String(Math.max(1, Math.ceil(retryAfterSeconds))),
+      },
+    ),
+  oauthFailed: (message = 'Sign-in with the provider failed') =>
+    new AppError(400, 'OAUTH_FAILED', message),
+  unavailable: (message = 'Service temporarily unavailable') =>
+    new AppError(503, 'SERVICE_UNAVAILABLE', message),
 };

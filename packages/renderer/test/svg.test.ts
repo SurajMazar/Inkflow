@@ -14,7 +14,8 @@ export function checkWellFormedXml(xml: string): { ok: true } | { ok: false; err
   const checkText = (text: string): string | null => {
     for (let k = 0; k < text.length; k++) {
       if (text[k] === '<') return 'raw < in text';
-      if (text[k] === '&' && !entity.test(text.slice(k))) return `bad entity at ${text.slice(k, k + 10)}`;
+      if (text[k] === '&' && !entity.test(text.slice(k)))
+        return `bad entity at ${text.slice(k, k + 10)}`;
     }
     return null;
   };
@@ -47,7 +48,10 @@ export function checkWellFormedXml(xml: string): { ok: true } | { ok: false; err
   return stack.length === 0 ? { ok: true } : { ok: false, error: `unclosed <${stack.join(', ')}>` };
 }
 
-function svgOptions(elements: SceneElement[], extra: Partial<SvgRenderOptions> = {}): SvgRenderOptions {
+function svgOptions(
+  elements: SceneElement[],
+  extra: Partial<SvgRenderOptions> = {},
+): SvgRenderOptions {
   return {
     bounds: { x: 0, y: 0, width: 800, height: 600 },
     scale: 1,
@@ -66,18 +70,60 @@ describe('renderSceneToSvg', () => {
     const frame = make('frame', { name: 'Frame <1>', x: 20, y: 40, width: 500, height: 400 });
     return [
       frame,
-      make('rectangle', { x: 40, y: 60, width: 120, height: 80, backgroundColor: '#ffc9c9', fillStyle: 'hachure', frameId: frame.id, label: createLabel('Box & co') }),
+      make('rectangle', {
+        x: 40,
+        y: 60,
+        width: 120,
+        height: 80,
+        backgroundColor: '#ffc9c9',
+        fillStyle: 'hachure',
+        frameId: frame.id,
+        label: createLabel('Box & co'),
+      }),
       make('ellipse', { x: 200, y: 60, width: 100, height: 80, angle: 0.4, opacity: 60 }),
-      make('arrow', { x: 40, y: 200, points: [[0, 0], [200, 50]], width: 200, height: 50, label: createEdgeLabel('edge') }),
+      make('arrow', {
+        x: 40,
+        y: 200,
+        points: [
+          [0, 0],
+          [200, 50],
+        ],
+        width: 200,
+        height: 50,
+        label: createEdgeLabel('edge'),
+      }),
       make('text', { x: 300, y: 300, text: '<script>alert("x")</script>', width: 200, height: 30 }),
-      make('image', { x: 600, y: 60, width: 100, height: 80, fileId: 'img', flipX: true, crop: { x: 10, y: 10, width: 50, height: 40 }, naturalWidth: 100, naturalHeight: 80 }),
-      make('freedraw', { x: 50, y: 500, points: [[0, 0, 0.5], [30, 10, 0.6], [60, 0, 0.7]], width: 60, height: 10 }),
+      make('image', {
+        x: 600,
+        y: 60,
+        width: 100,
+        height: 80,
+        fileId: 'img',
+        flipX: true,
+        crop: { x: 10, y: 10, width: 50, height: 40 },
+        naturalWidth: 100,
+        naturalHeight: 80,
+      }),
+      make('freedraw', {
+        x: 50,
+        y: 500,
+        points: [
+          [0, 0, 0.5],
+          [30, 10, 0.6],
+          [60, 0, 0.7],
+        ],
+        width: 60,
+        height: 10,
+      }),
     ];
   };
 
   it('produces well-formed standalone SVG with vector paths', () => {
     const els = scene();
-    const svg = renderSceneToSvg(els, svgOptions(els, { imageData: { img: 'data:image/png;base64,iVBORw0KGgo=' } }));
+    const svg = renderSceneToSvg(
+      els,
+      svgOptions(els, { imageData: { img: 'data:image/png;base64,iVBORw0KGgo=' } }),
+    );
     expect(checkWellFormedXml(svg)).toEqual({ ok: true });
     expect(svg.startsWith('<svg xmlns="http://www.w3.org/2000/svg"')).toBe(true);
     expect(svg).toContain('viewBox="0 0 800 600"');
@@ -100,12 +146,19 @@ describe('renderSceneToSvg', () => {
     expect(svg).toContain('&lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt;');
     expect(svg).toContain('Frame &lt;1&gt;');
     expect(svg).toContain('Box &amp; co');
-    const evil = make('rectangle', { width: 10, height: 10, strokeColor: '"/><script>alert(1)</script>' });
+    const evil = make('rectangle', {
+      width: 10,
+      height: 10,
+      strokeColor: '"/><script>alert(1)</script>',
+    });
     const svg2 = renderSceneToSvg([evil], svgOptions([evil]));
     expect(svg2).not.toContain('<script>');
     expect(checkWellFormedXml(svg2)).toEqual({ ok: true });
     const img = make('image', { width: 10, height: 10, fileId: 'bad' });
-    const svg3 = renderSceneToSvg([img], svgOptions([img], { imageData: { bad: 'javascript:alert(1)' } }));
+    const svg3 = renderSceneToSvg(
+      [img],
+      svgOptions([img], { imageData: { bad: 'javascript:alert(1)' } }),
+    );
     expect(svg3).not.toContain('javascript:');
   });
 
@@ -130,8 +183,12 @@ describe('renderSceneToSvg', () => {
     expect(svg).not.toMatch(/<rect x="0" y="0" width="800" height="600"/);
     expect(svg).toContain('filter="url(#ink-dark)"');
     expect(svg).toContain('filter="url(#ink-counter)"');
-    expect(svg).toContain('@font-face{font-family:"Kalam";src:url(data:font/woff2;base64,d09GMgABAAAAA)');
-    expect(svg).toContain('<metadata>{&quot;type&quot;:&quot;inkflow&quot;,&quot;x&quot;:&quot;&lt;/metadata&gt;&quot;}</metadata>');
+    expect(svg).toContain(
+      '@font-face{font-family:"Kalam";src:url(data:font/woff2;base64,d09GMgABAAAAA)',
+    );
+    expect(svg).toContain(
+      '<metadata>{&quot;type&quot;:&quot;inkflow&quot;,&quot;x&quot;:&quot;&lt;/metadata&gt;&quot;}</metadata>',
+    );
   });
 
   it('skips hidden and deleted elements and culls outside bounds', () => {

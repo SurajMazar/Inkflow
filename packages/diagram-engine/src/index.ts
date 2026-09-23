@@ -6,7 +6,13 @@ export { getCornerRadius, PathBuilder } from './shapes/path-builder';
 export { IconRegistry, iconRegistry } from './icons/registry';
 export { BUILTIN_ICONS } from './icons/icons';
 // Element layouts
-export { computeTableLayout, measureTable, getColumnKeyBadge, tableMetrics, TABLE_PADDING } from './layouts/table';
+export {
+  computeTableLayout,
+  measureTable,
+  getColumnKeyBadge,
+  tableMetrics,
+  TABLE_PADDING,
+} from './layouts/table';
 export { computeUmlClassLayout, measureUmlClass, parseUmlMember } from './layouts/uml-class';
 export {
   computeSequenceLayout,
@@ -41,7 +47,12 @@ export {
 } from './routing/route';
 export { findOrthogonalPath, simplifyOrthogonal } from './routing/orthogonal';
 // Auto layout
-export { autoLayout, selectConnectedComponent, DEFAULT_NODE_SPACING, DEFAULT_RANK_SPACING } from './layout';
+export {
+  autoLayout,
+  selectConnectedComponent,
+  DEFAULT_NODE_SPACING,
+  DEFAULT_RANK_SPACING,
+} from './layout';
 export { removeOverlaps } from './layout/force';
 // Builders & models
 export {

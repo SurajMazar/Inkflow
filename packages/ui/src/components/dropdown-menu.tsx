@@ -45,7 +45,10 @@ export function DropdownMenuItem({
   inset,
   variant = 'default',
   ...props
-}: React.ComponentProps<typeof DropdownMenuPrimitive.Item> & { inset?: boolean; variant?: 'default' | 'destructive' }) {
+}: React.ComponentProps<typeof DropdownMenuPrimitive.Item> & {
+  inset?: boolean;
+  variant?: 'default' | 'destructive';
+}) {
   return (
     <DropdownMenuPrimitive.Item
       data-slot="dropdown-menu-item"
@@ -116,12 +119,27 @@ export function DropdownMenuLabel({
   );
 }
 
-export function DropdownMenuSeparator({ className, ...props }: React.ComponentProps<typeof DropdownMenuPrimitive.Separator>) {
-  return <DropdownMenuPrimitive.Separator data-slot="dropdown-menu-separator" className={cn(menuSeparatorClass, className)} {...props} />;
+export function DropdownMenuSeparator({
+  className,
+  ...props
+}: React.ComponentProps<typeof DropdownMenuPrimitive.Separator>) {
+  return (
+    <DropdownMenuPrimitive.Separator
+      data-slot="dropdown-menu-separator"
+      className={cn(menuSeparatorClass, className)}
+      {...props}
+    />
+  );
 }
 
 export function DropdownMenuShortcut({ className, ...props }: React.ComponentProps<'span'>) {
-  return <span data-slot="dropdown-menu-shortcut" className={cn(menuShortcutClass, className)} {...props} />;
+  return (
+    <span
+      data-slot="dropdown-menu-shortcut"
+      className={cn(menuShortcutClass, className)}
+      {...props}
+    />
+  );
 }
 
 export function DropdownMenuSubTrigger({
@@ -143,12 +161,19 @@ export function DropdownMenuSubTrigger({
   );
 }
 
-export function DropdownMenuSubContent({ className, ...props }: React.ComponentProps<typeof DropdownMenuPrimitive.SubContent>) {
+export function DropdownMenuSubContent({
+  className,
+  ...props
+}: React.ComponentProps<typeof DropdownMenuPrimitive.SubContent>) {
   return (
     <DropdownMenuPrimitive.Portal>
       <DropdownMenuPrimitive.SubContent
         data-slot="dropdown-menu-sub-content"
-        className={cn(menuContentClass, 'origin-(--radix-dropdown-menu-content-transform-origin)', className)}
+        className={cn(
+          menuContentClass,
+          'origin-(--radix-dropdown-menu-content-transform-origin)',
+          className,
+        )}
         {...props}
       />
     </DropdownMenuPrimitive.Portal>

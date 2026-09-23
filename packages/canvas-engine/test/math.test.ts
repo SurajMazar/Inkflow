@@ -53,7 +53,11 @@ describe('viewport', () => {
   });
 
   it('fits bounds into the viewport', () => {
-    const next = fitBounds({ ...vp, zoom: 1 }, { minX: 0, minY: 0, maxX: 2000, maxY: 1000 }, { padding: 0 });
+    const next = fitBounds(
+      { ...vp, zoom: 1 },
+      { minX: 0, minY: 0, maxX: 2000, maxY: 1000 },
+      { padding: 0 },
+    );
     expect(next.zoom).toBeCloseTo(0.4);
     const center = screenToWorld(next, { x: 400, y: 300 });
     expect(center.x).toBeCloseTo(1000);
@@ -89,7 +93,12 @@ describe('resize', () => {
   it('keeps the anchor fixed for rotated boxes', () => {
     const rotated = { ...frame, angle: Math.PI / 2 };
     const c = { x: 50, y: 25 };
-    const box = resizeBox(rotated, 'se', { x: 20, y: 150 }, { keepAspect: false, fromCenter: false });
+    const box = resizeBox(
+      rotated,
+      'se',
+      { x: 20, y: 150 },
+      { keepAspect: false, fromCenter: false },
+    );
     expect(box.width).toBeGreaterThan(0);
     expect(box.height).toBeGreaterThan(0);
     // The top-left corner in world space (rotated around the new center) must stay where it was.
@@ -113,7 +122,10 @@ describe('resize', () => {
 function rotateAround(p: { x: number; y: number }, c: { x: number; y: number }, a: number) {
   const cos = Math.cos(a);
   const sin = Math.sin(a);
-  return { x: c.x + (p.x - c.x) * cos - (p.y - c.y) * sin, y: c.y + (p.x - c.x) * sin + (p.y - c.y) * cos };
+  return {
+    x: c.x + (p.x - c.x) * cos - (p.y - c.y) * sin,
+    y: c.y + (p.x - c.x) * sin + (p.y - c.y) * cos,
+  };
 }
 
 describe('rotate & flip', () => {
@@ -134,39 +146,79 @@ describe('rotate & flip', () => {
 
   it('flips shapes and mirrors linear points', () => {
     const r = createElement('triangle', { id: 't', x: 0, y: 0, width: 10, height: 10 });
-    const line = createElement('line', { id: 'l', x: 0, y: 0, width: 10, height: 5, points: [[0, 0], [10, 5]] });
+    const line = createElement('line', {
+      id: 'l',
+      x: 0,
+      y: 0,
+      width: 10,
+      height: 5,
+      points: [
+        [0, 0],
+        [10, 5],
+      ],
+    });
     const out = flipElements([r, line], 'horizontal', { x: 5, y: 5 });
     expect(out.get('t')!.flipX).toBe(true);
-    expect(out.get('l')!.points).toEqual([[10, 0], [0, 5]]);
+    expect(out.get('l')!.points).toEqual([
+      [10, 0],
+      [0, 5],
+    ]);
   });
 });
 
 describe('handles', () => {
   it('computes handles and cursors', () => {
-    const handles = computeTransformHandles({ x: 0, y: 0, width: 200, height: 100, angle: 0 }, { zoom: 1, rotatable: true, resizable: true });
-    expect(handles.map((h) => h.id).sort()).toEqual(['e', 'n', 'ne', 'nw', 'rotation', 's', 'se', 'sw', 'w']);
+    const handles = computeTransformHandles(
+      { x: 0, y: 0, width: 200, height: 100, angle: 0 },
+      { zoom: 1, rotatable: true, resizable: true },
+    );
+    expect(handles.map((h) => h.id).sort()).toEqual([
+      'e',
+      'n',
+      'ne',
+      'nw',
+      'rotation',
+      's',
+      'se',
+      'sw',
+      'w',
+    ]);
     expect(cursorForHandle('e', 0)).toBe('ew-resize');
     expect(cursorForHandle('e', Math.PI / 2)).toBe('ns-resize');
   });
 
   it('hides edge handles for tiny selections', () => {
-    const handles = computeTransformHandles({ x: 0, y: 0, width: 10, height: 10, angle: 0 }, { zoom: 1, rotatable: false, resizable: true });
+    const handles = computeTransformHandles(
+      { x: 0, y: 0, width: 10, height: 10, angle: 0 },
+      { zoom: 1, rotatable: false, resizable: true },
+    );
     expect(handles).toHaveLength(4);
   });
 });
 
 describe('snapping', () => {
   it('snaps edges and centers with guides', () => {
-    const res = snapBoundsToObjects({ minX: 103, minY: 0, maxX: 153, maxY: 20 }, [{ minX: 0, minY: 100, maxX: 100, maxY: 200 }], 8);
+    const res = snapBoundsToObjects(
+      { minX: 103, minY: 0, maxX: 153, maxY: 20 },
+      [{ minX: 0, minY: 100, maxX: 100, maxY: 200 }],
+      8,
+    );
     expect(res.dx).toBe(-3);
     expect(res.lines.length).toBeGreaterThan(0);
-    const none = snapBoundsToObjects({ minX: 300, minY: 300, maxX: 320, maxY: 320 }, [{ minX: 0, minY: 0, maxX: 10, maxY: 10 }], 8);
+    const none = snapBoundsToObjects(
+      { minX: 300, minY: 300, maxX: 320, maxY: 320 },
+      [{ minX: 0, minY: 0, maxX: 10, maxY: 10 }],
+      8,
+    );
     expect(none.dx).toBe(0);
     expect(none.dy).toBe(0);
   });
 
   it('snaps to grid and angles', () => {
-    expect(snapBoundsToGrid({ minX: 13, minY: 27, maxX: 50, maxY: 50 }, 20)).toEqual({ dx: 7, dy: -7 });
+    expect(snapBoundsToGrid({ minX: 13, minY: 27, maxX: 50, maxY: 50 }, 20)).toEqual({
+      dx: 7,
+      dy: -7,
+    });
     const p = snapVectorAngle({ x: 0, y: 0 }, { x: 10, y: 1 });
     expect(p.y).toBeCloseTo(0);
   });

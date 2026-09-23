@@ -64,10 +64,17 @@ describe('bounds', () => {
 
 describe('segments & polygons', () => {
   it('finds segment intersections', () => {
-    const p = segmentIntersection({ x: 0, y: 0 }, { x: 10, y: 10 }, { x: 0, y: 10 }, { x: 10, y: 0 });
+    const p = segmentIntersection(
+      { x: 0, y: 0 },
+      { x: 10, y: 10 },
+      { x: 0, y: 10 },
+      { x: 10, y: 0 },
+    );
     expect(p).not.toBeNull();
     expect(p!.x).toBeCloseTo(5);
-    expect(segmentIntersection({ x: 0, y: 0 }, { x: 1, y: 0 }, { x: 0, y: 1 }, { x: 1, y: 1 })).toBeNull();
+    expect(
+      segmentIntersection({ x: 0, y: 0 }, { x: 1, y: 0 }, { x: 0, y: 1 }, { x: 1, y: 1 }),
+    ).toBeNull();
   });
 
   it('measures distance to segments', () => {
@@ -181,7 +188,9 @@ import { parseSvgPath, pathBounds, pathToSvg, flattenPath, roundedRectPath } fro
 
 describe('paths', () => {
   it('parses relative/absolute commands and arcs', () => {
-    const p = parseSvgPath('M10 10 h 20 v20 H10 Z m 50 0 a 10 10 0 1 0 20 0 a 10 10 0 1 0 -20 0 q 5 5 10 0 t 10 0');
+    const p = parseSvgPath(
+      'M10 10 h 20 v20 H10 Z m 50 0 a 10 10 0 1 0 20 0 a 10 10 0 1 0 -20 0 q 5 5 10 0 t 10 0',
+    );
     expect(p[0]).toEqual({ type: 'M', x: 10, y: 10 });
     expect(p[1]).toEqual({ type: 'L', x: 30, y: 10 });
     const b = pathBounds(p);

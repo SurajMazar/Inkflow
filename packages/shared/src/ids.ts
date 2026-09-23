@@ -23,7 +23,7 @@ export function generateId(size = 21): string {
 export function randomInteger(): number {
   const buf = new Uint32Array(1);
   getCrypto().getRandomValues(buf);
-  return (buf[0]! >>> 1) || 1;
+  return buf[0]! >>> 1 || 1;
 }
 
 export function isUuid(value: string): boolean {

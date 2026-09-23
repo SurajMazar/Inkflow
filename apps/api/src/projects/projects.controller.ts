@@ -25,7 +25,10 @@ export class ProjectsController {
 
   @Get('workspaces/:id/projects')
   @ApiOperation({ summary: 'Projects of a workspace' })
-  list(@CurrentUser() user: AuthInfo, @IdParam('id', 'Workspace') workspaceId: string): Promise<ProjectDto[]> {
+  list(
+    @CurrentUser() user: AuthInfo,
+    @IdParam('id', 'Workspace') workspaceId: string,
+  ): Promise<ProjectDto[]> {
     return this.projects.listProjects(user.userId, workspaceId);
   }
 
@@ -53,14 +56,20 @@ export class ProjectsController {
 
   @Delete('projects/:id')
   @ApiOperation({ summary: 'Delete a project (its boards move to the trash)' })
-  async remove(@CurrentUser() user: AuthInfo, @IdParam('id', 'Project') id: string): Promise<OkResponse> {
+  async remove(
+    @CurrentUser() user: AuthInfo,
+    @IdParam('id', 'Project') id: string,
+  ): Promise<OkResponse> {
     await this.projects.deleteProject(user.userId, id);
     return { ok: true };
   }
 
   @Get('workspaces/:id/folders')
   @ApiOperation({ summary: 'Folders of a workspace' })
-  listFolders(@CurrentUser() user: AuthInfo, @IdParam('id', 'Workspace') workspaceId: string): Promise<FolderDto[]> {
+  listFolders(
+    @CurrentUser() user: AuthInfo,
+    @IdParam('id', 'Workspace') workspaceId: string,
+  ): Promise<FolderDto[]> {
     return this.projects.listFolders(user.userId, workspaceId);
   }
 
@@ -88,7 +97,10 @@ export class ProjectsController {
 
   @Delete('folders/:id')
   @ApiOperation({ summary: 'Delete a folder (boards move to the parent folder / root)' })
-  async removeFolder(@CurrentUser() user: AuthInfo, @IdParam('id', 'Folder') id: string): Promise<OkResponse> {
+  async removeFolder(
+    @CurrentUser() user: AuthInfo,
+    @IdParam('id', 'Folder') id: string,
+  ): Promise<OkResponse> {
     await this.projects.deleteFolder(user.userId, id);
     return { ok: true };
   }

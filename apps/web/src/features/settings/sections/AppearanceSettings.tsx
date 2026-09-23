@@ -39,7 +39,12 @@ export function AppearanceSettings() {
                   <Icon className="size-3.5 text-muted-foreground" aria-hidden />
                   {label}
                 </span>
-                <RadioGroupItem id={`theme-${value}`} value={value} aria-label={`${label} theme`} className="sr-only" />
+                <RadioGroupItem
+                  id={`theme-${value}`}
+                  value={value}
+                  aria-label={`${label} theme`}
+                  className="sr-only"
+                />
               </label>
             );
           })}
@@ -82,7 +87,11 @@ function ThemePreview({ variant }: { variant: ThemePreference }) {
   );
   return (
     <div aria-hidden className="h-14 w-full overflow-hidden rounded-md border">
-      {variant === 'light' ? light : variant === 'dark' ? dark : (
+      {variant === 'light' ? (
+        light
+      ) : variant === 'dark' ? (
+        dark
+      ) : (
         <div className="grid h-full grid-cols-2">
           {light}
           {dark}

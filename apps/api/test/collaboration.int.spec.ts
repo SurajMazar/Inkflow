@@ -34,7 +34,11 @@ describe('collaboration WebSocket', () => {
 
     const a = await joinBoard(t.wsUrl, { boardId: board.id, cookie: owner.cookieHeader() });
     expect(a.welcome).toMatchObject({ protocol: 1, role: 'OWNER', seq: 0, peers: [], missed: [] });
-    expect(a.welcome.user).toMatchObject({ id: owner.user!.id, name: 'Socket Owner', anonymous: false });
+    expect(a.welcome.user).toMatchObject({
+      id: owner.user!.id,
+      name: 'Socket Owner',
+      anonymous: false,
+    });
 
     const b = await joinBoard(t.wsUrl, { boardId: board.id, cookie: peer.cookieHeader() });
     expect(b.welcome.role).toBe('EDITOR');
@@ -50,11 +54,18 @@ describe('collaboration WebSocket', () => {
     expect(ack).toMatchObject({ batchId: 'batch-1', results: [{ status: 'applied', seq: 1 }] });
     const changesA = await a.socket.next('changes');
     const changesB = await b.socket.next('changes');
-    expect(changesB.changes[0]).toMatchObject({ seq: 1, clientId: a.clientId, userId: owner.user!.id, type: 'CREATE_ELEMENT' });
+    expect(changesB.changes[0]).toMatchObject({
+      seq: 1,
+      clientId: a.clientId,
+      userId: owner.user!.id,
+      type: 'CREATE_ELEMENT',
+    });
     expect(changesB.changes[0]!.elements[0]).toMatchObject({ id: 'ws-rect', version: 2 });
     expect(changesA.changes[0]!.seq).toBe(1);
     // Persisted.
-    const row = await t.prisma.boardElement.findUnique({ where: { boardId_elementId: { boardId: board.id, elementId: 'ws-rect' } } });
+    const row = await t.prisma.boardElement.findUnique({
+      where: { boardId_elementId: { boardId: board.id, elementId: 'ws-rect' } },
+    });
     expect(row?.version).toBe(2);
 
     // Resending the same op is reported as duplicate and not broadcast again.
@@ -67,7 +78,10 @@ describe('collaboration WebSocket', () => {
 
     // Presence is relayed and stored in Redis.
     b.socket.send({ t: 'presence', state: { cursor: { x: 5, y: 6 }, selectedIds: ['ws-rect'] } });
-    const presence = await a.socket.next('presence', (m) => m.peer.clientId === b.clientId && m.peer.state.cursor?.x === 5);
+    const presence = await a.socket.next(
+      'presence',
+      (m) => m.peer.clientId === b.clientId && m.peer.state.cursor?.x === 5,
+    );
     expect(presence.peer.state.selectedIds).toEqual(['ws-rect']);
     const stored = await t.app.get(RedisService).client.hget(presenceKey(board.id), b.clientId);
     expect(JSON.parse(stored!).state.cursor).toEqual({ x: 5, y: 6 });
@@ -78,7 +92,9 @@ describe('collaboration WebSocket', () => {
     expect(transient.clientId).toBe(b.clientId);
     expect(transient.elements[0]).toMatchObject({ id: 'ws-rect', x: 999 });
     await b.socket.expectNone('transient', 200);
-    const unchanged = await t.prisma.boardElement.findUniqueOrThrow({ where: { boardId_elementId: { boardId: board.id, elementId: 'ws-rect' } } });
+    const unchanged = await t.prisma.boardElement.findUniqueOrThrow({
+      where: { boardId_elementId: { boardId: board.id, elementId: 'ws-rect' } },
+    });
     expect((unchanged.data as { x: number }).x).toBe(10);
 
     // Ping / pong.
@@ -89,7 +105,10 @@ describe('collaboration WebSocket', () => {
     b.socket.close();
     const left = await a.socket.next('peer-left');
     expect(left.clientId).toBe(b.clientId);
-    await eventually(async () => (await t.app.get(RedisService).client.hget(presenceKey(board.id), b.clientId)) === null);
+    await eventually(
+      async () =>
+        (await t.app.get(RedisService).client.hget(presenceKey(board.id), b.clientId)) === null,
+    );
     a.socket.close();
   });
 
@@ -100,7 +119,10 @@ describe('collaboration WebSocket', () => {
     first.socket.send({
       t: 'ops',
       batchId: '1',
-      ops: [createOp(first.clientId, element('rectangle', { id: 'm1' })), createOp(first.clientId, element('ellipse', { id: 'm2' }))],
+      ops: [
+        createOp(first.clientId, element('rectangle', { id: 'm1' })),
+        createOp(first.clientId, element('ellipse', { id: 'm2' })),
+      ],
     });
     await first.socket.next('ack');
     const seqBefore = 2;
@@ -114,7 +136,12 @@ describe('collaboration WebSocket', () => {
       ops: [moveOp('other', 'm1', 77, 88), createOp('other', element('diamond', { id: 'm3' }))],
     });
 
-    const back = await joinBoard(t.wsUrl, { boardId: board.id, cookie: owner.cookieHeader(), clientId: first.clientId, lastSeq: seqBefore });
+    const back = await joinBoard(t.wsUrl, {
+      boardId: board.id,
+      cookie: owner.cookieHeader(),
+      clientId: first.clientId,
+      lastSeq: seqBefore,
+    });
     expect(back.welcome.seq).toBe(4);
     const missed = back.welcome.missed!;
     expect(missed.map((c) => c.seq)).toEqual([3, 4]);
@@ -130,7 +157,11 @@ describe('collaboration WebSocket', () => {
     back.socket.send({ t: 'sync', sinceSeq: 0 });
     expect((await back.socket.next('resync')).reason).toBeTruthy();
     back.socket.close();
-    const fresh = await joinBoard(t.wsUrl, { boardId: board.id, cookie: owner.cookieHeader(), lastSeq: 1 });
+    const fresh = await joinBoard(t.wsUrl, {
+      boardId: board.id,
+      cookie: owner.cookieHeader(),
+      lastSeq: 1,
+    });
     expect(fresh.welcome.missed).toBeNull();
     fresh.socket.close();
   });
@@ -142,10 +173,16 @@ describe('collaboration WebSocket', () => {
     // No credentials → 4401; unknown board → 4404; stranger → 4404.
     const anon = openSocket(t.wsUrl, { boardId: board.id });
     expect((await anon.closed).code).toBe(CLOSE_CODES.UNAUTHORIZED);
-    const bogus = openSocket(t.wsUrl, { boardId: '00000000-0000-4000-8000-000000000000', cookie: owner.cookieHeader() });
+    const bogus = openSocket(t.wsUrl, {
+      boardId: '00000000-0000-4000-8000-000000000000',
+      cookie: owner.cookieHeader(),
+    });
     expect((await bogus.closed).code).toBe(CLOSE_CODES.NOT_FOUND);
     const stranger = await signUp(t.url, 'Socket Stranger');
-    const strangerSocket = openSocket(t.wsUrl, { boardId: board.id, cookie: stranger.cookieHeader() });
+    const strangerSocket = openSocket(t.wsUrl, {
+      boardId: board.id,
+      cookie: stranger.cookieHeader(),
+    });
     expect((await strangerSocket.closed).code).toBe(CLOSE_CODES.NOT_FOUND);
     const badCookie = openSocket(t.wsUrl, { boardId: board.id, cookie: 'inkflow_at=garbage' });
     expect((await badCookie.closed).code).toBe(CLOSE_CODES.UNAUTHORIZED);
@@ -157,12 +194,18 @@ describe('collaboration WebSocket', () => {
     expect((await old.closed).code).toBe(CLOSE_CODES.PROTOCOL_MISMATCH);
 
     // Anonymous viewer via share link: guest identity, cannot send ops or transient updates.
-    const link = await owner.post<ShareLinkDto>(`/api/boards/${board.id}/share-links`, { role: 'VIEWER' });
+    const link = await owner.post<ShareLinkDto>(`/api/boards/${board.id}/share-links`, {
+      role: 'VIEWER',
+    });
     const guest = await joinBoard(t.wsUrl, { boardId: board.id, st: link.body.token });
     expect(guest.welcome.role).toBe('VIEWER');
     expect(guest.welcome.user.anonymous).toBe(true);
     expect(guest.welcome.user.name).toMatch(/^Guest /);
-    guest.socket.send({ t: 'ops', batchId: 'nope', ops: [createOp(guest.clientId, element('rectangle', { id: 'guest-rect' }))] });
+    guest.socket.send({
+      t: 'ops',
+      batchId: 'nope',
+      ops: [createOp(guest.clientId, element('rectangle', { id: 'guest-rect' }))],
+    });
     const rejected = await guest.socket.next('ack');
     expect(rejected.results[0]).toMatchObject({ status: 'rejected', reason: 'FORBIDDEN' });
     expect((await guest.socket.next('error')).code).toBe('FORBIDDEN');
@@ -170,7 +213,10 @@ describe('collaboration WebSocket', () => {
     expect((await guest.socket.next('error')).code).toBe('FORBIDDEN');
     expect(await t.prisma.boardElement.count({ where: { boardId: board.id } })).toBe(0);
     // Viewers still share presence.
-    const ownerSocket = await joinBoard(t.wsUrl, { boardId: board.id, cookie: owner.cookieHeader() });
+    const ownerSocket = await joinBoard(t.wsUrl, {
+      boardId: board.id,
+      cookie: owner.cookieHeader(),
+    });
     expect(ownerSocket.welcome.peers.map((p) => p.clientId)).toContain(guest.clientId);
 
     // Revoking the link disconnects the guest immediately.
@@ -188,7 +234,10 @@ describe('collaboration WebSocket', () => {
     const owner = await signUp(t.url, 'Downgrader');
     const editor = await signUp(t.url, 'Soon Viewer');
     const board = await createBoard(owner);
-    await owner.post(`/api/boards/${board.id}/shares`, { email: editor.user!.email, role: 'EDITOR' });
+    await owner.post(`/api/boards/${board.id}/shares`, {
+      email: editor.user!.email,
+      role: 'EDITOR',
+    });
     const e = await joinBoard(t.wsUrl, { boardId: board.id, cookie: editor.cookieHeader() });
     expect(e.welcome.role).toBe('EDITOR');
 
@@ -199,11 +248,18 @@ describe('collaboration WebSocket', () => {
     await owner.patch(`/api/boards/${board.id}/members/${editor.user!.id}`, { role: 'VIEWER' });
     await e.socket.next('event', (m) => m.event.kind === 'permissions-changed');
     await sleep(100);
-    e.socket.send({ t: 'ops', batchId: 'after-downgrade', ops: [createOp(e.clientId, element('rectangle'))] });
+    e.socket.send({
+      t: 'ops',
+      batchId: 'after-downgrade',
+      ops: [createOp(e.clientId, element('rectangle'))],
+    });
     const ack = await e.socket.next('ack', (m) => m.batchId === 'after-downgrade');
     expect(ack.results[0]!.status).toBe('rejected');
 
-    await owner.post(`/api/boards/${board.id}/comments`, { body: 'ping', anchor: { type: 'point', x: 0, y: 0 } });
+    await owner.post(`/api/boards/${board.id}/comments`, {
+      body: 'ping',
+      anchor: { type: 'point', x: 0, y: 0 },
+    });
     const commentEvent = await e.socket.next('event', (m) => m.event.kind === 'comments-changed');
     expect(commentEvent.event.kind).toBe('comments-changed');
 
@@ -218,9 +274,16 @@ describe('collaboration WebSocket', () => {
       const owner = await signUp(t.url, 'Multi Instance');
       const board = await createBoard(owner);
       const onFirst = await joinBoard(t.wsUrl, { boardId: board.id, cookie: owner.cookieHeader() });
-      const onSecond = await joinBoard(second.wsUrl, { boardId: board.id, cookie: owner.cookieHeader() });
+      const onSecond = await joinBoard(second.wsUrl, {
+        boardId: board.id,
+        cookie: owner.cookieHeader(),
+      });
       expect(onSecond.welcome.peers.map((p) => p.clientId)).toEqual([onFirst.clientId]);
-      onFirst.socket.send({ t: 'ops', batchId: 'x', ops: [createOp(onFirst.clientId, element('star', { id: 'far' }))] });
+      onFirst.socket.send({
+        t: 'ops',
+        batchId: 'x',
+        ops: [createOp(onFirst.clientId, element('star', { id: 'far' }))],
+      });
       const remote = await onSecond.socket.next('changes');
       expect(remote.changes[0]!.elements[0]!.id).toBe('far');
       onSecond.socket.send({ t: 'transient', elements: [{ id: 'far', x: 1 }] });
@@ -249,9 +312,15 @@ describe('collaboration WebSocket', () => {
     const owner = await signUp(t.url, 'Restorer');
     const board = await createBoard(owner);
     const s = await joinBoard(t.wsUrl, { boardId: board.id, cookie: owner.cookieHeader() });
-    s.socket.send({ t: 'ops', batchId: '1', ops: [createOp(s.clientId, element('rectangle', { id: 'keep' }))] });
+    s.socket.send({
+      t: 'ops',
+      batchId: '1',
+      ops: [createOp(s.clientId, element('rectangle', { id: 'keep' }))],
+    });
     await s.socket.next('ack');
-    const version = await owner.post<{ id: string }>(`/api/boards/${board.id}/versions`, { label: 'v' });
+    const version = await owner.post<{ id: string }>(`/api/boards/${board.id}/versions`, {
+      label: 'v',
+    });
     await owner.post(`/api/boards/${board.id}/versions/${version.body.id}/restore`);
     expect((await s.socket.next('resync')).reason).toBe('version-restored');
     const event = await s.socket.next('event', (m) => m.event.kind === 'version-restored');

@@ -13,8 +13,10 @@ const EDITOR_PACKAGES = /[\\/]packages[\\/](canvas-engine|collaboration|exporter
 
 function manualChunks(id: string): string | undefined {
   if (id.includes('/node_modules/')) {
-    if (/[\\/]node_modules[\\/](react|react-dom|scheduler|react-router)[\\/]/.test(id)) return 'react';
-    if (/[\\/]node_modules[\\/](@radix-ui|radix-ui|cmdk|@floating-ui)[\\/]/.test(id)) return 'radix';
+    if (/[\\/]node_modules[\\/](react|react-dom|scheduler|react-router)[\\/]/.test(id))
+      return 'react';
+    if (/[\\/]node_modules[\\/](@radix-ui|radix-ui|cmdk|@floating-ui)[\\/]/.test(id))
+      return 'radix';
     if (/[\\/]node_modules[\\/]@tanstack[\\/]/.test(id)) return 'query';
     return undefined;
   }
@@ -36,7 +38,9 @@ const apiProxy: ProxyOptions = {
           response.writeHead(502, { 'content-type': 'application/json' });
         }
         response.end(
-          JSON.stringify({ error: { code: 'SERVICE_UNAVAILABLE', message: `API unavailable (${error.message})` } }),
+          JSON.stringify({
+            error: { code: 'SERVICE_UNAVAILABLE', message: `API unavailable (${error.message})` },
+          }),
         );
       } else {
         response.destroy?.();
@@ -65,7 +69,8 @@ export const viteConfig: UserConfig = {
   },
   build: {
     target: 'es2022',
-    sourcemap: true,
+    // Container builds disable sourcemaps to fit small build VMs (INKFLOW_SOURCEMAP=false).
+    sourcemap: process.env.INKFLOW_SOURCEMAP !== 'false',
     chunkSizeWarningLimit: 900,
     rollupOptions: {
       output: { manualChunks },

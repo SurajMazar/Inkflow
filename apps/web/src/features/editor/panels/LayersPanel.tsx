@@ -39,7 +39,11 @@ function LayerRow({ row, selected, canEdit }: { row: Row; selected: boolean; can
     <li
       data-testid="layer-row"
       data-element-id={el.id}
-      className={cn('group flex h-8 items-center gap-1 pr-1.5 text-sm', selected ? 'bg-primary/10' : 'hover:bg-accent/50', el.hidden && 'text-muted-foreground')}
+      className={cn(
+        'group flex h-8 items-center gap-1 pr-1.5 text-sm',
+        selected ? 'bg-primary/10' : 'hover:bg-accent/50',
+        el.hidden && 'text-muted-foreground',
+      )}
       style={{ paddingLeft: 8 + Math.min(depth, 6) * 12 }}
     >
       <button
@@ -49,7 +53,10 @@ function LayerRow({ row, selected, canEdit }: { row: Row; selected: boolean; can
         aria-label={`${elementTypeLabel(el.type)}: ${name}${el.hidden ? ' (hidden)' : ''}${el.locked ? ' (locked)' : ''}`}
         onClick={(e) => {
           if (el.hidden) return;
-          editor.select([el.id], { expandGroups: false, additive: e.shiftKey || e.metaKey || e.ctrlKey });
+          editor.select([el.id], {
+            expandGroups: false,
+            additive: e.shiftKey || e.metaKey || e.ctrlKey,
+          });
         }}
         onDoubleClick={() => !el.hidden && editor.focusElement(el.id)}
       >
@@ -111,7 +118,12 @@ export function LayersPanel() {
     for (let i = elements.length - 1; i >= 0; i--) {
       const el = elements[i]!;
       const name = elementDisplayName(el);
-      if (q && !name.toLowerCase().includes(q) && !elementTypeLabel(el.type).toLowerCase().includes(q)) continue;
+      if (
+        q &&
+        !name.toLowerCase().includes(q) &&
+        !elementTypeLabel(el.type).toLowerCase().includes(q)
+      )
+        continue;
       out.push({ el, name, depth: el.groupIds.length + (el.frameId ? 1 : 0) });
     }
     return out;
@@ -122,7 +134,10 @@ export function LayersPanel() {
   return (
     <div data-testid="panel-layers" className="flex min-h-0 flex-1 flex-col">
       <div className="relative border-b p-3">
-        <Search className="pointer-events-none absolute top-1/2 left-5 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+        <Search
+          className="pointer-events-none absolute top-1/2 left-5 size-4 -translate-y-1/2 text-muted-foreground"
+          aria-hidden
+        />
         <Input
           value={filter}
           onChange={(e) => {
@@ -140,7 +155,11 @@ export function LayersPanel() {
           {hiddenCount ? ` · ${hiddenCount} hidden` : ''}
         </span>
         {canEdit && hiddenCount > 0 && (
-          <button type="button" className="text-primary hover:underline" onClick={() => editor.actions.run('arrange.showAll')}>
+          <button
+            type="button"
+            className="text-primary hover:underline"
+            onClick={() => editor.actions.run('arrange.showAll')}
+          >
             Show all
           </button>
         )}
@@ -152,12 +171,19 @@ export function LayersPanel() {
             The board is empty.
           </div>
         ) : rows.length === 0 ? (
-          <p className="p-4 text-center text-sm text-muted-foreground">No layers match “{filter.trim()}”.</p>
+          <p className="p-4 text-center text-sm text-muted-foreground">
+            No layers match “{filter.trim()}”.
+          </p>
         ) : (
           <>
             <ul aria-label="Layers">
               {rows.slice(0, limit).map((row) => (
-                <LayerRow key={row.el.id} row={row} selected={selected.has(row.el.id)} canEdit={canEdit} />
+                <LayerRow
+                  key={row.el.id}
+                  row={row}
+                  selected={selected.has(row.el.id)}
+                  canEdit={canEdit}
+                />
               ))}
             </ul>
             {rows.length > limit && (

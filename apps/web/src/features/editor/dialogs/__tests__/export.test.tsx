@@ -30,14 +30,38 @@ const json = vi.mocked(exporters.exportToJson);
 const download = vi.mocked(exporters.downloadBlob);
 
 function board() {
-  const f1 = createElement('frame', { id: 'f1', name: 'Slide 1', x: 0, y: 0, width: 400, height: 300 });
-  const f2 = createElement('frame', { id: 'f2', name: 'Slide 2', x: 500, y: 0, width: 400, height: 300 });
-  const inF1 = createElement('rectangle', { id: 'r1', x: 20, y: 20, width: 100, height: 60, frameId: 'f1' });
+  const f1 = createElement('frame', {
+    id: 'f1',
+    name: 'Slide 1',
+    x: 0,
+    y: 0,
+    width: 400,
+    height: 300,
+  });
+  const f2 = createElement('frame', {
+    id: 'f2',
+    name: 'Slide 2',
+    x: 500,
+    y: 0,
+    width: 400,
+    height: 300,
+  });
+  const inF1 = createElement('rectangle', {
+    id: 'r1',
+    x: 20,
+    y: 20,
+    width: 100,
+    height: 60,
+    frameId: 'f1',
+  });
   const loose = createElement('ellipse', { id: 'e1', x: 1200, y: 900, width: 80, height: 80 });
   return createTestEditor([f1, f2, inF1, loose]);
 }
 
-const settings = (overrides: Partial<ExportSettings>): ExportSettings => ({ ...DEFAULT_EXPORT_SETTINGS, ...overrides });
+const settings = (overrides: Partial<ExportSettings>): ExportSettings => ({
+  ...DEFAULT_EXPORT_SETTINGS,
+  ...overrides,
+});
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -46,13 +70,31 @@ beforeEach(() => {
 describe('runExport option mapping', () => {
   it('maps PNG settings for the whole board', async () => {
     const editor = board();
-    const out = await runExport(editor, settings({ format: 'png', scale: 3, background: false, darkMode: true, padding: 32, embedScene: true }));
+    const out = await runExport(
+      editor,
+      settings({
+        format: 'png',
+        scale: 3,
+        background: false,
+        darkMode: true,
+        padding: 32,
+        embedScene: true,
+      }),
+    );
     expect(out.ext).toBe('png');
     const [source, options] = png.mock.calls[0]!;
     expect(source.elements.map((e) => e.id)).toEqual(['f1', 'f2', 'r1', 'e1']);
     expect(source.files).toBe(editor.files);
     expect(source.appState).toBe(editor.appState);
-    expect(options).toMatchObject({ scale: 3, background: false, darkMode: true, padding: 32, embedScene: true, frameId: null, bounds: null });
+    expect(options).toMatchObject({
+      scale: 3,
+      background: false,
+      darkMode: true,
+      padding: 32,
+      embedScene: true,
+      frameId: null,
+      bounds: null,
+    });
     expect(options.loadImage).toEqual(expect.any(Function));
   });
 
@@ -70,16 +112,27 @@ describe('runExport option mapping', () => {
 
     editor.setViewport({ x: 100, y: 50, zoom: 2, width: 1000, height: 800 });
     await runExport(editor, settings({ scope: 'viewport', frameId: 'f2' }));
-    expect(png.mock.calls[1]![1]).toMatchObject({ frameId: null, bounds: { x: 100, y: 50, width: 500, height: 400 } });
+    expect(png.mock.calls[1]![1]).toMatchObject({
+      frameId: null,
+      bounds: { x: 100, y: 50, width: 500, height: 400 },
+    });
   });
 
   it('maps SVG settings (vector scale, fonts, embedded images and scene)', async () => {
     const editor = board();
-    const out = await runExport(editor, settings({ format: 'svg', scale: 4, embedScene: true, embedFonts: true }));
+    const out = await runExport(
+      editor,
+      settings({ format: 'svg', scale: 4, embedScene: true, embedFonts: true }),
+    );
     expect(out.ext).toBe('svg');
     expect(out.blob.type).toBe('image/svg+xml');
     const options = svg.mock.calls[0]![1];
-    expect(options).toMatchObject({ scale: 1, embedFonts: true, embedScene: true, background: true });
+    expect(options).toMatchObject({
+      scale: 1,
+      embedFonts: true,
+      embedScene: true,
+      background: true,
+    });
     expect(options.loadImageDataUrl).toEqual(expect.any(Function));
     const families = new Set(options.fontSources!.map((f) => f.family));
     expect([...families].sort()).toEqual(['Inter Variable', 'JetBrains Mono', 'Kalam', 'Lora']);
@@ -88,17 +141,32 @@ describe('runExport option mapping', () => {
   it('maps PDF pages and rendering mode', async () => {
     const editor = board();
     editor.reorderFrame('f2', 0);
-    await runExport(editor, settings({ format: 'pdf', pdfPages: 'frames', pdfMode: 'raster', scale: 2 }));
-    expect(pdf.mock.calls[0]![1]).toMatchObject({ pages: 'frames', mode: 'raster', scale: 2, frameOrder: ['f2', 'f1'], embedScene: false });
+    await runExport(
+      editor,
+      settings({ format: 'pdf', pdfPages: 'frames', pdfMode: 'raster', scale: 2 }),
+    );
+    expect(pdf.mock.calls[0]![1]).toMatchObject({
+      pages: 'frames',
+      mode: 'raster',
+      scale: 2,
+      frameOrder: ['f2', 'f1'],
+      embedScene: false,
+    });
 
     editor.select(['e1']);
-    await runExport(editor, settings({ format: 'pdf', scope: 'selection', pdfPages: 'frames', pdfMode: 'vector' }));
+    await runExport(
+      editor,
+      settings({ format: 'pdf', scope: 'selection', pdfPages: 'frames', pdfMode: 'vector' }),
+    );
     expect(pdf.mock.calls[1]![1]).toMatchObject({ pages: 'single', mode: 'vector' });
   });
 
   it('exports JSON of the chosen frame only', async () => {
     const editor = board();
-    const out = await runExport(editor, settings({ format: 'json', scope: 'frame', frameId: 'f1' }));
+    const out = await runExport(
+      editor,
+      settings({ format: 'json', scope: 'frame', frameId: 'f1' }),
+    );
     expect(out.ext).toBe('inkflow');
     expect(json.mock.calls[0]![0].elements.map((e) => e.id).sort()).toEqual(['f1', 'r1']);
   });
@@ -107,7 +175,13 @@ describe('runExport option mapping', () => {
 describe('ExportDialog', () => {
   beforeEach(() => {
     __resetClientStateForTests();
-    installFetchMock([{ method: 'GET', path: '/auth/me', respond: { status: 401, body: { error: { code: 'UNAUTHORIZED', message: 'no' } } } }]);
+    installFetchMock([
+      {
+        method: 'GET',
+        path: '/auth/me',
+        respond: { status: 401, body: { error: { code: 'UNAUTHORIZED', message: 'no' } } },
+      },
+    ]);
     URL.createObjectURL = vi.fn(() => 'blob:preview');
     URL.revokeObjectURL = vi.fn();
   });

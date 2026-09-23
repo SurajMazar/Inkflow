@@ -1,7 +1,12 @@
 import { randomUUID } from 'node:crypto';
 import type { IncomingMessage, Server } from 'node:http';
 import type { Duplex } from 'node:stream';
-import { Injectable, Logger, type BeforeApplicationShutdown, type OnApplicationBootstrap } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  type BeforeApplicationShutdown,
+  type OnApplicationBootstrap,
+} from '@nestjs/common';
 import { HttpAdapterHost } from '@nestjs/core';
 import { WebSocket, WebSocketServer, type RawData } from 'ws';
 import {
@@ -43,7 +48,20 @@ const BUCKET_CAPACITY = 300;
 const BUCKET_REFILL_PER_SECOND = 150;
 const MAX_RATE_VIOLATIONS = 500;
 
-const GUEST_NAMES = ['Otter', 'Falcon', 'Lynx', 'Heron', 'Panda', 'Koala', 'Fox', 'Orca', 'Ibis', 'Yak', 'Gecko', 'Moose'];
+const GUEST_NAMES = [
+  'Otter',
+  'Falcon',
+  'Lynx',
+  'Heron',
+  'Panda',
+  'Koala',
+  'Fox',
+  'Orca',
+  'Ibis',
+  'Yak',
+  'Gecko',
+  'Moose',
+];
 
 interface Connection {
   id: string;
@@ -90,13 +108,18 @@ function guestIdentity(): PresenceUser {
 @Injectable()
 export class CollaborationGateway implements OnApplicationBootstrap, BeforeApplicationShutdown {
   private readonly logger = new Logger(CollaborationGateway.name);
-  private readonly wss = new WebSocketServer({ noServer: true, maxPayload: MAX_WS_PAYLOAD_BYTES, clientTracking: false });
+  private readonly wss = new WebSocketServer({
+    noServer: true,
+    maxPayload: MAX_WS_PAYLOAD_BYTES,
+    clientTracking: false,
+  });
   private readonly connections = new Set<Connection>();
   private readonly rooms = new Map<string, Room>();
   private server: Server | null = null;
   private heartbeat: NodeJS.Timeout | null = null;
   private shuttingDown = false;
-  private readonly onUpgrade = (req: IncomingMessage, socket: Duplex, head: Buffer) => this.handleUpgrade(req, socket, head);
+  private readonly onUpgrade = (req: IncomingMessage, socket: Duplex, head: Buffer) =>
+    this.handleUpgrade(req, socket, head);
 
   constructor(
     private readonly adapterHost: HttpAdapterHost,
@@ -163,7 +186,8 @@ export class CollaborationGateway implements OnApplicationBootstrap, BeforeAppli
   }
 
   private closeSocket(ws: WebSocket, code: number, reason: string): void {
-    if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) ws.close(code, reason.slice(0, 120));
+    if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)
+      ws.close(code, reason.slice(0, 120));
   }
 
   private async onConnection(ws: WebSocket, req: IncomingMessage, url: URL): Promise<void> {
@@ -182,7 +206,11 @@ export class CollaborationGateway implements OnApplicationBootstrap, BeforeAppli
     if (extracted) {
       const result = this.tokens.verifyAccessToken(extracted.token);
       if (result.status !== 'valid' || (await this.tokens.isSessionRevoked(result.claims.sid))) {
-        this.closeSocket(ws, CLOSE_CODES.UNAUTHORIZED, result.status === 'expired' ? 'session expired' : 'unauthorized');
+        this.closeSocket(
+          ws,
+          CLOSE_CODES.UNAUTHORIZED,
+          result.status === 'expired' ? 'session expired' : 'unauthorized',
+        );
         return;
       }
       userId = result.claims.sub;
@@ -199,12 +227,21 @@ export class CollaborationGateway implements OnApplicationBootstrap, BeforeAppli
     }
     let user: PresenceUser;
     if (userId) {
-      const row = await this.prisma.user.findUnique({ where: { id: userId }, select: { id: true, name: true, avatarUrl: true } });
+      const row = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { id: true, name: true, avatarUrl: true },
+      });
       if (!row) {
         this.closeSocket(ws, CLOSE_CODES.UNAUTHORIZED, 'unknown user');
         return;
       }
-      user = { id: row.id, name: row.name, avatarUrl: row.avatarUrl, color: colorForId(row.id), anonymous: false };
+      user = {
+        id: row.id,
+        name: row.name,
+        avatarUrl: row.avatarUrl,
+        color: colorForId(row.id),
+        anonymous: false,
+      };
     } else {
       user = guestIdentity();
     }
@@ -295,7 +332,11 @@ export class CollaborationGateway implements OnApplicationBootstrap, BeforeAppli
     const result = clientMessageSchema.safeParse(parsed);
     if (!result.success) {
       const issue = result.error.issues[0];
-      this.sendError(conn, 'BAD_MESSAGE', `Invalid message${issue ? `: ${issue.path.join('.')} ${issue.message}` : ''}`);
+      this.sendError(
+        conn,
+        'BAD_MESSAGE',
+        `Invalid message${issue ? `: ${issue.path.join('.')} ${issue.message}` : ''}`,
+      );
       return;
     }
     const msg = result.data as ClientMessage;
@@ -326,7 +367,9 @@ export class CollaborationGateway implements OnApplicationBootstrap, BeforeAppli
   private dispatch(conn: Connection, msg: ClientMessage): void {
     switch (msg.t) {
       case 'ops':
-        conn.opsChain = conn.opsChain.then(() => this.onOps(conn, msg.batchId, msg.ops as unknown[])).catch(() => undefined);
+        conn.opsChain = conn.opsChain
+          .then(() => this.onOps(conn, msg.batchId, msg.ops as unknown[]))
+          .catch(() => undefined);
         return;
       case 'transient':
         this.onTransient(conn, msg.elements as unknown as SceneElement[]);
@@ -335,7 +378,9 @@ export class CollaborationGateway implements OnApplicationBootstrap, BeforeAppli
         this.onPresence(conn, msg.state);
         return;
       case 'sync':
-        void this.onSync(conn, msg.sinceSeq).catch((err: Error) => this.sendError(conn, 'SYNC_FAILED', err.message));
+        void this.onSync(conn, msg.sinceSeq).catch((err: Error) =>
+          this.sendError(conn, 'SYNC_FAILED', err.message),
+        );
         return;
       default:
         return;
@@ -343,7 +388,13 @@ export class CollaborationGateway implements OnApplicationBootstrap, BeforeAppli
   }
 
   private peerOf(conn: Connection): PeerPresence {
-    return { clientId: conn.clientId!, user: conn.user, role: conn.role, state: conn.state, lastSeen: Date.now() };
+    return {
+      clientId: conn.clientId!,
+      user: conn.user,
+      role: conn.role,
+      state: conn.state,
+      lastSeen: Date.now(),
+    };
   }
 
   private async storePresence(conn: Connection): Promise<void> {
@@ -351,7 +402,10 @@ export class CollaborationGateway implements OnApplicationBootstrap, BeforeAppli
     await this.presence.put(conn.boardId, this.peerOf(conn));
   }
 
-  private async onHello(conn: Connection, msg: Extract<ClientMessage, { t: 'hello' }>): Promise<void> {
+  private async onHello(
+    conn: Connection,
+    msg: Extract<ClientMessage, { t: 'hello' }>,
+  ): Promise<void> {
     if (conn.clientId) {
       this.sendError(conn, 'BAD_MESSAGE', 'hello was already received');
       return;
@@ -371,10 +425,14 @@ export class CollaborationGateway implements OnApplicationBootstrap, BeforeAppli
     // A reconnect with the same client id replaces the previous socket.
     const room = this.rooms.get(conn.boardId);
     for (const other of room?.connections ?? []) {
-      if (other !== conn && other.clientId === msg.clientId) this.closeConnection(other, CLOSE_CODES.NORMAL, 'replaced by a new connection');
+      if (other !== conn && other.clientId === msg.clientId)
+        this.closeConnection(other, CLOSE_CODES.NORMAL, 'replaced by a new connection');
     }
 
-    const access = await this.access.getBoardAccess(conn.boardId, { userId: conn.userId, shareToken: conn.shareToken });
+    const access = await this.access.getBoardAccess(conn.boardId, {
+      userId: conn.userId,
+      shareToken: conn.shareToken,
+    });
     if (!access) {
       this.closeConnection(conn, CLOSE_CODES.NOT_FOUND, 'board not found');
       return;
@@ -414,7 +472,11 @@ export class CollaborationGateway implements OnApplicationBootstrap, BeforeAppli
         }
       }
     }
-    void this.realtime.publishMessage(conn.boardId, { t: 'presence', peer: this.peerOf(conn) }, msg.clientId);
+    void this.realtime.publishMessage(
+      conn.boardId,
+      { t: 'presence', peer: this.peerOf(conn) },
+      msg.clientId,
+    );
     const inbound = conn.inbound;
     conn.inbound = [];
     for (const m of inbound) this.dispatch(conn, m);
@@ -422,7 +484,10 @@ export class CollaborationGateway implements OnApplicationBootstrap, BeforeAppli
 
   private async onOps(conn: Connection, batchId: string, ops: unknown[]): Promise<void> {
     if (conn.closed) return;
-    const access = await this.access.getBoardAccess(conn.boardId, { userId: conn.userId, shareToken: conn.shareToken });
+    const access = await this.access.getBoardAccess(conn.boardId, {
+      userId: conn.userId,
+      shareToken: conn.shareToken,
+    });
     if (!access) {
       this.closeConnection(conn, CLOSE_CODES.FORBIDDEN, 'access revoked');
       return;
@@ -434,7 +499,10 @@ export class CollaborationGateway implements OnApplicationBootstrap, BeforeAppli
         t: 'ack',
         batchId,
         results: ops.map((op, i) => ({
-          opId: op && typeof op === 'object' && typeof (op as { opId?: unknown }).opId === 'string' ? (op as { opId: string }).opId : `invalid-${i}`,
+          opId:
+            op && typeof op === 'object' && typeof (op as { opId?: unknown }).opId === 'string'
+              ? (op as { opId: string }).opId
+              : `invalid-${i}`,
           status: 'rejected' as const,
           seq: null,
           reason: 'FORBIDDEN',
@@ -443,14 +511,21 @@ export class CollaborationGateway implements OnApplicationBootstrap, BeforeAppli
       return;
     }
     try {
-      const result = await this.operations.applyBatch(conn.boardId, { userId: conn.userId }, conn.clientId!, ops);
+      const result = await this.operations.applyBatch(
+        conn.boardId,
+        { userId: conn.userId },
+        conn.clientId!,
+        ops,
+      );
       this.send(conn, { t: 'ack', batchId, results: result.results });
     } catch (err) {
       if (err instanceof AppError && err.getStatus() === 404) {
         this.closeConnection(conn, CLOSE_CODES.BOARD_DELETED, 'board deleted');
         return;
       }
-      this.logger.error(`ops batch ${batchId} failed on board ${conn.boardId}: ${(err as Error).message}`);
+      this.logger.error(
+        `ops batch ${batchId} failed on board ${conn.boardId}: ${(err as Error).message}`,
+      );
       this.sendError(conn, 'OPS_FAILED', `Batch ${batchId} could not be applied; retry later`);
     }
   }
@@ -461,10 +536,19 @@ export class CollaborationGateway implements OnApplicationBootstrap, BeforeAppli
       return;
     }
     const valid = elements.filter(
-      (el) => el && typeof el === 'object' && typeof el.id === 'string' && el.id.length > 0 && el.id.length <= 128,
+      (el) =>
+        el &&
+        typeof el === 'object' &&
+        typeof el.id === 'string' &&
+        el.id.length > 0 &&
+        el.id.length <= 128,
     );
     if (valid.length === 0) return;
-    void this.realtime.publishMessage(conn.boardId, { t: 'transient', clientId: conn.clientId!, elements: valid }, conn.clientId!);
+    void this.realtime.publishMessage(
+      conn.boardId,
+      { t: 'transient', clientId: conn.clientId!, elements: valid },
+      conn.clientId!,
+    );
   }
 
   private onPresence(conn: Connection, state: Partial<PresenceState>): void {
@@ -550,7 +634,10 @@ export class CollaborationGateway implements OnApplicationBootstrap, BeforeAppli
       this.closeConnection(conn, CLOSE_CODES.UNAUTHORIZED, 'session revoked');
       return;
     }
-    const access = await this.access.getBoardAccess(conn.boardId, { userId: conn.userId, shareToken: conn.shareToken });
+    const access = await this.access.getBoardAccess(conn.boardId, {
+      userId: conn.userId,
+      shareToken: conn.shareToken,
+    });
     if (!access) {
       this.closeConnection(conn, CLOSE_CODES.FORBIDDEN, 'access revoked');
       return;
@@ -559,7 +646,11 @@ export class CollaborationGateway implements OnApplicationBootstrap, BeforeAppli
       conn.role = access.role;
       if (conn.ready) {
         void this.storePresence(conn).catch(() => undefined);
-        void this.realtime.publishMessage(conn.boardId, { t: 'presence', peer: this.peerOf(conn) }, conn.clientId ?? undefined);
+        void this.realtime.publishMessage(
+          conn.boardId,
+          { t: 'presence', peer: this.peerOf(conn) },
+          conn.clientId ?? undefined,
+        );
       }
     }
   }
@@ -587,10 +678,15 @@ export class CollaborationGateway implements OnApplicationBootstrap, BeforeAppli
     }
     if (conn.clientId) {
       // Another socket of the same client (reconnect) keeps its presence entry.
-      const replaced = [...this.connections].some((c) => c.boardId === conn.boardId && c.clientId === conn.clientId);
+      const replaced = [...this.connections].some(
+        (c) => c.boardId === conn.boardId && c.clientId === conn.clientId,
+      );
       if (!replaced) {
         await this.presence.remove(conn.boardId, conn.clientId).catch(() => undefined);
-        await this.realtime.publishMessage(conn.boardId, { t: 'peer-left', clientId: conn.clientId });
+        await this.realtime.publishMessage(conn.boardId, {
+          t: 'peer-left',
+          clientId: conn.clientId,
+        });
       }
     }
   }
@@ -603,7 +699,8 @@ export class CollaborationGateway implements OnApplicationBootstrap, BeforeAppli
         continue;
       }
       if (conn.ws.readyState === WebSocket.OPEN) conn.ws.ping();
-      if (now - conn.lastValidated > REVALIDATE_INTERVAL_MS) void this.revalidate(conn).catch(() => undefined);
+      if (now - conn.lastValidated > REVALIDATE_INTERVAL_MS)
+        void this.revalidate(conn).catch(() => undefined);
     }
   }
 
@@ -612,7 +709,8 @@ export class CollaborationGateway implements OnApplicationBootstrap, BeforeAppli
     if (this.heartbeat) clearInterval(this.heartbeat);
     this.server?.off('upgrade', this.onUpgrade);
     const conns = [...this.connections];
-    for (const conn of conns) this.closeSocket(conn.ws, CLOSE_CODES.GOING_AWAY, 'server shutting down');
+    for (const conn of conns)
+      this.closeSocket(conn.ws, CLOSE_CODES.GOING_AWAY, 'server shutting down');
     await Promise.allSettled(conns.map((conn) => this.cleanup(conn)));
     // Give clients a moment to complete the close handshake, then force-close stragglers.
     await new Promise((resolve) => setTimeout(resolve, 200));

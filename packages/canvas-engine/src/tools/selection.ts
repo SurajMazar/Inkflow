@@ -119,7 +119,11 @@ export class SelectionTool extends BaseTool {
       if (el.points.length > 2 && el.type !== 'connector') {
         const frame = getSelectionFrame(selected);
         if (frame) {
-          const box = computeTransformHandles(frame, { zoom: this.zoom, rotatable: true, resizable: true });
+          const box = computeTransformHandles(frame, {
+            zoom: this.zoom,
+            rotatable: true,
+            resizable: true,
+          });
           return [...pointHandles, ...box];
         }
       }
@@ -135,10 +139,22 @@ export class SelectionTool extends BaseTool {
   }
 
   private cropHandles(): OverlayHandle[] {
-    const el = this.editor.state.cropId ? this.editor.getElement(this.editor.state.cropId) : undefined;
+    const el = this.editor.state.cropId
+      ? this.editor.getElement(this.editor.state.cropId)
+      : undefined;
     if (!el || el.type !== 'image') return [];
-    const frame: SelectionFrame = { x: el.x, y: el.y, width: el.width, height: el.height, angle: el.angle };
-    return computeTransformHandles(frame, { zoom: this.zoom, rotatable: false, resizable: true }).map((h) => ({
+    const frame: SelectionFrame = {
+      x: el.x,
+      y: el.y,
+      width: el.width,
+      height: el.height,
+      angle: el.angle,
+    };
+    return computeTransformHandles(frame, {
+      zoom: this.zoom,
+      rotatable: false,
+      resizable: true,
+    }).map((h) => ({
       ...h,
       id: CROP_PREFIX + h.id,
       kind: 'crop' as const,
@@ -176,7 +192,9 @@ export class SelectionTool extends BaseTool {
     const hitSelected = hit ? selectedIds.has(hit.id) : false;
     // Dragging anywhere inside the selection box moves the selection (unless another element is hit).
     const insideSelection =
-      selectedIds.size > 0 && pointInSelectionFrame(selectedFrame, e.world, this.px(4)) && (!hit || hitSelected);
+      selectedIds.size > 0 &&
+      pointInSelectionFrame(selectedFrame, e.world, this.px(4)) &&
+      (!hit || hitSelected);
 
     if (hit && !hitSelected) {
       if (e.mod) {
@@ -184,7 +202,8 @@ export class SelectionTool extends BaseTool {
       } else if (e.shift) {
         editor.select([hit.id], { additive: true });
       } else {
-        if (s.editingGroupId && !hit.groupIds.includes(s.editingGroupId)) editor.setState({ editingGroupId: null });
+        if (s.editingGroupId && !hit.groupIds.includes(s.editingGroupId))
+          editor.setState({ editingGroupId: null });
         editor.select([hit.id]);
       }
     }
@@ -205,7 +224,11 @@ export class SelectionTool extends BaseTool {
       const el = editor.state.cropId ? editor.getElement(editor.state.cropId) : undefined;
       if (!el || el.type !== 'image') return;
       if (!editor.beginGesture('Crop image')) return;
-      this.mode = { kind: 'crop', handle: handle.id.slice(CROP_PREFIX.length) as ResizeHandle, original: el };
+      this.mode = {
+        kind: 'crop',
+        handle: handle.id.slice(CROP_PREFIX.length) as ResizeHandle,
+        original: el,
+      };
       editor.setState({ interaction: 'cropping' });
       return;
     }
@@ -241,10 +264,25 @@ export class SelectionTool extends BaseTool {
         original = updated;
         targetIndex = index + 1;
       } else if (baked !== el) {
-        tx.update(el.id, { x: baked.x, y: baked.y, width: baked.width, height: baked.height, points: baked.points, angle: 0 });
+        tx.update(el.id, {
+          x: baked.x,
+          y: baked.y,
+          width: baked.width,
+          height: baked.height,
+          points: baked.points,
+          angle: 0,
+        });
       }
       this.selectedPoint = { elementId: el.id, index: targetIndex };
-      this.mode = { kind: 'point', elementId: el.id, index: targetIndex, original, candidate: null, moved: false, guides: EMPTY_GUIDES };
+      this.mode = {
+        kind: 'point',
+        elementId: el.id,
+        index: targetIndex,
+        original,
+        candidate: null,
+        moved: false,
+        guides: EMPTY_GUIDES,
+      };
       editor.setState({ interaction: 'editing-points' });
       return;
     }
@@ -252,15 +290,29 @@ export class SelectionTool extends BaseTool {
     if (!frame || !editor.beginGesture('Resize')) return;
     const onBox = handlePoint(frame, handle.id as ResizeHandle);
     const grab = { x: e.world.x - onBox.x, y: e.world.y - onBox.y };
-    this.mode = { kind: 'resizing', handle: handle.id as ResizeHandle, frame, originals: selected, guides: EMPTY_GUIDES, grab };
-    editor.setState({ interaction: 'resizing', cursor: cursorForHandle(handle.id as ResizeHandle, frame.angle) });
+    this.mode = {
+      kind: 'resizing',
+      handle: handle.id as ResizeHandle,
+      frame,
+      originals: selected,
+      guides: EMPTY_GUIDES,
+      grab,
+    };
+    editor.setState({
+      interaction: 'resizing',
+      cursor: cursorForHandle(handle.id as ResizeHandle, frame.angle),
+    });
   }
 
   /** Converts a rotated linear element into an equivalent unrotated one (for point editing). */
   private bakeRotation(el: LinearElement): LinearElement {
     if (el.angle === 0) return el;
     const world = getLinearWorldPoints(el);
-    const norm = normalizeLinearPoints(0, 0, world.map((p) => [p.x, p.y] as LocalPoint));
+    const norm = normalizeLinearPoints(
+      0,
+      0,
+      world.map((p) => [p.x, p.y] as LocalPoint),
+    );
     return { ...el, ...norm, angle: 0 };
   }
 
@@ -268,7 +320,8 @@ export class SelectionTool extends BaseTool {
     const out = new Map(elements.map((e) => [e.id, e]));
     for (const el of elements) {
       if (el.type !== 'frame') continue;
-      for (const child of this.editor.scene.getFrameChildren(el.id)) if (!child.locked) out.set(child.id, child);
+      for (const child of this.editor.scene.getFrameChildren(el.id))
+        if (!child.locked) out.set(child.id, child);
     }
     return [...out.values()];
   }
@@ -284,7 +337,8 @@ export class SelectionTool extends BaseTool {
       case 'pending': {
         const d = Math.hypot(e.screen.x - mode.down.screen.x, e.screen.y - mode.down.screen.y);
         if (d < DRAG_THRESHOLD_PX[e.pointerType]) return;
-        if ((mode.hitId || mode.insideSelection) && !this.editor.isReadOnly) this.startMove(mode.down, e);
+        if ((mode.hitId || mode.insideSelection) && !this.editor.isReadOnly)
+          this.startMove(mode.down, e);
         else this.startMarquee(mode.down, e);
         return;
       }
@@ -321,20 +375,34 @@ export class SelectionTool extends BaseTool {
           : handle.kind === 'rotate'
             ? 'grab'
             : 'pointer';
-      if (editor.state.cursor !== cursor || editor.state.hoveredId) editor.setState({ cursor, hoveredId: null });
+      if (editor.state.cursor !== cursor || editor.state.hoveredId)
+        editor.setState({ cursor, hoveredId: null });
       return;
     }
-    const hit = hitTestTop(editor.scene, e.world, { tolerance: hitTolerancePx(e.pointerType) / this.zoom });
-    const inside = pointInSelectionFrame(getSelectionFrame(editor.getSelectedElements()), e.world, this.px(4));
+    const hit = hitTestTop(editor.scene, e.world, {
+      tolerance: hitTolerancePx(e.pointerType) / this.zoom,
+    });
+    const inside = pointInSelectionFrame(
+      getSelectionFrame(editor.getSelectedElements()),
+      e.world,
+      this.px(4),
+    );
     const cursor = hit || inside ? (editor.isReadOnly ? 'default' : 'move') : 'default';
     const hoveredId = hit?.id ?? null;
-    if (editor.state.cursor !== cursor || editor.state.hoveredId !== hoveredId) editor.setState({ cursor, hoveredId });
+    if (editor.state.cursor !== cursor || editor.state.hoveredId !== hoveredId)
+      editor.setState({ cursor, hoveredId });
   }
 
   private startMarquee(down: CanvasPointerEvent, e: CanvasPointerEvent) {
     const additive = down.shift;
     if (!additive) this.editor.clearSelection();
-    this.mode = { kind: 'marquee', start: down.world, current: e.world, additive, base: [...this.editor.state.selectedIds] };
+    this.mode = {
+      kind: 'marquee',
+      start: down.world,
+      current: e.world,
+      additive,
+      base: [...this.editor.state.selectedIds],
+    };
     this.editor.setState({ interaction: 'selecting' });
     this.updateMarquee(e);
   }
@@ -391,7 +459,9 @@ export class SelectionTool extends BaseTool {
     if (down.alt) {
       const frameIds = new Set(editor.getFrames().map((f) => f.id));
       const sources = this.withFrameChildren(selected);
-      const { elements: copies, idMap } = duplicateElements(sources, { existingFrameIds: frameIds });
+      const { elements: copies, idMap } = duplicateElements(sources, {
+        existingFrameIds: frameIds,
+      });
       const keys = indicesAbove(editor.scene.getElementsIncludingDeleted(), copies.length);
       const created = copies.map((c, i) => tx.create({ ...c, index: keys[i]! }));
       const selection = selected.map((el) => idMap.get(el.id)).filter((id): id is string => !!id);
@@ -410,7 +480,14 @@ export class SelectionTool extends BaseTool {
     }
     const originals = new Map(moving.map((m) => [m.id, editor.scene.getElement(m.id)!]));
     const bounds = boundsOf([...originals.values()]);
-    this.mode = { kind: 'moving', start: down.world, originals, bounds, guides: EMPTY_GUIDES, frameTarget: null };
+    this.mode = {
+      kind: 'moving',
+      start: down.world,
+      originals,
+      bounds,
+      guides: EMPTY_GUIDES,
+      frameTarget: null,
+    };
     editor.setState({ interaction: 'moving', cursor: 'move', hoveredId: null });
     this.updateMove(e);
   }
@@ -425,7 +502,12 @@ export class SelectionTool extends BaseTool {
       if (Math.abs(dx) > Math.abs(dy)) dy = 0;
       else dx = 0;
     }
-    const moved: Bounds = { minX: mode.bounds.minX + dx, minY: mode.bounds.minY + dy, maxX: mode.bounds.maxX + dx, maxY: mode.bounds.maxY + dy };
+    const moved: Bounds = {
+      minX: mode.bounds.minX + dx,
+      minY: mode.bounds.minY + dy,
+      maxX: mode.bounds.maxX + dx,
+      maxY: mode.bounds.maxY + dy,
+    };
     const { snapping, grid } = this.editor.state;
     let guides: SnapGuides = EMPTY_GUIDES;
     if (snapping.toGrid) {
@@ -433,7 +515,11 @@ export class SelectionTool extends BaseTool {
       dx += g.dx;
       dy += g.dy;
     } else if (snapping.toObjects !== e.mod) {
-      const snap = snapBoundsToObjects(moved, snapCandidates(this.editor, new Set(mode.originals.keys())), SNAP_THRESHOLD_PX / this.zoom);
+      const snap = snapBoundsToObjects(
+        moved,
+        snapCandidates(this.editor, new Set(mode.originals.keys())),
+        SNAP_THRESHOLD_PX / this.zoom,
+      );
       dx += snap.dx;
       dy += snap.dy;
       guides = snap;
@@ -442,18 +528,27 @@ export class SelectionTool extends BaseTool {
     const patches: (readonly [string, ElementPatch])[] = [];
     for (const [id, el] of mode.originals) {
       const patch: ElementPatch = { x: el.x + dx, y: el.y + dy };
-      if (el.type === 'connector' && el.waypoints.length) patch.waypoints = el.waypoints.map(([x, y]) => [x + dx, y + dy]);
+      if (el.type === 'connector' && el.waypoints.length)
+        patch.waypoints = el.waypoints.map(([x, y]) => [x + dx, y + dy]);
       patches.push([id, patch]);
     }
     tx.updateMany(patches);
     this.editor.refreshBindings(tx, mode.originals.keys());
     // Frame drop target highlight.
-    const center = { x: (mode.bounds.minX + mode.bounds.maxX) / 2 + dx, y: (mode.bounds.minY + mode.bounds.maxY) / 2 + dy };
+    const center = {
+      x: (mode.bounds.minX + mode.bounds.maxX) / 2 + dx,
+      y: (mode.bounds.minY + mode.bounds.maxY) / 2 + dy,
+    };
     const frames = this.editor.getFrames().filter((f) => !mode.originals.has(f.id));
     let target: string | null = null;
     for (let i = frames.length - 1; i >= 0; i--) {
       const fb = getElementBounds(frames[i]!);
-      if (center.x >= fb.minX && center.x <= fb.maxX && center.y >= fb.minY && center.y <= fb.maxY) {
+      if (
+        center.x >= fb.minX &&
+        center.x <= fb.maxX &&
+        center.y >= fb.minY &&
+        center.y <= fb.maxY
+      ) {
         target = frames[i]!.id;
         break;
       }
@@ -469,7 +564,12 @@ export class SelectionTool extends BaseTool {
     let pointer = { x: e.world.x - mode.grab.x, y: e.world.y - mode.grab.y };
     mode.guides = EMPTY_GUIDES;
     if (mode.frame.angle === 0) {
-      const snap = snapDrawingPoint(this.editor, pointer, new Set(mode.originals.map((o) => o.id)), e.mod);
+      const snap = snapDrawingPoint(
+        this.editor,
+        pointer,
+        new Set(mode.originals.map((o) => o.id)),
+        e.mod,
+      );
       pointer = snap.point;
       mode.guides = snap;
     }
@@ -482,7 +582,12 @@ export class SelectionTool extends BaseTool {
       enforceMinSize(single, patch);
       patches = new Map([[single.id, patch]]);
     } else {
-      patches = resizeMultiple(mode.originals, mode.frame, box, e.shift || mode.originals.some((o) => o.angle !== 0));
+      patches = resizeMultiple(
+        mode.originals,
+        mode.frame,
+        box,
+        e.shift || mode.originals.some((o) => o.angle !== 0),
+      );
     }
     tx.updateMany([...patches.entries()]);
     this.editor.refreshBindings(tx, patches.keys());
@@ -528,11 +633,24 @@ export class SelectionTool extends BaseTool {
       }
     }
     worldPts[mode.index] = target;
-    const norm = normalizeLinearPoints(0, 0, worldPts.map((p) => [p.x, p.y] as LocalPoint));
-    const patch: ElementPatch = { x: norm.x, y: norm.y, width: norm.width, height: norm.height, points: norm.points };
+    const norm = normalizeLinearPoints(
+      0,
+      0,
+      worldPts.map((p) => [p.x, p.y] as LocalPoint),
+    );
+    const patch: ElementPatch = {
+      x: norm.x,
+      y: norm.y,
+      width: norm.width,
+      height: norm.height,
+      points: norm.points,
+    };
     if (isEndpoint && isBindingElement(el)) {
       const binding = mode.candidate
-        ? createBinding(mode.candidate.element.id, { portId: mode.candidate.portId, anchor: mode.candidate.anchor })
+        ? createBinding(mode.candidate.element.id, {
+            portId: mode.candidate.portId,
+            anchor: mode.candidate.anchor,
+          })
         : null;
       if (mode.index === 0) patch.startBinding = binding;
       else patch.endBinding = binding;
@@ -548,10 +666,20 @@ export class SelectionTool extends BaseTool {
     const el = mode.original;
     const crop = el.crop ?? { x: 0, y: 0, width: el.naturalWidth, height: el.naturalHeight };
     const scale = el.width / Math.max(1, crop.width);
-    const frame: SelectionFrame = { x: el.x, y: el.y, width: el.width, height: el.height, angle: el.angle };
+    const frame: SelectionFrame = {
+      x: el.x,
+      y: el.y,
+      width: el.width,
+      height: el.height,
+      angle: el.angle,
+    };
     const box = resizeBox(frame, mode.handle, e.world, { keepAspect: e.shift, fromCenter: false });
     const origCenter = { x: el.x + el.width / 2, y: el.y + el.height / 2 };
-    const newCenter = rotatePoint({ x: box.x + box.width / 2, y: box.y + box.height / 2 }, origCenter, -el.angle);
+    const newCenter = rotatePoint(
+      { x: box.x + box.width / 2, y: box.y + box.height / 2 },
+      origCenter,
+      -el.angle,
+    );
     let localX = newCenter.x - box.width / 2;
     let localY = newCenter.y - box.height / 2;
     // Clamp the crop rectangle to the image.
@@ -614,7 +742,11 @@ export class SelectionTool extends BaseTool {
       case 'resizing':
       case 'rotating': {
         const tx = editor.activeGesture;
-        if (tx) editor.refreshFrameMembership(tx, mode.originals.map((o) => o.id));
+        if (tx)
+          editor.refreshFrameMembership(
+            tx,
+            mode.originals.map((o) => o.id),
+          );
         editor.commitGesture();
         break;
       }
@@ -638,7 +770,9 @@ export class SelectionTool extends BaseTool {
     }
     if (e.alt) {
       // Click-through: cycle to the next element under the pointer.
-      const stack = hitTestAll(editor.scene, e.world, { tolerance: hitTolerancePx(e.pointerType) / this.zoom });
+      const stack = hitTestAll(editor.scene, e.world, {
+        tolerance: hitTolerancePx(e.pointerType) / this.zoom,
+      });
       if (stack.length > 1) {
         const current = stack.findIndex((el) => editor.state.selectedIds.includes(el.id));
         const next = stack[(current + 1) % stack.length]!;
@@ -719,7 +853,11 @@ export class SelectionTool extends BaseTool {
       }
     }
     pts.splice(best + 1, 0, world);
-    const norm = normalizeLinearPoints(0, 0, pts.map((p) => [p.x, p.y] as LocalPoint));
+    const norm = normalizeLinearPoints(
+      0,
+      0,
+      pts.map((p) => [p.x, p.y] as LocalPoint),
+    );
     this.editor.updateElements([[el.id, { ...norm, angle: 0 }]], 'Add point');
   }
 
@@ -749,7 +887,13 @@ export class SelectionTool extends BaseTool {
     }
     if ((e.key === 'Delete' || e.key === 'Backspace') && this.selectedPoint) {
       const el = editor.getElement(this.selectedPoint.elementId);
-      if (el && isLinearElement(el) && el.type !== 'connector' && el.points.length > 2 && editor.state.selectedIds.length === 1) {
+      if (
+        el &&
+        isLinearElement(el) &&
+        el.type !== 'connector' &&
+        el.points.length > 2 &&
+        editor.state.selectedIds.length === 1
+      ) {
         const baked = this.bakeRotation(el);
         const pts = baked.points.map(([x, y]) => [baked.x + x, baked.y + y] as LocalPoint);
         pts.splice(this.selectedPoint.index, 1);
@@ -763,7 +907,8 @@ export class SelectionTool extends BaseTool {
   }
 
   override onCancel(): void {
-    if (this.mode.kind !== 'idle' && this.mode.kind !== 'pending' && this.mode.kind !== 'marquee') this.editor.cancelGesture();
+    if (this.mode.kind !== 'idle' && this.mode.kind !== 'pending' && this.mode.kind !== 'marquee')
+      this.editor.cancelGesture();
     this.mode = { kind: 'idle' };
     this.editor.setState({ interaction: 'idle' });
   }
@@ -792,13 +937,16 @@ export class SelectionTool extends BaseTool {
     }
     if (mode.kind === 'point' && mode.candidate) {
       out.bindingHighlight = getOutlinePolygon(mode.candidate.element);
-      out.ports = getElementPorts(mode.candidate.element).map((p) => ({ point: p.point, active: p.id === mode.candidate?.portId }));
+      out.ports = getElementPorts(mode.candidate.element).map((p) => ({
+        point: p.point,
+        active: p.id === mode.candidate?.portId,
+      }));
     }
     if (this.selectedPoint && out.handles === undefined) {
       const el = this.editor.getElement(this.selectedPoint.elementId);
       if (el && isLinearElement(el) && this.editor.state.selectedIds.length === 1) {
-        out.handles = computeLinearHandles(el, { endpointsOnly: el.type === 'connector' }).map((h) =>
-          h.id === `point:${this.selectedPoint!.index}` ? { ...h, active: true } : h,
+        out.handles = computeLinearHandles(el, { endpointsOnly: el.type === 'connector' }).map(
+          (h) => (h.id === `point:${this.selectedPoint!.index}` ? { ...h, active: true } : h),
         );
       }
     }

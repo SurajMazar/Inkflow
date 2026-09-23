@@ -1,5 +1,11 @@
 import type { FileMetadata, FrameElement, SceneElement } from '@inkflow/elements';
-import { rectToBounds, rotatedRectCorners, rotatedRectBounds, type Path, type Rect } from '@inkflow/geometry';
+import {
+  rectToBounds,
+  rotatedRectCorners,
+  rotatedRectBounds,
+  type Path,
+  type Rect,
+} from '@inkflow/geometry';
 import {
   DrawableCache,
   FRAME_NAME_COLOR,
@@ -46,11 +52,16 @@ interface PreparedImage {
 
 function pagesFor(scope: ExportScope, options: PdfExportOptions): PageSpec[] {
   if (options.pages === 'frames') {
-    const frames = scope.elements.filter((e): e is FrameElement => e.type === 'frame' && !e.isDeleted && !e.hidden);
+    const frames = scope.elements.filter(
+      (e): e is FrameElement => e.type === 'frame' && !e.isDeleted && !e.hidden,
+    );
     const ordered = orderedFrames(frames, options.frameOrder ?? scope.appState.frameOrder);
     if (ordered.length > 0) {
       return ordered.map((frame) => {
-        const b = rotatedRectBounds({ x: frame.x, y: frame.y, width: frame.width, height: frame.height }, frame.angle);
+        const b = rotatedRectBounds(
+          { x: frame.x, y: frame.y, width: frame.width, height: frame.height },
+          frame.angle,
+        );
         return {
           bounds: { x: b.minX, y: b.minY, width: b.maxX - b.minX, height: b.maxY - b.minY },
           elements: elementsForExport(scope, frame.id),
@@ -102,8 +113,10 @@ async function prepareImages(
       if (!file) return;
       const alias = `img${++n}`;
       const url = file.url;
-      if (/^data:image\/png[;,]/i.test(url)) return void out.set(id, { data: url, format: 'PNG', alias });
-      if (/^data:image\/jpe?g[;,]/i.test(url)) return void out.set(id, { data: url, format: 'JPEG', alias });
+      if (/^data:image\/png[;,]/i.test(url))
+        return void out.set(id, { data: url, format: 'PNG', alias });
+      if (/^data:image\/jpe?g[;,]/i.test(url))
+        return void out.set(id, { data: url, format: 'JPEG', alias });
       try {
         const img = await options.loadImage(file);
         const w = Math.max(1, Math.round(file.width || 1));
@@ -123,7 +136,12 @@ async function prepareImages(
 
 /** Standard PDF font closest to each family. */
 function pdfFont(layer: TextLayer): [string, string] {
-  const name = layer.fontFamilyKey === 'serif' ? 'times' : layer.fontFamilyKey === 'mono' ? 'courier' : 'helvetica';
+  const name =
+    layer.fontFamilyKey === 'serif'
+      ? 'times'
+      : layer.fontFamilyKey === 'mono'
+        ? 'courier'
+        : 'helvetica';
   const bold = layer.fontWeight === 'bold';
   const italic = layer.fontStyle === 'italic';
   return [name, bold && italic ? 'bolditalic' : bold ? 'bold' : italic ? 'italic' : 'normal'];
@@ -136,7 +154,12 @@ function pdfText(text: string): string {
   let out = '';
   for (const ch of text) {
     const code = ch.codePointAt(0)!;
-    out += (code >= 0x20 && code <= 0x7e) || (code >= 0xa0 && code <= 0xff) || WIN_ANSI_EXTRA.has(ch) ? ch : code === 0x09 ? ' ' : '?';
+    out +=
+      (code >= 0x20 && code <= 0x7e) || (code >= 0xa0 && code <= 0xff) || WIN_ANSI_EXTRA.has(ch)
+        ? ch
+        : code === 0x09
+          ? ' '
+          : '?';
   }
   return out;
 }
@@ -247,9 +270,13 @@ class PdfPainter {
       if (!text) continue;
       this.doc.text(text, run.x, run.y, { align: layer.align, baseline: 'middle' });
       if (layer.decoration !== 'none') {
-        const w = this.doc.getTextWidth(text) + Math.max(0, [...text].length - 1) * layer.letterSpacing;
-        const left = layer.align === 'center' ? run.x - w / 2 : layer.align === 'right' ? run.x - w : run.x;
-        const y = run.y + (layer.decoration === 'underline' ? layer.fontSize * 0.45 : layer.fontSize * 0.05);
+        const w =
+          this.doc.getTextWidth(text) + Math.max(0, [...text].length - 1) * layer.letterSpacing;
+        const left =
+          layer.align === 'center' ? run.x - w / 2 : layer.align === 'right' ? run.x - w : run.x;
+        const y =
+          run.y +
+          (layer.decoration === 'underline' ? layer.fontSize * 0.45 : layer.fontSize * 0.05);
         this.doc.setDrawColor(c.r, c.g, c.b);
         this.doc.setLineWidth(Math.max(1, layer.fontSize / 16));
         this.doc.setLineDashPattern([], 0);
@@ -282,11 +309,27 @@ class PdfPainter {
     d.discardPath();
     if (layer.flipX || layer.flipY) {
       d.setCurrentTransformationMatrix(
-        d.Matrix(layer.flipX ? -1 : 1, 0, 0, layer.flipY ? -1 : 1, layer.flipX ? 2 * x + w : 0, layer.flipY ? 2 * y + h : 0),
+        d.Matrix(
+          layer.flipX ? -1 : 1,
+          0,
+          0,
+          layer.flipY ? -1 : 1,
+          layer.flipX ? 2 * x + w : 0,
+          layer.flipY ? 2 * y + h : 0,
+        ),
       );
     }
     this.alpha(alpha);
-    d.addImage(prepared.data as string, prepared.format, x - crop.x * sx, y - crop.y * sy, natW * sx, natH * sy, prepared.alias, 'FAST');
+    d.addImage(
+      prepared.data as string,
+      prepared.format,
+      x - crop.x * sx,
+      y - crop.y * sy,
+      natW * sx,
+      natH * sy,
+      prepared.alias,
+      'FAST',
+    );
     d.restoreGraphicsState();
   }
 
@@ -352,12 +395,18 @@ class PdfPainter {
     this.doc.setFont('helvetica', 'normal');
     this.doc.setFontSize(FRAME_NAME_FONT_SIZE);
     this.doc.setTextColor(c.r, c.g, c.b);
-    this.doc.text(pdfText(frame.name), 0, -FRAME_NAME_GAP, { baseline: 'bottom', maxWidth: frame.width });
+    this.doc.text(pdfText(frame.name), 0, -FRAME_NAME_GAP, {
+      baseline: 'bottom',
+      maxWidth: frame.width,
+    });
     this.doc.restoreGraphicsState();
   }
 
   clipToFrame(frame: FrameElement): void {
-    const corners = rotatedRectCorners({ x: frame.x, y: frame.y, width: frame.width, height: frame.height }, frame.angle);
+    const corners = rotatedRectCorners(
+      { x: frame.x, y: frame.y, width: frame.width, height: frame.height },
+      frame.angle,
+    );
     this.doc.moveTo(corners[0].x, corners[0].y);
     for (let i = 1; i < 4; i++) this.doc.lineTo(corners[i]!.x, corners[i]!.y);
     this.doc.close();
@@ -408,11 +457,19 @@ class PdfPainter {
  * hand-drawn op sets as vector paths (moveTo/lineTo/curveTo, fill/stroke, dash, opacity through
  * graphics states), text with the closest standard PDF font, and images embedded.
  */
-export async function exportToPdfBlob(scope: ExportScope, options: PdfExportOptions): Promise<Blob> {
+export async function exportToPdfBlob(
+  scope: ExportScope,
+  options: PdfExportOptions,
+): Promise<Blob> {
   const pages = pagesFor(scope, options);
   const sizes = pages.map((p) => pageSize(p.bounds));
   const first = sizes[0]!;
-  const doc = new jsPDF({ unit: 'pt', format: [first.w, first.h], orientation: orientation(first.w, first.h), compress: true });
+  const doc = new jsPDF({
+    unit: 'pt',
+    format: [first.w, first.h],
+    orientation: orientation(first.w, first.h),
+    compress: true,
+  });
   doc.setProperties({ title: 'Inkflow export', creator: 'Inkflow' });
   const background = options.background ? scope.appState.viewBackgroundColor : null;
 
@@ -423,7 +480,11 @@ export async function exportToPdfBlob(scope: ExportScope, options: PdfExportOpti
       if (i > 0) doc.addPage([size.w, size.h], orientation(size.w, size.h));
       const canvas = await exportToCanvas(
         { ...scope, elements: page.elements },
-        { ...options, frameId: page.frameId, bounds: page.frameId ? null : (options.bounds ?? null) },
+        {
+          ...options,
+          frameId: page.frameId,
+          bounds: page.frameId ? null : (options.bounds ?? null),
+        },
       );
       const data = await canvasDataUrl(canvas);
       doc.addImage(data as string, 'PNG', 0, 0, size.w, size.h, `page${i}`, 'FAST');

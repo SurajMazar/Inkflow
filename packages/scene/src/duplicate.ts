@@ -15,7 +15,10 @@ export interface DuplicateOptions {
  * consistently (nested groups stay nested), bindings between copied elements point to the copies,
  * and frame children follow copied frames.
  */
-export function duplicateElements(elements: readonly SceneElement[], options: DuplicateOptions = {}): {
+export function duplicateElements(
+  elements: readonly SceneElement[],
+  options: DuplicateOptions = {},
+): {
   elements: SceneElement[];
   idMap: Map<string, string>;
 } {
@@ -46,7 +49,8 @@ export function duplicateElements(elements: readonly SceneElement[], options: Du
     copy.isDeleted = false;
     copy.locked = false;
     if (el.frameId) {
-      copy.frameId = idMap.get(el.frameId) ?? (options.existingFrameIds?.has(el.frameId) ? el.frameId : null);
+      copy.frameId =
+        idMap.get(el.frameId) ?? (options.existingFrameIds?.has(el.frameId) ? el.frameId : null);
     }
     if (isLinearElement(copy) && isLinearElement(el)) {
       const remap = (b: typeof el.startBinding) => {

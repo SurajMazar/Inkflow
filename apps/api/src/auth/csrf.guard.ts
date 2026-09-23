@@ -19,10 +19,15 @@ export interface CsrfCheckInput {
  * Double-submit rule: unsafe requests that carry an auth cookie (and no bearer token) must echo the
  * `inkflow_csrf` cookie in `x-csrf-token`, and the token must carry a valid server signature.
  */
-export function csrfCheck(input: CsrfCheckInput, isValidToken: (token: string) => boolean): boolean {
+export function csrfCheck(
+  input: CsrfCheckInput,
+  isValidToken: (token: string) => boolean,
+): boolean {
   if (SAFE_METHODS.has(input.method.toUpperCase())) return true;
   if (input.hasBearer) return true;
-  const cookieAuthenticated = Boolean(input.cookies[ACCESS_COOKIE] || input.cookies[REFRESH_COOKIE]);
+  const cookieAuthenticated = Boolean(
+    input.cookies[ACCESS_COOKIE] || input.cookies[REFRESH_COOKIE],
+  );
   if (!cookieAuthenticated) return true;
   const cookie = input.cookies[CSRF_COOKIE];
   const header = input.header;
@@ -43,7 +48,8 @@ export class CsrfGuard implements CanActivate {
     const ok = csrfCheck(
       {
         method: req.method,
-        hasBearer: typeof authorization === 'string' && authorization.toLowerCase().startsWith('bearer '),
+        hasBearer:
+          typeof authorization === 'string' && authorization.toLowerCase().startsWith('bearer '),
         cookies: req.cookies ?? {},
         header: Array.isArray(header) ? header[0] : header,
       },

@@ -14,7 +14,9 @@ export function zodFieldErrors(error: z.ZodError): Record<string, string> {
 export function serverFieldErrors(details: unknown): Record<string, string> {
   const issues = Array.isArray(details)
     ? details
-    : details && typeof details === 'object' && Array.isArray((details as { issues?: unknown }).issues)
+    : details &&
+        typeof details === 'object' &&
+        Array.isArray((details as { issues?: unknown }).issues)
       ? (details as { issues: unknown[] }).issues
       : [];
   const errors: Record<string, string> = {};

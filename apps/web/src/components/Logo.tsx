@@ -31,11 +31,21 @@ export function LogoMark({ className, title }: { className?: string; title?: str
 }
 
 /** Mark + hand-drawn wordmark. */
-export function Logo({ className, size = 'default' }: { className?: string; size?: 'default' | 'lg' }) {
+export function Logo({
+  className,
+  size = 'default',
+}: {
+  className?: string;
+  size?: 'default' | 'lg';
+}) {
   return (
     <span className={cn('inline-flex items-center gap-2', className)}>
       <LogoMark className={size === 'lg' ? 'size-9' : 'size-7'} />
-      <span className={cn('font-hand font-bold tracking-tight', size === 'lg' ? 'text-2xl' : 'text-xl')}>Inkflow</span>
+      <span
+        className={cn('font-hand font-bold tracking-tight', size === 'lg' ? 'text-2xl' : 'text-xl')}
+      >
+        Inkflow
+      </span>
     </span>
   );
 }

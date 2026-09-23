@@ -18,7 +18,9 @@ export default async function globalSetup(): Promise<void> {
       `SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename <> '_prisma_migrations'`,
     );
     if (rows.length) {
-      await client.query(`TRUNCATE ${rows.map((r) => `"${r.tablename}"`).join(', ')} RESTART IDENTITY CASCADE`);
+      await client.query(
+        `TRUNCATE ${rows.map((r) => `"${r.tablename}"`).join(', ')} RESTART IDENTITY CASCADE`,
+      );
     }
   } finally {
     await client.end();

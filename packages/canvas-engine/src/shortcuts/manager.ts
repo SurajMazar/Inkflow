@@ -30,7 +30,16 @@ export function parseCombo(combo: string): ParsedCombo {
   };
 }
 
-const SHIFTED_SYMBOLS: Record<string, string> = { '?': '/', '+': '=', '>': '.', '<': ',', '{': '[', '}': ']', '!': '1', '@': '2' };
+const SHIFTED_SYMBOLS: Record<string, string> = {
+  '?': '/',
+  '+': '=',
+  '>': '.',
+  '<': ',',
+  '{': '[',
+  '}': ']',
+  '!': '1',
+  '@': '2',
+};
 
 /** Normalized key name of a keyboard event (layout-independent for letters and digits). */
 export function eventKey(e: KeyboardEvent): string {
@@ -66,7 +75,12 @@ export function comboMatches(combo: ParsedCombo, e: KeyboardEvent, mac: boolean)
   }
   if (combo.key === '+' && key === '=') wantShift = e.shiftKey;
   if (key !== wanted && !(combo.key === '+' && key === '=')) return false;
-  return modPressed === combo.mod && ctrlPressed === combo.ctrl && e.shiftKey === wantShift && e.altKey === combo.alt;
+  return (
+    modPressed === combo.mod &&
+    ctrlPressed === combo.ctrl &&
+    e.shiftKey === wantShift &&
+    e.altKey === combo.alt
+  );
 }
 
 /** Serializes a keyboard event into a combo string (used by the shortcut recorder). */
@@ -105,12 +119,15 @@ export class ShortcutManager {
 
   /** Effective shortcut list after overrides (for help/UI). */
   effective(): ShortcutDefinition[] {
-    return DEFAULT_SHORTCUTS.map((s) => (this.overrides[s.id] ? { ...s, keys: [this.overrides[s.id]!] } : s));
+    return DEFAULT_SHORTCUTS.map((s) =>
+      this.overrides[s.id] ? { ...s, keys: [this.overrides[s.id]!] } : s,
+    );
   }
 
   private rebuild() {
     this.bindings = [];
-    for (const s of this.effective()) for (const k of s.keys) this.bindings.push({ id: s.id, combo: parseCombo(k) });
+    for (const s of this.effective())
+      for (const k of s.keys) this.bindings.push({ id: s.id, combo: parseCombo(k) });
   }
 
   attach(win: Window): () => void {
@@ -126,7 +143,8 @@ export class ShortcutManager {
     if (isEditableTarget(e.target)) return false;
     // Ignore keys while focus is inside UI overlays (dialogs, menus) that manage their own keys.
     const target = e.target as HTMLElement | null;
-    if (target?.closest?.('[role="dialog"],[role="menu"],[role="listbox"],[data-inkflow-ui-keys]')) return false;
+    if (target?.closest?.('[role="dialog"],[role="menu"],[role="listbox"],[data-inkflow-ui-keys]'))
+      return false;
 
     if (editor.state.presentation.active) return this.handlePresentation(e);
 
@@ -142,7 +160,12 @@ export class ShortcutManager {
     // Arrow keys: nudge (Shift = large step), or pan the canvas when nothing is selected.
     if (e.key.startsWith('Arrow') && !e.metaKey && !e.ctrlKey && !e.altKey) {
       if (editor.state.selectedIds.length === 0) return false;
-      const id = { ArrowLeft: 'nav.nudgeLeft', ArrowRight: 'nav.nudgeRight', ArrowUp: 'nav.nudgeUp', ArrowDown: 'nav.nudgeDown' }[e.key];
+      const id = {
+        ArrowLeft: 'nav.nudgeLeft',
+        ArrowRight: 'nav.nudgeRight',
+        ArrowUp: 'nav.nudgeUp',
+        ArrowDown: 'nav.nudgeDown',
+      }[e.key];
       if (id && editor.actions.run(id, { large: e.shiftKey })) {
         e.preventDefault();
         return true;
@@ -152,8 +175,14 @@ export class ShortcutManager {
     for (const b of this.bindings) {
       if (!comboMatches(b.combo, e, this.mac)) continue;
       // Single-key shortcuts never fire while a pointer interaction is in progress.
-      if (!b.combo.mod && !b.combo.alt && editor.activeTool.isBusy() && b.id.startsWith('tool.')) continue;
-      if (b.id === 'edit.copy' || b.id === 'edit.cut' || b.id === 'edit.paste' || b.id === 'edit.pasteInPlace') {
+      if (!b.combo.mod && !b.combo.alt && editor.activeTool.isBusy() && b.id.startsWith('tool.'))
+        continue;
+      if (
+        b.id === 'edit.copy' ||
+        b.id === 'edit.cut' ||
+        b.id === 'edit.paste' ||
+        b.id === 'edit.pasteInPlace'
+      ) {
         // Native clipboard events handle these so the system clipboard is used without prompts.
         if (b.id !== 'edit.pasteInPlace') return false;
       }

@@ -20,7 +20,8 @@ export interface MockRoute {
   method: string;
   path: string | RegExp;
   /** Static response or a function of the call (and its 0-based index for this route). */
-  respond: MockResponse | ((call: RecordedCall, index: number) => MockResponse | Promise<MockResponse>);
+  respond:
+    MockResponse | ((call: RecordedCall, index: number) => MockResponse | Promise<MockResponse>);
 }
 
 function toResponse({ status = 200, body, headers = {} }: MockResponse): Response {
@@ -48,7 +49,8 @@ export function installFetchMock(initialRoutes: MockRoute[] = []) {
   const counters = new Map<MockRoute, number>();
 
   const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
-    const rawUrl = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+    const rawUrl =
+      typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
     const url = new URL(rawUrl, 'http://localhost');
     const method = (init?.method ?? 'GET').toUpperCase();
     let body: unknown = init?.body;
@@ -69,7 +71,9 @@ export function installFetchMock(initialRoutes: MockRoute[] = []) {
     };
     calls.push(call);
     const route = routes.find(
-      (r) => r.method === method && (typeof r.path === 'string' ? r.path === call.path : r.path.test(call.path)),
+      (r) =>
+        r.method === method &&
+        (typeof r.path === 'string' ? r.path === call.path : r.path.test(call.path)),
     );
     if (!route) {
       unmatched.push(call);
@@ -77,7 +81,8 @@ export function installFetchMock(initialRoutes: MockRoute[] = []) {
     }
     const index = counters.get(route) ?? 0;
     counters.set(route, index + 1);
-    const result = typeof route.respond === 'function' ? await route.respond(call, index) : route.respond;
+    const result =
+      typeof route.respond === 'function' ? await route.respond(call, index) : route.respond;
     return toResponse(result);
   });
 
@@ -92,7 +97,10 @@ export function installFetchMock(initialRoutes: MockRoute[] = []) {
       routes.unshift(...extra);
     },
     callsTo(method: string, path: string | RegExp) {
-      return calls.filter((c) => c.method === method && (typeof path === 'string' ? c.path === path : path.test(c.path)));
+      return calls.filter(
+        (c) =>
+          c.method === method && (typeof path === 'string' ? c.path === path : path.test(c.path)),
+      );
     },
   };
 }

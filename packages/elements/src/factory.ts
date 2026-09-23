@@ -49,7 +49,10 @@ function baseDefaults(type: ElementType): BaseElement {
   };
 }
 
-export function createLabel(text: string, style: Partial<TextStyle> & { color?: string | null } = {}): ShapeLabel {
+export function createLabel(
+  text: string,
+  style: Partial<TextStyle> & { color?: string | null } = {},
+): ShapeLabel {
   return {
     ...DEFAULT_TEXT_STYLE,
     textAlign: 'center',
@@ -76,11 +79,17 @@ export function createEdgeLabel(
   };
 }
 
-export function createBinding(elementId: string, options: Partial<Omit<Binding, 'elementId'>> = {}): Binding {
+export function createBinding(
+  elementId: string,
+  options: Partial<Omit<Binding, 'elementId'>> = {},
+): Binding {
   return { elementId, portId: null, anchor: null, gap: DEFAULT_BINDING_GAP, ...options };
 }
 
-export function createTableColumn(name: string, options: Partial<Omit<TableColumn, 'name'>> = {}): TableColumn {
+export function createTableColumn(
+  name: string,
+  options: Partial<Omit<TableColumn, 'name'>> = {},
+): TableColumn {
   return {
     id: generateId(10),
     name,
@@ -214,8 +223,16 @@ function typeDefaults(type: ElementType): Record<string, unknown> {
 }
 
 /** Creates a fully populated element of the given type with sensible defaults. */
-export function createElement<T extends ElementType>(type: T, props: NewElementProps<T> = {}): ElementOfType<T> {
-  const element = { ...baseDefaults(type), ...typeDefaults(type), ...props, type } as unknown as ElementOfType<T>;
+export function createElement<T extends ElementType>(
+  type: T,
+  props: NewElementProps<T> = {},
+): ElementOfType<T> {
+  const element = {
+    ...baseDefaults(type),
+    ...typeDefaults(type),
+    ...props,
+    type,
+  } as unknown as ElementOfType<T>;
   return element;
 }
 

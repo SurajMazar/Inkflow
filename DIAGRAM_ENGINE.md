@@ -30,12 +30,12 @@ sequences with the `compute*Layout` functions; the canvas engine uses ports, `fi
 
 A `NodeElement` stores a `shape` key. `shapeRegistry` holds `NodeShapeDefinition`s:
 
-| field | meaning |
-| --- | --- |
-| `geometry(w, h, el?)` | `ShapeGeometry` in the local box `0..w × 0..h` |
-| `defaultSize`, `defaultStyle`, `defaultIcon`, `keywords`, `category` | palette & builder defaults |
-| `elliptical` | outline is an ellipse (smooth sampling for highlights) |
-| `ports(w, h)` | default ports (default: four side midpoints) |
+| field                                                                | meaning                                                |
+| -------------------------------------------------------------------- | ------------------------------------------------------ |
+| `geometry(w, h, el?)`                                                | `ShapeGeometry` in the local box `0..w × 0..h`         |
+| `defaultSize`, `defaultStyle`, `defaultIcon`, `keywords`, `category` | palette & builder defaults                             |
+| `elliptical`                                                         | outline is an ellipse (smooth sampling for highlights) |
+| `ports(w, h)`                                                        | default ports (default: four side midpoints)           |
 
 `ShapeGeometry` contains the closed `outline` (filled, stroked, hit-tested), optional `details`
 (extra strokes: cylinder rims, rack slots, bricks), `fills` (filled with the stroke colour: LEDs,
@@ -66,11 +66,20 @@ their contents and are never routing obstacles.
 ```ts
 import { shapeRegistry, PathBuilder } from '@inkflow/diagram-engine';
 shapeRegistry.register({
-  key: 'tag', label: 'Tag', category: 'misc', keywords: ['label'],
+  key: 'tag',
+  label: 'Tag',
+  category: 'misc',
+  keywords: ['label'],
   defaultSize: { width: 140, height: 60 },
   geometry: (w, h) => ({
-    outline: new PathBuilder().moveTo(0, 0).lineTo(w - h / 2, 0).lineTo(w, h / 2)
-      .lineTo(w - h / 2, h).lineTo(0, h).close().build(),
+    outline: new PathBuilder()
+      .moveTo(0, 0)
+      .lineTo(w - h / 2, 0)
+      .lineTo(w, h / 2)
+      .lineTo(w - h / 2, h)
+      .lineTo(0, h)
+      .close()
+      .build(),
     labelBox: { x: 8, y: 8, width: w - h / 2 - 8, height: h - 16 },
   }),
 });
@@ -91,16 +100,16 @@ label and keywords. To add an icon, register `{ key, label, category, keywords, 
 All layouts use `measureLineWidth`/`getFontString` from `@inkflow/elements` (DOM measurer in the
 browser, heuristic in Node), so measurement and drawing agree.
 
-* **Tables** — `computeTableLayout`: header (bold name, `headerFontSize = fontSize + 1`), rows of
+- **Tables** — `computeTableLayout`: header (bold name, `headerFontSize = fontSize + 1`), rows of
   `rowHeight = 2 × fontSize`, key-badge column (`PK`, `FK`, `PK FK`, `UQ` from
   `getColumnKeyBadge`), name column (`nameColumnX`, PK names bold) and type column
   (`typeColumnX`). `measureTable` returns the minimum size (≥ 140 wide, one placeholder row when
   empty).
-* **UML class** — `computeUmlClassLayout`: name compartment (optional `«stereotype»` line, bold
+- **UML class** — `computeUmlClassLayout`: name compartment (optional `«stereotype»` line, bold
   name, italic when abstract), attributes, methods (extra box height goes to methods). Member
   suffixes follow Mermaid: `$` static (underlined), `*` abstract (italic); markers are stripped
   from the displayed text (`parseUmlMember`).
-* **Sequence** — `computeSequenceLayout` (local coordinates): participant headers across the top
+- **Sequence** — `computeSequenceLayout` (local coordinates): participant headers across the top
   (spacing = max(`participantSpacing`, header widths, message labels)), lifelines, messages in
   model order `messageSpacing` apart (self messages add a loop of ½ spacing), activation bars
   derived from call nesting — a `sync` message opens a bar on the receiver (nested bars offset by
@@ -117,7 +126,7 @@ browser, heuristic in Node), so measurement and drawing agree.
 `Binding = { elementId, portId, anchor, gap }` resolves in this order:
 
 1. **Port** — `getElementPorts(el)` returns world-space `ResolvedPort`s `{ id, side, point,
-   normal }`. Nodes: shape default ports merged with `node.ports` (custom ports override ids);
+normal }`. Nodes: shape default ports merged with `node.ports` (custom ports override ids);
    side points are projected inward onto non-rectangular outlines (a triangle's `left` port sits
    on its slanted edge). Shapes (rectangle/ellipse/…): projected side ports. Tables: side ports plus
    `col:<columnId>:left|right` per row. UML class, image, text, frame: side ports. Linear, freedraw
@@ -145,13 +154,13 @@ first; floating ends aim at the nearest waypoint, the other fixed point, or the 
 centre; for `orthogonal`/`elbow` floating ends snap to the side port facing that point, judged
 relative to the target's aspect ratio), then:
 
-* `straight` — start, waypoints, end.
-* `curved` — control polyline for a Catmull-Rom curve: start, waypoints (or one control halfway
+- `straight` — start, waypoints, end.
+- `curved` — control polyline for a Catmull-Rom curve: start, waypoints (or one control halfway
   between the two ends pushed 30 % along their normals), end.
-* `bezier` — exactly `[start, c1, c2, end]`, controls along the normals at 40 % of the distance.
-* `elbow` — one bend (perpendicular normals) or two bends (parallel normals, midpoint channel, or
+- `bezier` — exactly `[start, c1, c2, end]`, controls along the normals at 40 % of the distance.
+- `elbow` — one bend (perpendicular normals) or two bends (parallel normals, midpoint channel, or
   a C-shape when both normals point the same way). No obstacle avoidance.
-* `orthogonal` — obstacle-avoiding orthogonal routing:
+- `orthogonal` — obstacle-avoiding orthogonal routing:
   1. Obstacles are the non-linear elements (containers, frames and freedraw excluded) inflated by
      `ROUTING_MARGIN` (16). Containers enclosing an endpoint are dropped.
   2. Stubs leave each target along its port normal until they exit the inflated target.
@@ -183,7 +192,7 @@ around the connector.
 elements bound between the nodes). Sizes come from each node's rotated bounds; the laid-out block
 is anchored at the original selection's top-left; all algorithms are deterministic.
 
-* **hierarchical** (Sugiyama) — per connected component: DFS cycle breaking (back edges reversed),
+- **hierarchical** (Sugiyama) — per connected component: DFS cycle breaking (back edges reversed),
   longest-path layering with sources pulled down next to their successors, dummy vertices for long
   edges, barycentric crossing minimization (alternating sweeps, best ordering kept, crossings
   counted with a Fenwick tree), then priority coordinate assignment: each sweep places a layer at
@@ -191,15 +200,15 @@ is anchored at the original selection's top-left; all algorithms are determinist
   weighted isotonic regression (pool-adjacent-violators); dummies weigh 8× so long edges stay
   straight; the final pass centres children under parents. Directions TB/BT/LR/RL; components are
   packed side by side.
-* **tree** — Walker's tidy tree in Buchheim–Jünger–Leipert O(n) form with size-aware separations;
+- **tree** — Walker's tidy tree in Buchheim–Jünger–Leipert O(n) form with size-aware separations;
   roots are nodes without incoming edges (cycles fall back to the first unvisited node, forests
   packed side by side); children are ordered by their current position. Direction `LR` defaults
   to a mind map (`mindMap: false` for a plain LR tree): root subtrees are split between both sides
   balanced by subtree size.
-* **grid** — near-square grid in reading order (rows by vertical overlap, then left to right) with
+- **grid** — near-square grid in reading order (rows by vertical overlap, then left to right) with
   per-column widths and per-row heights.
-* **horizontal / vertical** — one row / column in current order, equal gaps, centred on a line.
-* **force** — Fruchterman–Reingold: seeded random start (`seed`, default 1), repulsion k²/d,
+- **horizontal / vertical** — one row / column in current order, equal gaps, centred on a line.
+- **force** — Fruchterman–Reingold: seeded random start (`seed`, default 1), repulsion k²/d,
   attraction d²/k, weak gravity, linear cooling (300/180/120 iterations for ≤100/≤300/larger
   graphs), followed by overlap removal (sweep-and-prune pairs pushed apart along the axis of least
   penetration until no overlap remains).
@@ -209,18 +218,18 @@ limits). `selectConnectedComponent(scene, ids)` walks bindings breadth first.
 
 ## Builders, ER/UML/sequence models
 
-* `createNode(shape, props)` — registry defaults; `label` may be a string (sans 16 px).
-* `createConnector(from, to, props)` — binds facing side ports (by box gaps; `fromPort: null` for
+- `createNode(shape, props)` — registry defaults; `label` may be a string (sans 16 px).
+- `createConnector(from, to, props)` — binds facing side ports (by box gaps; `fromPort: null` for
   floating) and routes with `computeConnectorRoute`.
-* `createErTable` (sized with `measureTable`; PKs non-nullable), `createErRelationship` — orthogonal
+- `createErTable` (sized with `measureTable`; PKs non-nullable), `createErRelationship` — orthogonal
   `relationship` edges bound to `col:<id>:left|right` ports (same side when tables are stacked);
   crow's-foot heads: one-to-one `er-one-only`/`er-one-only`, one-to-many
   `er-one-only`/`er-zero-many`, many-to-one mirrored, many-to-many `er-zero-many` both.
-* `createUmlClass`, `createUmlRelation(from, to, kind)` — inheritance/realization point from subtype
+- `createUmlClass`, `createUmlRelation(from, to, kind)` — inheritance/realization point from subtype
   to supertype (hollow triangle, realization dashed), aggregation/composition put the hollow/filled
   diamond on `from` (the whole), dependency is dashed with an open arrow, association has an open
   arrow.
-* `createSequenceDiagram(participants, messages)` — index-based messages, sized with
+- `createSequenceDiagram(participants, messages)` — index-based messages, sized with
   `measureSequence`.
 
 ## Library and templates
@@ -246,27 +255,27 @@ architecture, UML, mind-map and kanban builders. Every build passes `validateEle
 All input is untrusted data: nothing is evaluated, no network or file access happens, sizes and
 counts are capped, and results always go through element validation.
 
-* `importNativeJson(text)` — 50 MB cap, guarded `JSON.parse`, rejects non-objects and other
+- `importNativeJson(text)` — 50 MB cap, guarded `JSON.parse`, rejects non-objects and other
   formats, then `parseDocument` (migration + per-element validation, invalid elements dropped and
   reported).
-* `importExcalidraw(json)` — converts shapes, lines/arrows (bindings → floating bindings, heads,
+- `importExcalidraw(json)` — converts shapes, lines/arrows (bindings → floating bindings, heads,
   elbow/curved styles), freedraw, text (font numbers → hand/sans/mono), bound text → shape/arrow
   labels, images + files map (only `data:image/(png|jpeg|webp|gif|svg+xml);base64` URLs, bytes
   checked against the declared type, SVGs re-sanitized), frames; z-order → fractional indices.
-* `sanitizeSvg` — a local XML tokenizer (no DOMParser) builds a tree that is re-serialized from an
+- `sanitizeSvg` — a local XML tokenizer (no DOMParser) builds a tree that is re-serialized from an
   allow-list of elements and attributes. Dropped: scripts, `foreignObject`, `<style>`, `<a>`,
   animation, DOCTYPE/ENTITY declarations (no entity expansion), comments, PIs, `on*` handlers,
   `javascript:`/`vbscript:`/`data:` values (checked after entity decoding and control-character
   stripping), non-local `url()`/`href`, CSS outside an allow-list; `<image>` only with raster data
   URLs; text is re-escaped. `svgToDataUrl` returns the sanitized SVG as a base64 data URL.
-* `importSvgAsElements` — sanitized SVG → rectangles, ellipses, lines, closed polygons, sampled
+- `importSvgAsElements` — sanitized SVG → rectangles, ellipses, lines, closed polygons, sampled
   paths (one line element per subpath, closed on `Z`) and text; `translate/scale/rotate/skew/
-  matrix` transforms, nested groups, `viewBox` + `preserveAspectRatio`, inherited presentation
+matrix` transforms, nested groups, `viewBox` + `preserveAspectRatio`, inherited presentation
   attributes and `style`, opacity composition, `use` expansion with depth and node budgets.
-* `readImageFile(blob)` — size limit (`MAX_UPLOAD_BYTES`), magic-byte sniffing (PNG, JPEG, GIF,
+- `readImageFile(blob)` — size limit (`MAX_UPLOAD_BYTES`), magic-byte sniffing (PNG, JPEG, GIF,
   WebP, SVG; the declared type is ignored), header-parsed dimensions, SVGs sanitized.
-* `detectImportKind(fileName, mime, head)` — content first, then MIME, then extension.
-* `importMermaid(text)` — `flowchart`/`graph` (TD/TB/BT/LR/RL; `[]`, `()`, `([])`, `[[]]`,
+- `detectImportKind(fileName, mime, head)` — content first, then MIME, then extension.
+- `importMermaid(text)` — `flowchart`/`graph` (TD/TB/BT/LR/RL; `[]`, `()`, `([])`, `[[]]`,
   `[()]`, `(())`, `((()))`, `{}`, `{{}}`, `[//]`, `[\\]`, `[/\]`, `[\/]`, `>]`; `-->`, `---`,
   `-.->`, `==>`, `--o`, `--x`, `<-->`, `~~~`; `|label|` and inline `-- label -->`; `&` groups;
   chains; `classDef`/`class`/`style` colours; subgraphs → frames with a clustered layout: each
@@ -281,10 +290,10 @@ counts are capped, and results always go through element validation.
 
 ## Known limitations
 
-* Mermaid: nested subgraphs become overlapping frames (the scene model does not nest frames);
+- Mermaid: nested subgraphs become overlapping frames (the scene model does not nest frames);
   node ids must be separated from relation tokens by whitespace when they end in `o`/`x`
   (`Foo o-- Bar`); `loop/alt/…` blocks become notes because the sequence model has no fragments;
   the `@{ shape: … }` node syntax is reported as unsupported.
-* `Note left of / right of` import as notes over the participant (the sequence model only has
+- `Note left of / right of` import as notes over the participant (the sequence model only has
   "over" notes).
-* Orthogonal routes are computed per connector; parallel connectors may share segments.
+- Orthogonal routes are computed per connector; parallel connectors may share segments.

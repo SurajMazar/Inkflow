@@ -1,5 +1,10 @@
 import type { CollaboratorView, Editor } from '@inkflow/canvas-engine';
-import { CollabClient, CLOSE_CODES, type PeerPresence, type SyncStatus } from '@inkflow/collaboration';
+import {
+  CollabClient,
+  CLOSE_CODES,
+  type PeerPresence,
+  type SyncStatus,
+} from '@inkflow/collaboration';
 import { changesToOperations, type SceneDocument } from '@inkflow/scene';
 import { debounce } from '@inkflow/shared';
 import { useQueryClient } from '@tanstack/react-query';
@@ -22,7 +27,13 @@ export interface BoardSyncOptions {
   reload(): Promise<{ document: SceneDocument; seq: number } | null>;
 }
 
-const INITIAL_STATUS: SyncStatus = { connection: 'connecting', save: 'saved', pendingOps: 0, lastSavedAt: null, error: null };
+const INITIAL_STATUS: SyncStatus = {
+  connection: 'connecting',
+  save: 'saved',
+  pendingOps: 0,
+  lastSavedAt: null,
+  error: null,
+};
 const TRANSIENT_TIMEOUT_MS = 2500;
 
 function toCollaborator(peer: PeerPresence): CollaboratorView {
@@ -47,7 +58,10 @@ function toCollaborator(peer: PeerPresence): CollaboratorView {
  * local commits → operations (queued offline in IndexedDB) → WebSocket/HTTP → PostgreSQL,
  * server changes → rebased element states → editor, plus presence, live previews, snapshots.
  */
-export function useBoardSync(options: BoardSyncOptions): { status: SyncStatus; client: CollabClient | null } {
+export function useBoardSync(options: BoardSyncOptions): {
+  status: SyncStatus;
+  client: CollabClient | null;
+} {
   const { editor, boardId, canEdit, shareToken } = options;
   const [status, setStatus] = React.useState<SyncStatus>(INITIAL_STATUS);
   const [client, setClient] = React.useState<CollabClient | null>(null);
@@ -57,7 +71,10 @@ export function useBoardSync(options: BoardSyncOptions): { status: SyncStatus; c
   latest.current = options;
 
   React.useEffect(() => {
-    const transientByPeer = new Map<string, { ids: Set<string>; timer: ReturnType<typeof setTimeout> }>();
+    const transientByPeer = new Map<
+      string,
+      { ids: Set<string>; timer: ReturnType<typeof setTimeout> }
+    >();
     let disposed = false;
 
     const revertTransient = (clientId: string) => {
@@ -98,11 +115,15 @@ export function useBoardSync(options: BoardSyncOptions): { status: SyncStatus; c
         if (existing) clearTimeout(existing.timer);
         const ids = existing?.ids ?? new Set<string>();
         for (const el of elements) ids.add(el.id);
-        transientByPeer.set(peerId, { ids, timer: setTimeout(() => revertTransient(peerId), TRANSIENT_TIMEOUT_MS) });
+        transientByPeer.set(peerId, {
+          ids,
+          timer: setTimeout(() => revertTransient(peerId), TRANSIENT_TIMEOUT_MS),
+        });
       },
       onPeers: (peers) => {
         const present = new Set(peers.map((p) => p.clientId));
-        for (const peerId of [...transientByPeer.keys()]) if (!present.has(peerId)) revertTransient(peerId);
+        for (const peerId of [...transientByPeer.keys()])
+          if (!present.has(peerId)) revertTransient(peerId);
         editor.setCollaborators(peers.map(toCollaborator));
       },
       onStatus: (s) => {
@@ -133,7 +154,9 @@ export function useBoardSync(options: BoardSyncOptions): { status: SyncStatus; c
         void resync();
       },
       onRejected: (results) => {
-        notify.error('Some changes could not be saved', { description: results[0]?.reason ?? 'The server rejected them.' });
+        notify.error('Some changes could not be saved', {
+          description: results[0]?.reason ?? 'The server rejected them.',
+        });
       },
       onFatal: (code, message) => {
         if (code === CLOSE_CODES.UNAUTHORIZED) {
@@ -164,7 +187,9 @@ export function useBoardSync(options: BoardSyncOptions): { status: SyncStatus; c
       collab.submit(ops);
       saveSnapshot();
     });
-    const offTransient = editor.events.on('transient', (elements) => collab.sendTransient(elements));
+    const offTransient = editor.events.on('transient', (elements) =>
+      collab.sendTransient(elements),
+    );
     const offPresence = editor.events.on('presence', (state) => collab.updatePresence(state));
     const persistAppState = debounce(() => {
       if (!latest.current.canEdit) return;

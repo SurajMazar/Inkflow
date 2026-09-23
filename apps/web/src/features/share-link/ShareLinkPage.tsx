@@ -25,7 +25,8 @@ export function ShareLinkPage() {
     queryKey: queryKeys.shareLinks.resolve(token),
     queryFn: ({ signal }) => api.sharing.resolveLink(token, { signal }),
     enabled: token.length > 0,
-    retry: (count, error) => !(error instanceof ApiError && error.status > 0 && error.status < 500) && count < 2,
+    retry: (count, error) =>
+      !(error instanceof ApiError && error.status > 0 && error.status < 500) && count < 2,
     staleTime: 0,
     gcTime: 0,
   });
@@ -38,7 +39,12 @@ export function ShareLinkPage() {
 
   if (resolved.isError || !token) {
     const error = resolved.error;
-    const unavailable = !token || (error instanceof ApiError && (error.code === 'NOT_FOUND' || error.code === 'TOKEN_EXPIRED' || error.code === 'TOKEN_INVALID'));
+    const unavailable =
+      !token ||
+      (error instanceof ApiError &&
+        (error.code === 'NOT_FOUND' ||
+          error.code === 'TOKEN_EXPIRED' ||
+          error.code === 'TOKEN_INVALID'));
     const { title, description } = describeApiError(error);
     return (
       <FullPageMessage
@@ -48,11 +54,7 @@ export function ShareLinkPage() {
           </div>
         }
         title={unavailable ? 'This link has expired or was revoked' : title}
-        description={
-          unavailable
-            ? 'Ask the person who shared it for a new link.'
-            : description
-        }
+        description={unavailable ? 'Ask the person who shared it for a new link.' : description}
         actions={
           <>
             {unavailable ? null : (

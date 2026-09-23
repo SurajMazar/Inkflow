@@ -30,7 +30,12 @@ async function ensureUser(prisma: PrismaService, u: (typeof DEMO_USERS)[number])
   const existing = await prisma.user.findUnique({ where: { email: u.email } });
   if (existing) return { user: existing, created: false };
   const user = await prisma.user.create({
-    data: { email: u.email, name: u.name, passwordHash: await hashPassword(u.password), emailVerifiedAt: new Date() },
+    data: {
+      email: u.email,
+      name: u.name,
+      passwordHash: await hashPassword(u.password),
+      emailVerifiedAt: new Date(),
+    },
   });
   return { user, created: true };
 }
@@ -45,7 +50,9 @@ async function main(): Promise<void> {
     const projects = ctx.get(ProjectsService);
     const boards = ctx.get(BoardsService);
 
-    const [{ user: demo }, { user: alex }] = await Promise.all(DEMO_USERS.map((u) => ensureUser(prisma, u)));
+    const [{ user: demo }, { user: alex }] = await Promise.all(
+      DEMO_USERS.map((u) => ensureUser(prisma, u)),
+    );
 
     const existing = await prisma.workspace.findFirst({
       where: { name: DEMO_WORKSPACE, members: { some: { userId: demo.id, role: 'OWNER' } } },
@@ -66,7 +73,10 @@ async function main(): Promise<void> {
     for (const name of new Set(Object.values(PROJECT_OF))) {
       const p = await projects.createProject(demo.id, workspace.id, {
         name,
-        description: name === 'Engineering' ? 'System design, data models and UML' : 'Planning, flows and ideation',
+        description:
+          name === 'Engineering'
+            ? 'System design, data models and UML'
+            : 'Planning, flows and ideation',
       });
       projectIds.set(name, p.id);
     }
@@ -90,13 +100,17 @@ async function main(): Promise<void> {
     }
     if (created[0]) {
       await boards.setFavorite(demo.id, created[0], true);
-      const first = await prisma.boardElement.findFirst({ where: { boardId: created[0], isDeleted: false } });
+      const first = await prisma.boardElement.findFirst({
+        where: { boardId: created[0], isDeleted: false },
+      });
       await prisma.comment.create({
         data: {
           boardId: created[0],
           authorId: alex.id,
           body: 'Looks great! Should we add a retry path for failed payments?',
-          anchor: first ? { type: 'element', elementId: first.elementId, x: 10, y: 10 } : { type: 'point', x: 0, y: 0 },
+          anchor: first
+            ? { type: 'element', elementId: first.elementId, x: 10, y: 10 }
+            : { type: 'point', x: 0, y: 0 },
         },
       });
     }

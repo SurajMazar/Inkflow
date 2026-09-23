@@ -10,7 +10,13 @@ import { createTestEditor, renderInSession } from './test-session';
 
 beforeEach(() => {
   __resetClientStateForTests();
-  installFetchMock([{ method: 'GET', path: '/auth/me', respond: { status: 401, body: { error: { code: 'UNAUTHORIZED', message: 'no' } } } }]);
+  installFetchMock([
+    {
+      method: 'GET',
+      path: '/auth/me',
+      respond: { status: 401, body: { error: { code: 'UNAUTHORIZED', message: 'no' } } },
+    },
+  ]);
 });
 
 function setup<T extends TableElement | SequenceElement>(el: T) {
@@ -44,7 +50,11 @@ describe('StructuredEditorPanel — tables', () => {
     const [id, patch] = patches[0]!;
     expect(id).toBe('tbl');
     expect(patch.columns).toHaveLength(3);
-    expect(patch.columns![2]).toMatchObject({ name: 'column_3', dataType: 'text', primaryKey: false });
+    expect(patch.columns![2]).toMatchObject({
+      name: 'column_3',
+      dataType: 'text',
+      primaryKey: false,
+    });
     const size = measureTable(live());
     expect(patch).toMatchObject({ width: size.width, height: size.height });
     expect(live().columns).toHaveLength(3);
@@ -86,7 +96,11 @@ describe('StructuredEditorPanel — tables', () => {
     await user.click(within(second()).getByRole('button', { name: 'Move column email up' }));
     expect(live().columns.map((c) => c.name)).toEqual(['email', 'id']);
 
-    await user.click(within(screen.getAllByTestId('table-column')[0]!).getByRole('button', { name: 'Remove column email' }));
+    await user.click(
+      within(screen.getAllByTestId('table-column')[0]!).getByRole('button', {
+        name: 'Remove column email',
+      }),
+    );
     expect(live().columns.map((c) => c.name)).toEqual(['id']);
   });
 });
@@ -110,7 +124,12 @@ describe('StructuredEditorPanel — sequence diagrams', () => {
     expect(label).toBe('Add message');
     const patch = patches[0]![1];
     expect(patch.messages).toHaveLength(2);
-    expect(patch.messages![1]).toMatchObject({ from: before.participants[0]!.id, to: before.participants[1]!.id, label: 'message', kind: 'sync' });
+    expect(patch.messages![1]).toMatchObject({
+      from: before.participants[0]!.id,
+      to: before.participants[1]!.id,
+      label: 'message',
+      kind: 'sync',
+    });
     expect(patch.height!).toBeGreaterThan(before.height);
     expect(screen.getAllByTestId('sequence-message')).toHaveLength(2);
   });
@@ -123,13 +142,26 @@ describe('StructuredEditorPanel — sequence diagrams', () => {
     const labelInput = within(msg()).getByTestId('message-label');
     await user.clear(labelInput);
     await user.type(labelInput, 'SELECT users{Enter}');
-    expect(update).toHaveBeenLastCalledWith([['seq', expect.objectContaining({ messages: [expect.objectContaining({ label: 'SELECT users' })] })]], 'Edit message');
+    expect(update).toHaveBeenLastCalledWith(
+      [
+        [
+          'seq',
+          expect.objectContaining({
+            messages: [expect.objectContaining({ label: 'SELECT users' })],
+          }),
+        ],
+      ],
+      'Edit message',
+    );
 
     const db = live().participants[2]!.id;
     await user.selectOptions(within(msg()).getByRole('combobox', { name: 'Message 1 to' }), db);
     expect(live().messages[0]!.to).toBe(db);
 
-    await user.selectOptions(within(msg()).getByRole('combobox', { name: 'Message 1 kind' }), 'async');
+    await user.selectOptions(
+      within(msg()).getByRole('combobox', { name: 'Message 1 kind' }),
+      'async',
+    );
     expect(live().messages[0]!.kind).toBe('async');
 
     await user.click(within(msg()).getByRole('button', { name: 'Remove message 1' }));

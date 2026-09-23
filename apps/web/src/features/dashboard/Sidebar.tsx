@@ -80,10 +80,16 @@ export function WorkspaceSwitcher() {
       <DropdownMenuContent align="start" className="w-64">
         <DropdownMenuLabel>Workspaces</DropdownMenuLabel>
         {workspaces.map((w) => (
-          <DropdownMenuItem key={w.id} onSelect={() => go(`/w/${w.id}`)} data-testid="workspace-option">
+          <DropdownMenuItem
+            key={w.id}
+            onSelect={() => go(`/w/${w.id}`)}
+            data-testid="workspace-option"
+          >
             <WorkspaceBadge workspace={w} className="size-5 text-[10px]" />
             <span className="min-w-0 flex-1 truncate">{w.name}</span>
-            {w.id === workspace.id ? <Check className="size-4" aria-label="Current workspace" /> : null}
+            {w.id === workspace.id ? (
+              <Check className="size-4" aria-label="Current workspace" />
+            ) : null}
           </DropdownMenuItem>
         ))}
         <DropdownMenuSeparator />
@@ -91,7 +97,10 @@ export function WorkspaceSwitcher() {
           <Settings aria-hidden />
           Workspace settings
         </DropdownMenuItem>
-        <DropdownMenuItem onSelect={() => setCreateWorkspaceOpen(true)} data-testid="workspace-create">
+        <DropdownMenuItem
+          onSelect={() => setCreateWorkspaceOpen(true)}
+          data-testid="workspace-create"
+        >
           <Plus aria-hidden />
           Create workspace
         </DropdownMenuItem>
@@ -133,7 +142,11 @@ function SidebarLink({
   );
 }
 
-type ProjectDialog = { kind: 'create' } | { kind: 'rename'; project: ProjectDto } | { kind: 'delete'; project: ProjectDto } | null;
+type ProjectDialog =
+  | { kind: 'create' }
+  | { kind: 'rename'; project: ProjectDto }
+  | { kind: 'delete'; project: ProjectDto }
+  | null;
 
 function ProjectsNav() {
   const { workspace } = useCurrentWorkspace();
@@ -203,7 +216,10 @@ function ProjectsNav() {
                     <Pencil aria-hidden />
                     Rename…
                   </DropdownMenuItem>
-                  <DropdownMenuItem variant="destructive" onSelect={() => setDialog({ kind: 'delete', project })}>
+                  <DropdownMenuItem
+                    variant="destructive"
+                    onSelect={() => setDialog({ kind: 'delete', project })}
+                  >
                     <Trash2 aria-hidden />
                     Delete…
                   </DropdownMenuItem>
@@ -237,15 +253,23 @@ function ProjectsNav() {
         initialValue={dialog?.kind === 'rename' ? dialog.project.name : ''}
         maxLength={120}
         onSubmit={(name) =>
-          dialog?.kind === 'rename' ? rename.mutateAsync({ projectId: dialog.project.id, name }) : Promise.resolve()
+          dialog?.kind === 'rename'
+            ? rename.mutateAsync({ projectId: dialog.project.id, name })
+            : Promise.resolve()
         }
       />
-      <AlertDialog open={dialog?.kind === 'delete'} onOpenChange={(open) => !open && setDialog(null)}>
+      <AlertDialog
+        open={dialog?.kind === 'delete'}
+        onOpenChange={(open) => !open && setDialog(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete “{dialog?.kind === 'delete' ? dialog.project.name : ''}”?</AlertDialogTitle>
+            <AlertDialogTitle>
+              Delete “{dialog?.kind === 'delete' ? dialog.project.name : ''}”?
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              The project and its folders are removed. Its boards move to the trash, where you can restore them.
+              The project and its folders are removed. Its boards move to the trash, where you can
+              restore them.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

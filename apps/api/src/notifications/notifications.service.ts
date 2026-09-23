@@ -82,18 +82,16 @@ export class NotificationsService {
       this.prisma.notification.count({ where: { userId, readAt: null } }),
     ]);
     return {
-      items: items.map(
-        (n): NotificationDto => ({
-          id: n.id,
-          type: n.type,
-          actor: n.actor ? toPublicUser(n.actor) : null,
-          title: n.title,
-          body: n.body,
-          link: n.link,
-          readAt: iso(n.readAt),
-          createdAt: iso(n.createdAt),
-        }),
-      ),
+      items: items.map((n): NotificationDto => ({
+        id: n.id,
+        type: n.type,
+        actor: n.actor ? toPublicUser(n.actor) : null,
+        title: n.title,
+        body: n.body,
+        link: n.link,
+        readAt: iso(n.readAt),
+        createdAt: iso(n.createdAt),
+      })),
       unreadCount,
     };
   }
@@ -104,12 +102,18 @@ export class NotificationsService {
       data: { readAt: new Date() },
     });
     if (res.count === 0) {
-      const exists = await this.prisma.notification.findFirst({ where: { id, userId }, select: { id: true } });
+      const exists = await this.prisma.notification.findFirst({
+        where: { id, userId },
+        select: { id: true },
+      });
       if (!exists) throw Errors.notFound('Notification');
     }
   }
 
   async markAllRead(userId: string): Promise<void> {
-    await this.prisma.notification.updateMany({ where: { userId, readAt: null }, data: { readAt: new Date() } });
+    await this.prisma.notification.updateMany({
+      where: { userId, readAt: null },
+      data: { readAt: new Date() },
+    });
   }
 }

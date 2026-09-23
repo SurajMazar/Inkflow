@@ -8,7 +8,13 @@ export interface CurrentWorkspace {
 
 const WorkspaceContext = React.createContext<CurrentWorkspace | null>(null);
 
-export function WorkspaceProvider({ value, children }: { value: CurrentWorkspace; children: React.ReactNode }) {
+export function WorkspaceProvider({
+  value,
+  children,
+}: {
+  value: CurrentWorkspace;
+  children: React.ReactNode;
+}) {
   return <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>;
 }
 

@@ -42,7 +42,10 @@ export function UserMenu() {
           <span className="truncate text-xs">{user.email}</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onSelect={() => navigate('/settings/account')} data-testid="user-menu-settings">
+        <DropdownMenuItem
+          onSelect={() => navigate('/settings/account')}
+          data-testid="user-menu-settings"
+        >
           <Settings aria-hidden />
           Settings
         </DropdownMenuItem>
@@ -56,7 +59,10 @@ export function UserMenu() {
             Theme
           </DropdownMenuSubTrigger>
           <DropdownMenuSubContent>
-            <DropdownMenuRadioGroup value={theme} onValueChange={(value) => setTheme(value as ThemePreference)}>
+            <DropdownMenuRadioGroup
+              value={theme}
+              onValueChange={(value) => setTheme(value as ThemePreference)}
+            >
               <DropdownMenuRadioItem value="light" data-testid="theme-light">
                 <Sun className="size-4 text-muted-foreground" aria-hidden />
                 Light

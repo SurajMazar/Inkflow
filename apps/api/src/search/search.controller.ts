@@ -15,7 +15,10 @@ export class SearchController {
   @Get()
   @ApiZodQuery(searchQuerySchema)
   @ApiOperation({ summary: 'Search board titles and board content' })
-  search(@CurrentUser() user: AuthInfo, @ZQuery(searchQuerySchema) query: z.output<typeof searchQuerySchema>): Promise<SearchResultDto[]> {
+  search(
+    @CurrentUser() user: AuthInfo,
+    @ZQuery(searchQuerySchema) query: z.output<typeof searchQuerySchema>,
+  ): Promise<SearchResultDto[]> {
     return this.searchService.search(user.userId, query);
   }
 }

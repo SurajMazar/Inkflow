@@ -6,7 +6,9 @@ function read(key: string): string[] {
   try {
     const raw = localStorage.getItem(key);
     const parsed = raw ? (JSON.parse(raw) as unknown) : [];
-    return Array.isArray(parsed) ? parsed.filter((c): c is string => typeof c === 'string').slice(0, 40) : [];
+    return Array.isArray(parsed)
+      ? parsed.filter((c): c is string => typeof c === 'string').slice(0, 40)
+      : [];
   } catch {
     return [];
   }
@@ -29,7 +31,9 @@ export const colorMemory = {
   favorites: () => read(FAVORITES_KEY),
   toggleFavorite(color: string): string[] {
     const favs = read(FAVORITES_KEY);
-    const next = favs.includes(color) ? favs.filter((c) => c !== color) : [...favs, color].slice(0, 24);
+    const next = favs.includes(color)
+      ? favs.filter((c) => c !== color)
+      : [...favs, color].slice(0, 24);
     write(FAVORITES_KEY, next);
     return next;
   },

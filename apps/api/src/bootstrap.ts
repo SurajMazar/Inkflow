@@ -16,20 +16,28 @@ export const JSON_BODY_LIMIT = '10mb';
 export const DOCS_PATH = 'docs';
 
 /** Formats errors raised by Express middleware before Nest routing (e.g. malformed/oversized JSON). */
-function middlewareErrorHandler(err: unknown, req: Request, res: Response, next: NextFunction): void {
+function middlewareErrorHandler(
+  err: unknown,
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): void {
   if (res.headersSent) {
     next(err);
     return;
   }
   const rendered = renderException(err);
   const id = (req as Request & { id?: unknown }).id;
-  res.status(rendered.status).json(buildErrorBody(rendered, id === undefined ? undefined : String(id)));
+  res
+    .status(rendered.status)
+    .json(buildErrorBody(rendered, id === undefined ? undefined : String(id)));
 }
 
 /** Assigns the request id first, so every response (even body-parser errors) carries it. */
 function requestIdMiddleware(req: Request, res: Response, next: NextFunction): void {
   const incoming = req.headers['x-request-id'];
-  const id = typeof incoming === 'string' && /^[\w.-]{1,64}$/.test(incoming) ? incoming : randomUUID();
+  const id =
+    typeof incoming === 'string' && /^[\w.-]{1,64}$/.test(incoming) ? incoming : randomUUID();
   (req as Request & { id?: string }).id = id;
   res.setHeader('x-request-id', id);
   next();
@@ -45,7 +53,10 @@ export function configureApp(app: NestExpressApplication, env: ApiEnv): void {
 
   const production = env.NODE_ENV === 'production';
   const apiHelmet = helmet({
-    contentSecurityPolicy: { useDefaults: false, directives: { defaultSrc: ["'none'"], frameAncestors: ["'none'"] } },
+    contentSecurityPolicy: {
+      useDefaults: false,
+      directives: { defaultSrc: ["'none'"], frameAncestors: ["'none'"] },
+    },
     crossOriginResourcePolicy: { policy: 'same-site' },
     hsts: production ? { maxAge: 31_536_000, includeSubDomains: true } : false,
     referrerPolicy: { policy: 'no-referrer' },
@@ -64,13 +75,21 @@ export function configureApp(app: NestExpressApplication, env: ApiEnv): void {
     hsts: production ? { maxAge: 31_536_000, includeSubDomains: true } : false,
   });
   app.use((req: Request, res: Response, next: NextFunction) =>
-    req.path.startsWith(`/api/${DOCS_PATH}`) ? docsHelmet(req, res, next) : apiHelmet(req, res, next),
+    req.path.startsWith(`/api/${DOCS_PATH}`)
+      ? docsHelmet(req, res, next)
+      : apiHelmet(req, res, next),
   );
   app.enableCors({
     origin: env.WEB_ORIGIN.replace(/\/+$/, ''),
     credentials: true,
     methods: ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['content-type', 'authorization', CSRF_HEADER, SHARE_TOKEN_HEADER, 'x-request-id'],
+    allowedHeaders: [
+      'content-type',
+      'authorization',
+      CSRF_HEADER,
+      SHARE_TOKEN_HEADER,
+      'x-request-id',
+    ],
     exposedHeaders: ['x-request-id', 'retry-after'],
     maxAge: 600,
   });
@@ -80,13 +99,18 @@ export function configureApp(app: NestExpressApplication, env: ApiEnv): void {
 
   const openApi = new DocumentBuilder()
     .setTitle('Inkflow API')
-    .setDescription('REST API of Inkflow. Real-time collaboration uses the WebSocket at /api/ws (see docs/API_CONTRACT.md).')
+    .setDescription(
+      'REST API of Inkflow. Real-time collaboration uses the WebSocket at /api/ws (see docs/API_CONTRACT.md).',
+    )
     .setVersion('1.0')
     .addCookieAuth(ACCESS_COOKIE)
     .addBearerAuth()
     .build();
   const document = SwaggerModule.createDocument(app, openApi);
-  SwaggerModule.setup(DOCS_PATH, app, document, { useGlobalPrefix: true, jsonDocumentUrl: `${DOCS_PATH}-json` });
+  SwaggerModule.setup(DOCS_PATH, app, document, {
+    useGlobalPrefix: true,
+    jsonDocumentUrl: `${DOCS_PATH}-json`,
+  });
 
   app.enableShutdownHooks();
 }
@@ -106,7 +130,9 @@ export async function createApp(env: ApiEnv): Promise<NestExpressApplication> {
  * (boards, operations, templates…) can be resolved with `ctx.get(Service)`. Call `ctx.close()`.
  */
 export async function createAppContext(env: ApiEnv): Promise<INestApplicationContext> {
-  const ctx = await NestFactory.createApplicationContext(AppModule.forRoot(env), { bufferLogs: true });
+  const ctx = await NestFactory.createApplicationContext(AppModule.forRoot(env), {
+    bufferLogs: true,
+  });
   ctx.useLogger(ctx.get(Logger));
   ctx.enableShutdownHooks();
   return ctx;

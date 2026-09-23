@@ -11,9 +11,27 @@ const ascii = (s: string) => [...s].map((c) => c.charCodeAt(0));
 
 function makePng(width: number, height: number): Uint8Array<ArrayBuffer> {
   return new Uint8Array([
-    0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
-    ...be32(13), ...ascii('IHDR'), ...be32(width), ...be32(height), 8, 6, 0, 0, 0, ...be32(0),
-    ...be32(0), ...ascii('IEND'), ...be32(0),
+    0x89,
+    0x50,
+    0x4e,
+    0x47,
+    0x0d,
+    0x0a,
+    0x1a,
+    0x0a,
+    ...be32(13),
+    ...ascii('IHDR'),
+    ...be32(width),
+    ...be32(height),
+    8,
+    6,
+    0,
+    0,
+    0,
+    ...be32(0),
+    ...be32(0),
+    ...ascii('IEND'),
+    ...be32(0),
   ]);
 }
 
@@ -23,7 +41,27 @@ function makeGif(width: number, height: number): Uint8Array<ArrayBuffer> {
 
 function makeJpeg(width: number, height: number): Uint8Array<ArrayBuffer> {
   const app0 = [0xff, 0xe0, 0x00, 0x10, ...ascii('JFIF'), 0, 1, 1, 0, 0, 1, 0, 1, 0, 0];
-  const sof0 = [0xff, 0xc0, 0x00, 0x11, 8, (height >> 8) & 0xff, height & 0xff, (width >> 8) & 0xff, width & 0xff, 3, 1, 0x22, 0, 2, 0x11, 1, 3, 0x11, 1];
+  const sof0 = [
+    0xff,
+    0xc0,
+    0x00,
+    0x11,
+    8,
+    (height >> 8) & 0xff,
+    height & 0xff,
+    (width >> 8) & 0xff,
+    width & 0xff,
+    3,
+    1,
+    0x22,
+    0,
+    2,
+    0x11,
+    1,
+    3,
+    0x11,
+    1,
+  ];
   return new Uint8Array([0xff, 0xd8, ...app0, ...sof0, 0xff, 0xd9]);
 }
 
@@ -33,11 +71,22 @@ function riff(chunk: string, payload: number[]): Uint8Array<ArrayBuffer> {
   return new Uint8Array([...ascii('RIFF'), ...le32(body.length), ...body]);
 }
 
-const makeWebpVp8x = (w: number, h: number) => riff('VP8X', [0, 0, 0, 0, ...le24(w - 1), ...le24(h - 1)]);
-const makeWebpVp8 = (w: number, h: number) => riff('VP8 ', [0, 0, 0, 0x9d, 0x01, 0x2a, ...le16(w), ...le16(h), 0, 0]);
+const makeWebpVp8x = (w: number, h: number) =>
+  riff('VP8X', [0, 0, 0, 0, ...le24(w - 1), ...le24(h - 1)]);
+const makeWebpVp8 = (w: number, h: number) =>
+  riff('VP8 ', [0, 0, 0, 0x9d, 0x01, 0x2a, ...le16(w), ...le16(h), 0, 0]);
 function makeWebpVp8l(w: number, h: number): Uint8Array<ArrayBuffer> {
   const bits = ((w - 1) | ((h - 1) << 14)) >>> 0;
-  return riff('VP8L', [0x2f, bits & 0xff, (bits >>> 8) & 0xff, (bits >>> 16) & 0xff, (bits >>> 24) & 0xff, 0, 0, 0]);
+  return riff('VP8L', [
+    0x2f,
+    bits & 0xff,
+    (bits >>> 8) & 0xff,
+    (bits >>> 16) & 0xff,
+    (bits >>> 24) & 0xff,
+    0,
+    0,
+    0,
+  ]);
 }
 
 const utf8 = (s: string) => new TextEncoder().encode(s);
@@ -53,8 +102,12 @@ describe('sniffImageMime', () => {
 
   it('identifies SVG after BOM, prolog and comments', () => {
     expect(sniffImageMime(utf8('<svg xmlns="http://www.w3.org/2000/svg"/>'))).toBe('image/svg+xml');
-    expect(sniffImageMime(utf8('\uFEFF  <?xml version="1.0"?>\n<!-- hi -->\n<svg width="1"></svg>'))).toBe('image/svg+xml');
-    expect(sniffImageMime(utf8('<?xml version="1.0"?><!DOCTYPE svg [<!ENTITY a "b">]><svg/>'))).toBe('image/svg+xml');
+    expect(
+      sniffImageMime(utf8('\uFEFF  <?xml version="1.0"?>\n<!-- hi -->\n<svg width="1"></svg>')),
+    ).toBe('image/svg+xml');
+    expect(
+      sniffImageMime(utf8('<?xml version="1.0"?><!DOCTYPE svg [<!ENTITY a "b">]><svg/>')),
+    ).toBe('image/svg+xml');
   });
 
   it('rejects unknown content', () => {
@@ -67,15 +120,30 @@ describe('sniffImageMime', () => {
 
 describe('readImageDimensions', () => {
   it('parses PNG, GIF and JPEG headers', () => {
-    expect(readImageDimensions(makePng(640, 480), 'image/png')).toEqual({ width: 640, height: 480 });
+    expect(readImageDimensions(makePng(640, 480), 'image/png')).toEqual({
+      width: 640,
+      height: 480,
+    });
     expect(readImageDimensions(makeGif(33, 44), 'image/gif')).toEqual({ width: 33, height: 44 });
-    expect(readImageDimensions(makeJpeg(1920, 1080), 'image/jpeg')).toEqual({ width: 1920, height: 1080 });
+    expect(readImageDimensions(makeJpeg(1920, 1080), 'image/jpeg')).toEqual({
+      width: 1920,
+      height: 1080,
+    });
   });
 
   it('parses the three WebP variants', () => {
-    expect(readImageDimensions(makeWebpVp8x(3000, 2000), 'image/webp')).toEqual({ width: 3000, height: 2000 });
-    expect(readImageDimensions(makeWebpVp8(320, 240), 'image/webp')).toEqual({ width: 320, height: 240 });
-    expect(readImageDimensions(makeWebpVp8l(1000, 16383), 'image/webp')).toEqual({ width: 1000, height: 16383 });
+    expect(readImageDimensions(makeWebpVp8x(3000, 2000), 'image/webp')).toEqual({
+      width: 3000,
+      height: 2000,
+    });
+    expect(readImageDimensions(makeWebpVp8(320, 240), 'image/webp')).toEqual({
+      width: 320,
+      height: 240,
+    });
+    expect(readImageDimensions(makeWebpVp8l(1000, 16383), 'image/webp')).toEqual({
+      width: 1000,
+      height: 16383,
+    });
   });
 
   it('parses SVG sizes from width/height or viewBox', () => {
@@ -89,7 +157,9 @@ describe('readImageDimensions', () => {
 
   it('returns null for truncated or corrupt headers', () => {
     expect(readImageDimensions(makePng(1, 1).subarray(0, 20), 'image/png')).toBeNull();
-    expect(readImageDimensions(new Uint8Array([0xff, 0xd8, 0xff, 0xda, 0, 2]), 'image/jpeg')).toBeNull();
+    expect(
+      readImageDimensions(new Uint8Array([0xff, 0xd8, 0xff, 0xda, 0, 2]), 'image/jpeg'),
+    ).toBeNull();
     expect(readImageDimensions(new Uint8Array([1, 2, 3]), 'image/bmp')).toBeNull();
   });
 });
@@ -117,11 +187,15 @@ describe('readImageFile', () => {
   });
 
   it('sanitizes SVG blobs', async () => {
-    const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="20" onload="alert(1)"><script>alert(2)</script><rect width="5" height="5"/></svg>';
+    const svg =
+      '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="20" onload="alert(1)"><script>alert(2)</script><rect width="5" height="5"/></svg>';
     const result = await readImageFile(new Blob([svg], { type: 'image/svg+xml' }));
     expect(result.mimeType).toBe('image/svg+xml');
     expect(result).toMatchObject({ width: 10, height: 20 });
-    const decoded = Buffer.from(result.dataUrl.replace('data:image/svg+xml;base64,', ''), 'base64').toString('utf8');
+    const decoded = Buffer.from(
+      result.dataUrl.replace('data:image/svg+xml;base64,', ''),
+      'base64',
+    ).toString('utf8');
     expect(decoded).toContain('<rect');
     expect(decoded).not.toMatch(/script|onload|alert/i);
   });
@@ -141,9 +215,13 @@ describe('readImageFile', () => {
   });
 
   it('rejects unknown formats, empty files and corrupt headers', async () => {
-    await expect(readImageFile(new Blob(['hello world'], { type: 'image/png' }))).rejects.toThrow(/Unsupported/);
+    await expect(readImageFile(new Blob(['hello world'], { type: 'image/png' }))).rejects.toThrow(
+      /Unsupported/,
+    );
     await expect(readImageFile(new Blob([]))).rejects.toThrow(/empty/);
-    await expect(readImageFile(new Blob([new Uint8Array([0xff, 0xd8, 0xff, 0xd9])]))).rejects.toThrow(/dimensions/);
+    await expect(
+      readImageFile(new Blob([new Uint8Array([0xff, 0xd8, 0xff, 0xd9])])),
+    ).rejects.toThrow(/dimensions/);
   });
 
   it('rejects absurd raster dimensions', async () => {

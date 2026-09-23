@@ -13,8 +13,10 @@ export class ShapeRegistry {
 
   /** Adds or replaces a shape definition. */
   register(def: NodeShapeDefinition): void {
-    if (!/^[a-z0-9][a-z0-9-]{0,63}$/.test(def.key)) throw new Error(`Invalid shape key "${def.key}"`);
-    if (!(def.defaultSize.width > 0 && def.defaultSize.height > 0)) throw new Error(`Shape "${def.key}" needs a positive default size`);
+    if (!/^[a-z0-9][a-z0-9-]{0,63}$/.test(def.key))
+      throw new Error(`Invalid shape key "${def.key}"`);
+    if (!(def.defaultSize.width > 0 && def.defaultSize.height > 0))
+      throw new Error(`Shape "${def.key}" needs a positive default size`);
     this.shapes.set(def.key, def);
   }
 
@@ -72,13 +74,21 @@ export function getNodeGeometry(node: NodeElement): ShapeGeometry {
   } else {
     const def = shapeRegistry.get(node.shape) ?? shapeRegistry.get('rectangle')!;
     geometry = def.geometry(w, h, node);
-    if (def.elliptical && geometry.elliptical === undefined) geometry = { ...geometry, elliptical: true };
+    if (def.elliptical && geometry.elliptical === undefined)
+      geometry = { ...geometry, elliptical: true };
   }
-  let labelBox = geometry.labelBox ?? { x: 8, y: 8, width: Math.max(0, w - 16), height: Math.max(0, h - 16) };
+  let labelBox = geometry.labelBox ?? {
+    x: 8,
+    y: 8,
+    width: Math.max(0, w - 16),
+    height: Math.max(0, h - 16),
+  };
   let iconBox = geometry.iconBox;
   if (node.icon && !iconBox) {
     const hasText = !!node.label && node.label.text.trim().length > 0;
-    const size = hasText ? defaultIconSize(labelBox) : Math.max(0, Math.min(48, labelBox.width, labelBox.height));
+    const size = hasText
+      ? defaultIconSize(labelBox)
+      : Math.max(0, Math.min(48, labelBox.width, labelBox.height));
     iconBox = {
       x: labelBox.x + (labelBox.width - size) / 2,
       y: hasText ? labelBox.y : labelBox.y + (labelBox.height - size) / 2,
@@ -87,7 +97,12 @@ export function getNodeGeometry(node: NodeElement): ShapeGeometry {
     };
     if (hasText) {
       const used = size + 4;
-      labelBox = { x: labelBox.x, y: labelBox.y + used, width: labelBox.width, height: Math.max(0, labelBox.height - used) };
+      labelBox = {
+        x: labelBox.x,
+        y: labelBox.y + used,
+        width: labelBox.width,
+        height: Math.max(0, labelBox.height - used),
+      };
     }
   }
   const out: ShapeGeometry = { ...geometry, labelBox, ...(iconBox ? { iconBox } : {}) };
@@ -98,7 +113,9 @@ export function getNodeGeometry(node: NodeElement): ShapeGeometry {
     outline: mirrorPath(out.outline, w, h, fx, fy),
     ...(out.details ? { details: out.details.map((d) => mirrorPath(d, w, h, fx, fy)) } : {}),
     ...(out.fills ? { fills: out.fills.map((d) => mirrorPath(d, w, h, fx, fy)) } : {}),
-    ...(out.connectionOutline ? { connectionOutline: mirrorPath(out.connectionOutline, w, h, fx, fy) } : {}),
+    ...(out.connectionOutline
+      ? { connectionOutline: mirrorPath(out.connectionOutline, w, h, fx, fy) }
+      : {}),
     ...(out.labelBox ? { labelBox: mirrorRect(out.labelBox, w, h, fx, fy) } : {}),
     ...(out.iconBox ? { iconBox: mirrorRect(out.iconBox, w, h, fx, fy) } : {}),
     ...(out.subtitleBox ? { subtitleBox: mirrorRect(out.subtitleBox, w, h, fx, fy) } : {}),

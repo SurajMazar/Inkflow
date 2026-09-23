@@ -36,12 +36,23 @@ export function roundedPolygonPath(points: readonly Point[], radius: number): Pa
   return out;
 }
 
-function cornerAt(prev: Point, cur: Point, next: Point, radius: number): { a: Point; v: Point; b: Point } {
+function cornerAt(
+  prev: Point,
+  cur: Point,
+  next: Point,
+  radius: number,
+): { a: Point; v: Point; b: Point } {
   const d1 = Math.hypot(prev.x - cur.x, prev.y - cur.y);
   const d2 = Math.hypot(next.x - cur.x, next.y - cur.y);
   const r = Math.max(0, Math.min(radius, d1 / 2, d2 / 2));
-  const a = d1 === 0 ? cur : { x: cur.x + ((prev.x - cur.x) * r) / d1, y: cur.y + ((prev.y - cur.y) * r) / d1 };
-  const b = d2 === 0 ? cur : { x: cur.x + ((next.x - cur.x) * r) / d2, y: cur.y + ((next.y - cur.y) * r) / d2 };
+  const a =
+    d1 === 0
+      ? cur
+      : { x: cur.x + ((prev.x - cur.x) * r) / d1, y: cur.y + ((prev.y - cur.y) * r) / d1 };
+  const b =
+    d2 === 0
+      ? cur
+      : { x: cur.x + ((next.x - cur.x) * r) / d2, y: cur.y + ((next.y - cur.y) * r) / d2 };
   return { a, v: cur, b };
 }
 
@@ -126,7 +137,13 @@ export function pathSegments(path: Path): Segment[] {
       out.push({ type: 'L', from: cursor, to: { x: c.x, y: c.y } });
       cursor = { x: c.x, y: c.y };
     } else if (c.type === 'C' && cursor) {
-      out.push({ type: 'C', from: cursor, c1: { x: c.x1, y: c.y1 }, c2: { x: c.x2, y: c.y2 }, to: { x: c.x, y: c.y } });
+      out.push({
+        type: 'C',
+        from: cursor,
+        c1: { x: c.x1, y: c.y1 },
+        c2: { x: c.x2, y: c.y2 },
+        to: { x: c.x, y: c.y },
+      });
       cursor = { x: c.x, y: c.y };
     } else if (c.type === 'Z' && cursor && start) {
       out.push({ type: 'L', from: cursor, to: start });
@@ -142,7 +159,8 @@ export function segmentsToPath(segments: readonly Segment[]): Path {
   const out: Path = [{ type: 'M', x: first.from.x, y: first.from.y }];
   for (const s of segments) {
     if (s.type === 'L') out.push({ type: 'L', x: s.to.x, y: s.to.y });
-    else out.push({ type: 'C', x1: s.c1.x, y1: s.c1.y, x2: s.c2.x, y2: s.c2.y, x: s.to.x, y: s.to.y });
+    else
+      out.push({ type: 'C', x1: s.c1.x, y1: s.c1.y, x2: s.c2.x, y2: s.c2.y, x: s.to.x, y: s.to.y });
   }
   return out;
 }
@@ -207,7 +225,9 @@ export function trimPath(path: Path, amount: number, atStart: boolean): Path {
 }
 
 function reverseSegment(s: Segment): Segment {
-  return s.type === 'L' ? { type: 'L', from: s.to, to: s.from } : { type: 'C', from: s.to, c1: s.c2, c2: s.c1, to: s.from };
+  return s.type === 'L'
+    ? { type: 'L', from: s.to, to: s.from }
+    : { type: 'C', from: s.to, c1: s.c2, c2: s.c1, to: s.from };
 }
 
 function trimSegmentsStart(segments: Segment[], amount: number): Segment[] {
@@ -223,7 +243,11 @@ function trimSegmentsStart(segments: Segment[], amount: number): Segment[] {
     }
     if (s.type === 'L') {
       const k = remaining / len;
-      out[0] = { type: 'L', from: { x: s.from.x + (s.to.x - s.from.x) * k, y: s.from.y + (s.to.y - s.from.y) * k }, to: s.to };
+      out[0] = {
+        type: 'L',
+        from: { x: s.from.x + (s.to.x - s.from.x) * k, y: s.from.y + (s.to.y - s.from.y) * k },
+        to: s.to,
+      };
     } else {
       out[0] = splitCubic(s, cubicTAtLength(s, remaining))[1];
     }
@@ -289,7 +313,15 @@ export function flipPath(path: Path, w: number, h: number, flipX: boolean, flipY
       case 'L':
         return { type: c.type, x: fx(c.x), y: fy(c.y) };
       case 'C':
-        return { type: 'C', x1: fx(c.x1), y1: fy(c.y1), x2: fx(c.x2), y2: fy(c.y2), x: fx(c.x), y: fy(c.y) };
+        return {
+          type: 'C',
+          x1: fx(c.x1),
+          y1: fy(c.y1),
+          x2: fx(c.x2),
+          y2: fy(c.y2),
+          x: fx(c.x),
+          y: fy(c.y),
+        };
       case 'Z':
         return c;
     }

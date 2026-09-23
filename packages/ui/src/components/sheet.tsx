@@ -9,7 +9,10 @@ export const SheetTrigger = SheetPrimitive.Trigger;
 export const SheetClose = SheetPrimitive.Close;
 export const SheetPortal = SheetPrimitive.Portal;
 
-export function SheetOverlay({ className, ...props }: React.ComponentProps<typeof SheetPrimitive.Overlay>) {
+export function SheetOverlay({
+  className,
+  ...props
+}: React.ComponentProps<typeof SheetPrimitive.Overlay>) {
   return (
     <SheetPrimitive.Overlay
       data-slot="sheet-overlay"
@@ -40,19 +43,31 @@ const sheetVariants = cva(
 );
 
 export interface SheetContentProps
-  extends React.ComponentProps<typeof SheetPrimitive.Content>,
-    VariantProps<typeof sheetVariants> {
+  extends React.ComponentProps<typeof SheetPrimitive.Content>, VariantProps<typeof sheetVariants> {
   showCloseButton?: boolean;
 }
 
 /** Side panel (`left`/`right`/`top`) or mobile bottom sheet (`side="bottom"`, with a grab handle). */
-export function SheetContent({ className, children, side = 'right', showCloseButton = true, ...props }: SheetContentProps) {
+export function SheetContent({
+  className,
+  children,
+  side = 'right',
+  showCloseButton = true,
+  ...props
+}: SheetContentProps) {
   return (
     <SheetPortal>
       <SheetOverlay />
-      <SheetPrimitive.Content data-slot="sheet-content" className={cn(sheetVariants({ side }), className)} {...props}>
+      <SheetPrimitive.Content
+        data-slot="sheet-content"
+        className={cn(sheetVariants({ side }), className)}
+        {...props}
+      >
         {side === 'bottom' ? (
-          <div aria-hidden className="mx-auto mt-2 h-1.5 w-10 shrink-0 rounded-full bg-muted-foreground/30" />
+          <div
+            aria-hidden
+            className="mx-auto mt-2 h-1.5 w-10 shrink-0 rounded-full bg-muted-foreground/30"
+          />
         ) : null}
         {children}
         {showCloseButton ? (
@@ -67,18 +82,42 @@ export function SheetContent({ className, children, side = 'right', showCloseBut
 }
 
 export function SheetHeader({ className, ...props }: React.ComponentProps<'div'>) {
-  return <div data-slot="sheet-header" className={cn('flex flex-col gap-1.5 p-4', className)} {...props} />;
+  return (
+    <div
+      data-slot="sheet-header"
+      className={cn('flex flex-col gap-1.5 p-4', className)}
+      {...props}
+    />
+  );
 }
 
 export function SheetFooter({ className, ...props }: React.ComponentProps<'div'>) {
-  return <div data-slot="sheet-footer" className={cn('mt-auto flex flex-col gap-2 p-4', className)} {...props} />;
+  return (
+    <div
+      data-slot="sheet-footer"
+      className={cn('mt-auto flex flex-col gap-2 p-4', className)}
+      {...props}
+    />
+  );
 }
 
-export function SheetTitle({ className, ...props }: React.ComponentProps<typeof SheetPrimitive.Title>) {
-  return <SheetPrimitive.Title data-slot="sheet-title" className={cn('font-semibold', className)} {...props} />;
+export function SheetTitle({
+  className,
+  ...props
+}: React.ComponentProps<typeof SheetPrimitive.Title>) {
+  return (
+    <SheetPrimitive.Title
+      data-slot="sheet-title"
+      className={cn('font-semibold', className)}
+      {...props}
+    />
+  );
 }
 
-export function SheetDescription({ className, ...props }: React.ComponentProps<typeof SheetPrimitive.Description>) {
+export function SheetDescription({
+  className,
+  ...props
+}: React.ComponentProps<typeof SheetPrimitive.Description>) {
   return (
     <SheetPrimitive.Description
       data-slot="sheet-description"

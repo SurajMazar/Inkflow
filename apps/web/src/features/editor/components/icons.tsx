@@ -37,7 +37,12 @@ export const TOOL_META: Record<ToolType, ToolMeta> = {
   selection: { id: 'selection', label: 'Select', icon: MousePointer2, shortcut: 'V' },
   hand: { id: 'hand', label: 'Hand (pan)', icon: Hand, shortcut: 'H' },
   rectangle: { id: 'rectangle', label: 'Rectangle', icon: Square, shortcut: 'R' },
-  roundedRectangle: { id: 'roundedRectangle', label: 'Rounded rectangle', icon: RectangleHorizontal, shortcut: '⇧R' },
+  roundedRectangle: {
+    id: 'roundedRectangle',
+    label: 'Rounded rectangle',
+    icon: RectangleHorizontal,
+    shortcut: '⇧R',
+  },
   ellipse: { id: 'ellipse', label: 'Ellipse', icon: Circle, shortcut: 'E' },
   diamond: { id: 'diamond', label: 'Diamond', icon: Diamond, shortcut: 'D' },
   triangle: { id: 'triangle', label: 'Triangle', icon: Triangle, shortcut: '⇧T' },

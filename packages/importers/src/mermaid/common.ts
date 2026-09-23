@@ -1,4 +1,9 @@
-import { createBinding, createElement, type LinearElement, type SceneElement } from '@inkflow/elements';
+import {
+  createBinding,
+  createElement,
+  type LinearElement,
+  type SceneElement,
+} from '@inkflow/elements';
 
 /** Hard limits that keep hostile input from exhausting memory or CPU. */
 export const MAX_MERMAID_CHARS = 1_000_000;
@@ -77,7 +82,14 @@ export function cleanLabel(raw: string): string {
   if (s.startsWith('`') && s.endsWith('`') && s.length >= 2) s = s.slice(1, -1);
   s = s.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]*>/g, '');
   s = s.replace(/#(\d{1,6});/g, (_, n: string) => safeChar(Number(n)));
-  const named: Record<string, string> = { quot: '"', amp: '&', lt: '<', gt: '>', apos: "'", nbsp: ' ' };
+  const named: Record<string, string> = {
+    quot: '"',
+    amp: '&',
+    lt: '<',
+    gt: '>',
+    apos: "'",
+    nbsp: ' ',
+  };
   s = s.replace(/#([a-z]+);/gi, (m, name: string) => named[name.toLowerCase()] ?? m);
   s = s.replace(/&(quot|amp|lt|gt|apos|nbsp);/gi, (_, name: string) => named[name.toLowerCase()]!);
   s = s.replace(/&#(\d{1,6});/g, (_, n: string) => safeChar(Number(n)));
@@ -86,15 +98,28 @@ export function cleanLabel(raw: string): string {
 }
 
 function safeChar(code: number): string {
-  if (!Number.isFinite(code) || code < 32 || code > 0x10ffff || (code >= 0xd800 && code <= 0xdfff)) return '';
+  if (!Number.isFinite(code) || code < 32 || code > 0x10ffff || (code >= 0xd800 && code <= 0xdfff))
+    return '';
   return String.fromCodePoint(code);
 }
 
 const COLOR_RE = /^(#[0-9a-f]{3,8}|[a-z]{3,20}|rgba?\(\s*[\d.\s,%]+\))$/i;
 
 /** Parses `fill:#f9f,stroke:#333,stroke-width:4px` style lists (colors only, validated). */
-export function parseStyleList(list: string): { fill?: string; stroke?: string; strokeWidth?: number; dashed?: boolean; color?: string } {
-  const out: { fill?: string; stroke?: string; strokeWidth?: number; dashed?: boolean; color?: string } = {};
+export function parseStyleList(list: string): {
+  fill?: string;
+  stroke?: string;
+  strokeWidth?: number;
+  dashed?: boolean;
+  color?: string;
+} {
+  const out: {
+    fill?: string;
+    stroke?: string;
+    strokeWidth?: number;
+    dashed?: boolean;
+    color?: string;
+  } = {};
   for (const decl of list.split(/,(?![^(]*\))/)) {
     const [k, v] = decl.split(':').map((x) => x.trim());
     if (!k || !v) continue;
@@ -110,5 +135,8 @@ export function parseStyleList(list: string): { fill?: string; stroke?: string; 
 
 /** Lightweight edge used only to drive `autoLayout`. */
 export function layoutEdge(from: string, to: string): LinearElement {
-  return createElement('connector', { startBinding: createBinding(from), endBinding: createBinding(to) });
+  return createElement('connector', {
+    startBinding: createBinding(from),
+    endBinding: createBinding(to),
+  });
 }

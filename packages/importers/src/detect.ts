@@ -73,7 +73,12 @@ function detectJson(text: string): ImportKind | null {
 /** Magic bytes of raster formats as they appear when binary data is decoded as Latin-1 or UTF-8. */
 function looksLikeBinaryImage(head: string): boolean {
   const first = head.charCodeAt(0);
-  if ((first === 0x89 || first === 0xfffd) && head.startsWith('PNG\r\n', 1) && head.charCodeAt(6) === 0x1a) return true;
+  if (
+    (first === 0x89 || first === 0xfffd) &&
+    head.startsWith('PNG\r\n', 1) &&
+    head.charCodeAt(6) === 0x1a
+  )
+    return true;
   if (head.startsWith('GIF87a') || head.startsWith('GIF89a')) return true;
   if (first === 0xff && head.charCodeAt(1) === 0xd8 && head.charCodeAt(2) === 0xff) return true;
   return head.startsWith('RIFF') && head.slice(8, 12) === 'WEBP';

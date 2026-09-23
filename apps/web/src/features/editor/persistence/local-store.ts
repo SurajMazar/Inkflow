@@ -9,7 +9,13 @@ import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
 interface InkflowDB extends DBSchema {
   documents: {
     key: string;
-    value: { boardId: string; document: SceneDocument; seq: number; title: string; savedAt: number };
+    value: {
+      boardId: string;
+      document: SceneDocument;
+      seq: number;
+      title: string;
+      savedAt: number;
+    };
   };
   pendingOps: {
     key: string;
@@ -17,7 +23,14 @@ interface InkflowDB extends DBSchema {
   };
   uploads: {
     key: string;
-    value: { fileId: string; boardId: string; blob: Blob; name: string; type: string; createdAt: number };
+    value: {
+      fileId: string;
+      boardId: string;
+      blob: Blob;
+      name: string;
+      type: string;
+      createdAt: number;
+    };
     indexes: { byBoard: string };
   };
 }
@@ -34,8 +47,10 @@ function db(): Promise<IDBPDatabase<InkflowDB> | null> {
       try {
         return await openDB<InkflowDB>(DB_NAME, DB_VERSION, {
           upgrade(database) {
-            if (!database.objectStoreNames.contains('documents')) database.createObjectStore('documents', { keyPath: 'boardId' });
-            if (!database.objectStoreNames.contains('pendingOps')) database.createObjectStore('pendingOps', { keyPath: 'boardId' });
+            if (!database.objectStoreNames.contains('documents'))
+              database.createObjectStore('documents', { keyPath: 'boardId' });
+            if (!database.objectStoreNames.contains('pendingOps'))
+              database.createObjectStore('pendingOps', { keyPath: 'boardId' });
             if (!database.objectStoreNames.contains('uploads')) {
               const store = database.createObjectStore('uploads', { keyPath: 'fileId' });
               store.createIndex('byBoard', 'boardId');
@@ -55,7 +70,12 @@ function db(): Promise<IDBPDatabase<InkflowDB> | null> {
 const memoryPending = new Map<string, Operation[]>();
 
 export const localStore = {
-  async saveSnapshot(boardId: string, document: SceneDocument, seq: number, title: string): Promise<void> {
+  async saveSnapshot(
+    boardId: string,
+    document: SceneDocument,
+    seq: number,
+    title: string,
+  ): Promise<void> {
     const d = await db();
     if (!d) return;
     await d.put('documents', { boardId, document, seq, title, savedAt: Date.now() });
@@ -79,7 +99,13 @@ export const localStore = {
     await tx.done;
   },
 
-  async queueUpload(entry: { fileId: string; boardId: string; blob: Blob; name: string; type: string }): Promise<void> {
+  async queueUpload(entry: {
+    fileId: string;
+    boardId: string;
+    blob: Blob;
+    name: string;
+    type: string;
+  }): Promise<void> {
     const d = await db();
     if (!d) return;
     await d.put('uploads', { ...entry, createdAt: Date.now() });

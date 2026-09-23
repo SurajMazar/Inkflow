@@ -12,11 +12,37 @@ import {
 } from './image-validation';
 
 const ALL = ['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'image/svg+xml'] as const;
-const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64');
+const PNG = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+  'base64',
+);
 
 function jpeg(width: number, height: number): Buffer {
-  const app0 = [0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x49, 0x46, 0x00, 0x01, 0x01, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00];
-  const sof = [0xff, 0xc0, 0x00, 0x11, 0x08, height >> 8, height & 0xff, width >> 8, width & 0xff, 0x03, 1, 0x11, 0, 2, 0x11, 1, 3, 0x11, 1];
+  const app0 = [
+    0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x49, 0x46, 0x00, 0x01, 0x01, 0x00, 0x00, 0x01, 0x00, 0x01,
+    0x00, 0x00,
+  ];
+  const sof = [
+    0xff,
+    0xc0,
+    0x00,
+    0x11,
+    0x08,
+    height >> 8,
+    height & 0xff,
+    width >> 8,
+    width & 0xff,
+    0x03,
+    1,
+    0x11,
+    0,
+    2,
+    0x11,
+    1,
+    3,
+    0x11,
+    1,
+  ];
   return Buffer.from([0xff, 0xd8, ...app0, ...sof, 0xff, 0xd9]);
 }
 
@@ -69,8 +95,16 @@ describe('image type detection (magic bytes)', () => {
     expect(detectImageType(jpeg(2, 2))).toBe('image/jpeg');
     expect(detectImageType(gif(1, 1))).toBe('image/gif');
     expect(detectImageType(webpVp8x(4, 4))).toBe('image/webp');
-    expect(detectImageType(Buffer.from('﻿<?xml version="1.0"?><!-- c --><svg xmlns="http://www.w3.org/2000/svg"/>'))).toBe('image/svg+xml');
-    expect(detectImageType(Buffer.from('<!DOCTYPE svg><svg:svg xmlns:svg="http://www.w3.org/2000/svg"/>'))).toBe('image/svg+xml');
+    expect(
+      detectImageType(
+        Buffer.from('﻿<?xml version="1.0"?><!-- c --><svg xmlns="http://www.w3.org/2000/svg"/>'),
+      ),
+    ).toBe('image/svg+xml');
+    expect(
+      detectImageType(
+        Buffer.from('<!DOCTYPE svg><svg:svg xmlns:svg="http://www.w3.org/2000/svg"/>'),
+      ),
+    ).toBe('image/svg+xml');
   });
 
   it('rejects other content', () => {
@@ -91,16 +125,26 @@ describe('dimension parsing', () => {
   });
 
   it('reads SVG width/height/viewBox', () => {
-    expect(svgDimensions('<svg width="120" height="80px"></svg>')).toEqual({ width: 120, height: 80 });
+    expect(svgDimensions('<svg width="120" height="80px"></svg>')).toEqual({
+      width: 120,
+      height: 80,
+    });
     expect(svgDimensions('<svg viewBox="0 0 300 150"></svg>')).toEqual({ width: 300, height: 150 });
-    expect(svgDimensions('<svg width="600" viewBox="0,0,300,150"></svg>')).toEqual({ width: 600, height: 300 });
+    expect(svgDimensions('<svg width="600" viewBox="0,0,300,150"></svg>')).toEqual({
+      width: 600,
+      height: 300,
+    });
     expect(svgDimensions('<svg width="100%"></svg>')).toBeNull();
   });
 });
 
 describe('SVG safety', () => {
   it('accepts plain drawings', () => {
-    expect(svgSafetyIssue('<svg xmlns="http://www.w3.org/2000/svg"><defs><path id="p"/></defs><use href="#p"/><text>on time</text></svg>')).toBeNull();
+    expect(
+      svgSafetyIssue(
+        '<svg xmlns="http://www.w3.org/2000/svg"><defs><path id="p"/></defs><use href="#p"/><text>on time</text></svg>',
+      ),
+    ).toBeNull();
   });
 
   it.each([
@@ -124,17 +168,29 @@ describe('SVG safety', () => {
 
 describe('validateImage', () => {
   it('returns type and dimensions', () => {
-    expect(validateImage(PNG, 'image/png', ALL)).toEqual({ mimeType: 'image/png', width: 1, height: 1 });
-    expect(validateImage(jpeg(8, 4), 'image/jpg', ALL)).toEqual({ mimeType: 'image/jpeg', width: 8, height: 4 });
+    expect(validateImage(PNG, 'image/png', ALL)).toEqual({
+      mimeType: 'image/png',
+      width: 1,
+      height: 1,
+    });
+    expect(validateImage(jpeg(8, 4), 'image/jpg', ALL)).toEqual({
+      mimeType: 'image/jpeg',
+      width: 8,
+      height: 4,
+    });
     expect(validateImage(PNG, 'application/octet-stream', ALL).mimeType).toBe('image/png');
   });
 
   it('rejects mismatches, disallowed types, corrupt headers and unsafe SVGs', () => {
     expect(() => validateImage(PNG, 'image/gif', ALL)).toThrow(ImageValidationError);
     expect(() => validateImage(Buffer.from('fake'), 'image/png', ALL)).toThrow(/Unsupported/);
-    expect(() => validateImage(gif(1, 1), 'image/gif', ['image/png', 'image/webp'])).toThrow(/not accepted/);
+    expect(() => validateImage(gif(1, 1), 'image/gif', ['image/png', 'image/webp'])).toThrow(
+      /not accepted/,
+    );
     expect(() => validateImage(PNG.subarray(0, 12), 'image/png', ALL)).toThrow(/corrupt/);
-    expect(() => validateImage(Buffer.from('<svg onload="x"/>'), 'image/svg+xml', ALL)).toThrow(/event handler/);
+    expect(() => validateImage(Buffer.from('<svg onload="x"/>'), 'image/svg+xml', ALL)).toThrow(
+      /event handler/,
+    );
     expect(() => validateImage(Buffer.alloc(0), 'image/png', ALL)).toThrow(/empty/);
     expect(() => validateImage(gif(60_000, 1), 'image/gif', ALL)).toThrow(/at most/);
   });

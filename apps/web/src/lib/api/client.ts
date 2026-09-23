@@ -266,7 +266,10 @@ export function toApiError(status: number, body: unknown, retryAfter?: string | 
   }
   const code = codeForStatus(status);
   const message =
-    typeof body === 'string' && body.length > 0 && body.length < 300 && !body.trimStart().startsWith('<')
+    typeof body === 'string' &&
+    body.length > 0 &&
+    body.length < 300 &&
+    !body.trimStart().startsWith('<')
       ? body
       : `Request failed (${status})`;
   return new ApiError(
@@ -280,7 +283,9 @@ export function toApiError(status: number, body: unknown, retryAfter?: string | 
 /** Seconds to wait before retrying a rate-limited request, when the server said so. */
 export function retryAfterSeconds(error: ApiError): number | null {
   const details = error.details as { retryAfterSeconds?: unknown } | undefined;
-  return details && typeof details.retryAfterSeconds === 'number' ? details.retryAfterSeconds : null;
+  return details && typeof details.retryAfterSeconds === 'number'
+    ? details.retryAfterSeconds
+    : null;
 }
 
 async function safeJson(res: Response): Promise<unknown> {
@@ -295,7 +300,9 @@ async function safeJson(res: Response): Promise<unknown> {
 
 function isAbortError(error: unknown): boolean {
   return (
-    (typeof DOMException !== 'undefined' && error instanceof DOMException && error.name === 'AbortError') ||
+    (typeof DOMException !== 'undefined' &&
+      error instanceof DOMException &&
+      error.name === 'AbortError') ||
     (error instanceof Error && error.name === 'AbortError')
   );
 }
@@ -331,7 +338,11 @@ export async function recoverFrom401(): Promise<boolean> {
  * @example
  *   const boards = await request<BoardSummaryDto[]>('GET', '/boards', { query: { filter: 'recent' } });
  */
-export async function request<T>(method: HttpMethod, path: string, options: RequestOptions = {}): Promise<T> {
+export async function request<T>(
+  method: HttpMethod,
+  path: string,
+  options: RequestOptions = {},
+): Promise<T> {
   return send<T>(method, path, options, { refreshed: false, csrfRetried: false });
 }
 
@@ -340,7 +351,12 @@ interface Attempt {
   csrfRetried: boolean;
 }
 
-async function send<T>(method: HttpMethod, path: string, options: RequestOptions, attempt: Attempt): Promise<T> {
+async function send<T>(
+  method: HttpMethod,
+  path: string,
+  options: RequestOptions,
+  attempt: Attempt,
+): Promise<T> {
   const headers: Record<string, string> = { accept: 'application/json', ...options.headers };
   let body: BodyInit | undefined;
   if (options.formData) {
@@ -379,7 +395,8 @@ async function send<T>(method: HttpMethod, path: string, options: RequestOptions
       !attempt.refreshed &&
       shouldRefreshOn401(path, isApiErrorBody(payload) ? error.code : undefined);
     if (refreshable) {
-      if (await recoverFrom401()) return send<T>(method, path, options, { ...attempt, refreshed: true });
+      if (await recoverFrom401())
+        return send<T>(method, path, options, { ...attempt, refreshed: true });
       throw error;
     }
     if (res.status === 403 && error.code === 'CSRF_INVALID' && !attempt.csrfRetried) {

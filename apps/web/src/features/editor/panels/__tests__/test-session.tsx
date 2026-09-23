@@ -10,7 +10,10 @@ import { BoardSessionProvider, type BoardSession } from '../../hooks/editor-cont
 import { useEditorUi } from '../../hooks/ui-store';
 
 /** A real, detached editor with a sized viewport. */
-export function createTestEditor(elements: SceneElement[] = [], options: { readOnly?: boolean } = {}): Editor {
+export function createTestEditor(
+  elements: SceneElement[] = [],
+  options: { readOnly?: boolean } = {},
+): Editor {
   const editor = new Editor({ initialState: { readOnly: false } });
   editor.setState({ viewport: { x: 0, y: 0, zoom: 1, width: 1000, height: 800 } });
   if (elements.length) editor.addElements(elements, { select: false });
@@ -34,7 +37,13 @@ export function makeSession(editor: Editor, options: SessionOptions = {}): Board
     canEdit: role !== 'VIEWER',
     canComment: options.canComment ?? true,
     shareToken: null,
-    sync: { connection: 'online', save: 'saved', pendingOps: 0, lastSavedAt: null, error: null } satisfies SyncStatus,
+    sync: {
+      connection: 'online',
+      save: 'saved',
+      pendingOps: 0,
+      lastSavedAt: null,
+      error: null,
+    } satisfies SyncStatus,
     offlineCopy: false,
     renameBoard: vi.fn(async () => undefined),
     reload: options.reload ?? vi.fn(async () => undefined),
@@ -42,9 +51,16 @@ export function makeSession(editor: Editor, options: SessionOptions = {}): Board
 }
 
 /** Renders `ui` inside the app providers and a board session for `editor`. */
-export function renderInSession(ui: React.ReactElement, editor: Editor, options: SessionOptions = {}) {
+export function renderInSession(
+  ui: React.ReactElement,
+  editor: Editor,
+  options: SessionOptions = {},
+) {
   useEditorUi.getState().reset();
   const session = makeSession(editor, options);
-  const result = renderWithProviders(<BoardSessionProvider value={session}>{ui}</BoardSessionProvider>, options);
+  const result = renderWithProviders(
+    <BoardSessionProvider value={session}>{ui}</BoardSessionProvider>,
+    options,
+  );
   return { ...result, session };
 }

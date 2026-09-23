@@ -78,17 +78,26 @@ export function CommandInput({
   );
 }
 
-export function CommandList({ className, ...props }: React.ComponentProps<typeof CommandPrimitive.List>) {
+export function CommandList({
+  className,
+  ...props
+}: React.ComponentProps<typeof CommandPrimitive.List>) {
   return (
     <CommandPrimitive.List
       data-slot="command-list"
-      className={cn('max-h-[min(60dvh,420px)] scroll-py-1 overflow-x-hidden overflow-y-auto py-1.5', className)}
+      className={cn(
+        'max-h-[min(60dvh,420px)] scroll-py-1 overflow-x-hidden overflow-y-auto py-1.5',
+        className,
+      )}
       {...props}
     />
   );
 }
 
-export function CommandEmpty({ className, ...props }: React.ComponentProps<typeof CommandPrimitive.Empty>) {
+export function CommandEmpty({
+  className,
+  ...props
+}: React.ComponentProps<typeof CommandPrimitive.Empty>) {
   return (
     <CommandPrimitive.Empty
       data-slot="command-empty"
@@ -102,7 +111,10 @@ export function CommandLoading(props: React.ComponentProps<typeof CommandPrimiti
   return <CommandPrimitive.Loading {...props} />;
 }
 
-export function CommandGroup({ className, ...props }: React.ComponentProps<typeof CommandPrimitive.Group>) {
+export function CommandGroup({
+  className,
+  ...props
+}: React.ComponentProps<typeof CommandPrimitive.Group>) {
   return (
     <CommandPrimitive.Group
       data-slot="command-group"
@@ -112,11 +124,23 @@ export function CommandGroup({ className, ...props }: React.ComponentProps<typeo
   );
 }
 
-export function CommandSeparator({ className, ...props }: React.ComponentProps<typeof CommandPrimitive.Separator>) {
-  return <CommandPrimitive.Separator data-slot="command-separator" className={cn('-mx-1 my-1 h-px bg-border', className)} {...props} />;
+export function CommandSeparator({
+  className,
+  ...props
+}: React.ComponentProps<typeof CommandPrimitive.Separator>) {
+  return (
+    <CommandPrimitive.Separator
+      data-slot="command-separator"
+      className={cn('-mx-1 my-1 h-px bg-border', className)}
+      {...props}
+    />
+  );
 }
 
-export function CommandItem({ className, ...props }: React.ComponentProps<typeof CommandPrimitive.Item>) {
+export function CommandItem({
+  className,
+  ...props
+}: React.ComponentProps<typeof CommandPrimitive.Item>) {
   return (
     <CommandPrimitive.Item
       data-slot="command-item"
@@ -130,5 +154,11 @@ export function CommandItem({ className, ...props }: React.ComponentProps<typeof
 }
 
 export function CommandShortcut({ className, ...props }: React.ComponentProps<'span'>) {
-  return <span data-slot="command-shortcut" className={cn('ml-auto text-xs tracking-widest text-muted-foreground', className)} {...props} />;
+  return (
+    <span
+      data-slot="command-shortcut"
+      className={cn('ml-auto text-xs tracking-widest text-muted-foreground', className)}
+      {...props}
+    />
+  );
 }

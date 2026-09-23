@@ -23,7 +23,9 @@ export function RegisterPage() {
   const [email, setEmail] = React.useState(params.get('email') ?? '');
   const [password, setPassword] = React.useState('');
   const [fieldErrors, setFieldErrors] = React.useState<Record<string, string>>({});
-  const [formError, setFormError] = React.useState<{ title: string; description?: string } | null>(null);
+  const [formError, setFormError] = React.useState<{ title: string; description?: string } | null>(
+    null,
+  );
   const [submitting, setSubmitting] = React.useState(false);
   const [sentTo, setSentTo] = React.useState<string | null>(null);
 
@@ -65,7 +67,10 @@ export function RegisterPage() {
       <AuthLayout
         title="Check your inbox"
         footer={
-          <Link className="font-medium text-foreground underline-offset-4 hover:underline" to={authRedirect('/login', params.get('next'))}>
+          <Link
+            className="font-medium text-foreground underline-offset-4 hover:underline"
+            to={authRedirect('/login', params.get('next'))}
+          >
             Back to sign in
           </Link>
         }
@@ -82,7 +87,10 @@ export function RegisterPage() {
       footer={
         <>
           Already have an account?{' '}
-          <Link className="font-medium text-foreground underline-offset-4 hover:underline" to={authRedirect('/login', params.get('next'))}>
+          <Link
+            className="font-medium text-foreground underline-offset-4 hover:underline"
+            to={authRedirect('/login', params.get('next'))}
+          >
             Sign in
           </Link>
         </>
@@ -94,7 +102,9 @@ export function RegisterPage() {
           {formError ? (
             <FormAlert>
               <p className="font-medium">{formError.title}</p>
-              {formError.description ? <p className="mt-0.5 opacity-90">{formError.description}</p> : null}
+              {formError.description ? (
+                <p className="mt-0.5 opacity-90">{formError.description}</p>
+              ) : null}
             </FormAlert>
           ) : null}
           <FormField label="Name" error={fieldErrors.name}>
@@ -124,7 +134,9 @@ export function RegisterPage() {
               <>
                 <Input
                   {...controlProps}
-                  aria-describedby={[controlProps['aria-describedby'], 'register-password-strength'].filter(Boolean).join(' ')}
+                  aria-describedby={[controlProps['aria-describedby'], 'register-password-strength']
+                    .filter(Boolean)
+                    .join(' ')}
                   type="password"
                   name="password"
                   autoComplete="new-password"
@@ -136,7 +148,12 @@ export function RegisterPage() {
               </>
             )}
           </FormField>
-          <Button type="submit" className="mt-1 w-full" disabled={submitting} data-testid="register-submit">
+          <Button
+            type="submit"
+            className="mt-1 w-full"
+            disabled={submitting}
+            data-testid="register-submit"
+          >
             {submitting ? <Spinner className="text-current" label={null} /> : null}
             {submitting ? 'Creating account…' : 'Create account'}
           </Button>
@@ -172,15 +189,22 @@ export function CheckInbox({ email }: { email: string }) {
         <MailCheck className="size-5" aria-hidden />
       </div>
       <p className="text-sm text-muted-foreground">
-        We sent a verification link to <span className="font-medium text-foreground">{email}</span>. Open it to
-        activate your account.
+        We sent a verification link to <span className="font-medium text-foreground">{email}</span>.
+        Open it to activate your account.
       </p>
       <div className="grid gap-2">
-        <Button variant="outline" onClick={() => void resend()} disabled={sending || sentAgain} data-testid="register-resend">
+        <Button
+          variant="outline"
+          onClick={() => void resend()}
+          disabled={sending || sentAgain}
+          data-testid="register-resend"
+        >
           {sending ? <Spinner label={null} /> : null}
           {sentAgain ? 'Email sent — check your inbox' : 'Resend email'}
         </Button>
-        <p className="text-center text-xs text-muted-foreground">Can't find it? Check your spam folder.</p>
+        <p className="text-center text-xs text-muted-foreground">
+          Can't find it? Check your spam folder.
+        </p>
       </div>
     </div>
   );

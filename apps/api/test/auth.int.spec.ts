@@ -30,13 +30,26 @@ describe('auth', () => {
     expect(csrf.status).toBe(200);
     expect(client.cookie('inkflow_csrf')).toBe(csrf.body.csrfToken);
 
-    const reg = await client.post<RegisterResponse>('/api/auth/register', { email, password: PASSWORD, name: 'Ada Lovelace' });
+    const reg = await client.post<RegisterResponse>('/api/auth/register', {
+      email,
+      password: PASSWORD,
+      name: 'Ada Lovelace',
+    });
     expect(reg.status).toBe(201);
     expect(reg.body.requiresVerification).toBe(true);
-    expect(reg.body.user).toMatchObject({ email, name: 'Ada Lovelace', emailVerified: false, hasPassword: true });
+    expect(reg.body.user).toMatchObject({
+      email,
+      name: 'Ada Lovelace',
+      emailVerified: false,
+      hasPassword: true,
+    });
     expect(client.cookie('inkflow_at')).toBeUndefined();
 
-    const dup = await client.post('/api/auth/register', { email, password: PASSWORD, name: 'Other' });
+    const dup = await client.post('/api/auth/register', {
+      email,
+      password: PASSWORD,
+      name: 'Other',
+    });
     expect(dup.status).toBe(409);
     expect((dup.body as { error: { code: string } }).error.code).toBe('CONFLICT');
 
@@ -66,9 +79,14 @@ describe('auth', () => {
     const bad = await other.post('/api/auth/login', { email, password: 'wrong-password-1' });
     expect(bad.status).toBe(401);
     expect((bad.body as { error: { code: string } }).error.code).toBe('INVALID_CREDENTIALS');
-    const unknown = await other.post('/api/auth/login', { email: uniqueEmail('nobody'), password: PASSWORD });
+    const unknown = await other.post('/api/auth/login', {
+      email: uniqueEmail('nobody'),
+      password: PASSWORD,
+    });
     expect(unknown.status).toBe(401);
-    expect((unknown.body as { error: { message: string } }).error.message).toBe((bad.body as { error: { message: string } }).error.message);
+    expect((unknown.body as { error: { message: string } }).error.message).toBe(
+      (bad.body as { error: { message: string } }).error.message,
+    );
     const login = await other.post<AuthResponse>('/api/auth/login', { email, password: PASSWORD });
     expect(login.status).toBe(200);
     expect(login.body.user.id).toBe(me.body.user.id);
@@ -113,16 +131,24 @@ describe('auth', () => {
     const missing = await client.patch('/api/users/me', { name: 'X' }, { csrf: false });
     expect(missing.status).toBe(403);
     expect((missing.body as { error: { code: string } }).error.code).toBe('CSRF_INVALID');
-    const wrong = await client.patch('/api/users/me', { name: 'X' }, { csrf: false, headers: { 'x-csrf-token': 'forged.token' } });
+    const wrong = await client.patch(
+      '/api/users/me',
+      { name: 'X' },
+      { csrf: false, headers: { 'x-csrf-token': 'forged.token' } },
+    );
     expect(wrong.status).toBe(403);
     const ok = await client.patch<{ name: string }>('/api/users/me', { name: 'Csrf Passed' });
     expect(ok.status).toBe(200);
     expect(ok.body.name).toBe('Csrf Passed');
     // Bearer-authenticated requests are exempt.
     const bearer = new TestClient(t.url);
-    const res = await bearer.patch<{ name: string }>('/api/users/me', { name: 'Bearer' }, {
-      headers: { authorization: `Bearer ${client.cookie('inkflow_at')}` },
-    });
+    const res = await bearer.patch<{ name: string }>(
+      '/api/users/me',
+      { name: 'Bearer' },
+      {
+        headers: { authorization: `Bearer ${client.cookie('inkflow_at')}` },
+      },
+    );
     expect(res.status).toBe(200);
   });
 
@@ -131,13 +157,17 @@ describe('auth', () => {
     const client = await signUp(t.url, 'Reset Me', email);
     const anon = new TestClient(t.url);
     expect((await anon.post('/api/auth/forgot-password', { email })).status).toBe(200);
-    expect((await anon.post('/api/auth/forgot-password', { email: uniqueEmail('ghost') })).status).toBe(200);
+    expect(
+      (await anon.post('/api/auth/forgot-password', { email: uniqueEmail('ghost') })).status,
+    ).toBe(200);
     const mail = await waitForEmail(email, 'Reset your Inkflow password');
     const token = tokenFromText(mail.text);
     const newPassword = 'brand-new-password-7';
     const reset = await anon.post('/api/auth/reset-password', { token, password: newPassword });
     expect(reset.status).toBe(200);
-    expect((await anon.post('/api/auth/reset-password', { token, password: newPassword })).status).toBe(400);
+    expect(
+      (await anon.post('/api/auth/reset-password', { token, password: newPassword })).status,
+    ).toBe(400);
     // Existing sessions were revoked.
     expect((await client.get('/api/auth/me')).status).toBe(401);
     expect((await anon.post('/api/auth/login', { email, password: PASSWORD })).status).toBe(401);
@@ -149,9 +179,15 @@ describe('auth', () => {
     const a = await signUp(t.url, 'Changer', email);
     const b = new TestClient(t.url);
     expect((await b.post('/api/auth/login', { email, password: PASSWORD })).status).toBe(200);
-    const wrong = await a.post('/api/auth/change-password', { currentPassword: 'nope', newPassword: 'another-password-9' });
+    const wrong = await a.post('/api/auth/change-password', {
+      currentPassword: 'nope',
+      newPassword: 'another-password-9',
+    });
     expect(wrong.status).toBe(400);
-    const changed = await a.post('/api/auth/change-password', { currentPassword: PASSWORD, newPassword: 'another-password-9' });
+    const changed = await a.post('/api/auth/change-password', {
+      currentPassword: PASSWORD,
+      newPassword: 'another-password-9',
+    });
     expect(changed.status).toBe(200);
     expect((await a.get('/api/auth/me')).status).toBe(200);
     expect((await b.get('/api/auth/me')).status).toBe(401);
@@ -175,13 +211,14 @@ describe('auth', () => {
 
   it('returns uniform validation errors', async () => {
     const anon = new TestClient(t.url);
-    const res = await anon.post<{ error: { code: string; details: { path: string[] }[]; requestId: string } }>(
-      '/api/auth/register',
-      { email: 'not-an-email', password: 'short', name: '' },
-    );
+    const res = await anon.post<{
+      error: { code: string; details: { path: string[] }[]; requestId: string };
+    }>('/api/auth/register', { email: 'not-an-email', password: 'short', name: '' });
     expect(res.status).toBe(400);
     expect(res.body.error.code).toBe('VALIDATION_FAILED');
-    expect(res.body.error.details.map((d) => d.path[0])).toEqual(expect.arrayContaining(['email', 'password', 'name']));
+    expect(res.body.error.details.map((d) => d.path[0])).toEqual(
+      expect.arrayContaining(['email', 'password', 'name']),
+    );
     expect(res.body.error.requestId).toBeTruthy();
   });
 });
@@ -192,11 +229,18 @@ describe('auth without mandatory email verification', () => {
     try {
       const client = new TestClient(relaxed.url);
       const email = uniqueEmail('relaxed');
-      const reg = await client.post<RegisterResponse>('/api/auth/register', { email, password: PASSWORD, name: 'Quick Start' });
+      const reg = await client.post<RegisterResponse>('/api/auth/register', {
+        email,
+        password: PASSWORD,
+        name: 'Quick Start',
+      });
       expect(reg.status).toBe(201);
       expect(reg.body.requiresVerification).toBe(false);
       expect(client.cookie('inkflow_at')).toBeTruthy();
-      expect((await client.get<AuthResponse>('/api/auth/me')).body.user).toMatchObject({ email, emailVerified: false });
+      expect((await client.get<AuthResponse>('/api/auth/me')).body.user).toMatchObject({
+        email,
+        emailVerified: false,
+      });
       // A verification email is still sent.
       await waitForEmail(email, 'Verify your email');
     } finally {

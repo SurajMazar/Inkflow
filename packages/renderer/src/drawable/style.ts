@@ -28,7 +28,10 @@ export function dashPattern(style: StrokeStyle, strokeWidth: number): number[] |
   }
 }
 
-export function strokePaint(el: Pick<SceneElement, 'strokeColor' | 'strokeWidth' | 'strokeStyle'>, cap?: LineCap): StrokePaint | null {
+export function strokePaint(
+  el: Pick<SceneElement, 'strokeColor' | 'strokeWidth' | 'strokeStyle'>,
+  cap?: LineCap,
+): StrokePaint | null {
   if (isTransparentColor(el.strokeColor) || el.strokeWidth <= 0) return null;
   return {
     color: el.strokeColor,
@@ -39,7 +42,11 @@ export function strokePaint(el: Pick<SceneElement, 'strokeColor' | 'strokeWidth'
   };
 }
 
-export function solidPaint(color: string, width: number, dash: number[] | null = null): StrokePaint {
+export function solidPaint(
+  color: string,
+  width: number,
+  dash: number[] | null = null,
+): StrokePaint {
   return { color, width, dash, cap: 'round', join: 'round' };
 }
 

@@ -90,30 +90,78 @@ export class RecordingContext {
   }
 
   // --- state properties
-  get fillStyle(): string { return this.state.fillStyle; }
-  set fillStyle(v: string) { this.state.fillStyle = v; }
-  get strokeStyle(): string { return this.state.strokeStyle; }
-  set strokeStyle(v: string) { this.state.strokeStyle = v; }
-  get lineWidth(): number { return this.state.lineWidth; }
-  set lineWidth(v: number) { this.state.lineWidth = v; }
-  get globalAlpha(): number { return this.state.globalAlpha; }
-  set globalAlpha(v: number) { this.state.globalAlpha = v; }
-  get font(): string { return this.state.font; }
-  set font(v: string) { this.state.font = v; }
-  get textAlign(): string { return this.state.textAlign; }
-  set textAlign(v: string) { this.state.textAlign = v; }
-  get textBaseline(): string { return this.state.textBaseline; }
-  set textBaseline(v: string) { this.state.textBaseline = v; }
-  get lineCap(): string { return this.state.lineCap; }
-  set lineCap(v: string) { this.state.lineCap = v; }
-  get lineJoin(): string { return this.state.lineJoin; }
-  set lineJoin(v: string) { this.state.lineJoin = v; }
-  get filter(): string { return this.state.filter; }
-  set filter(v: string) { this.state.filter = v; }
-  get globalCompositeOperation(): string { return this.state.globalCompositeOperation; }
-  set globalCompositeOperation(v: string) { this.state.globalCompositeOperation = v; }
-  get letterSpacing(): string { return this.state.letterSpacing; }
-  set letterSpacing(v: string) { this.state.letterSpacing = v; }
+  get fillStyle(): string {
+    return this.state.fillStyle;
+  }
+  set fillStyle(v: string) {
+    this.state.fillStyle = v;
+  }
+  get strokeStyle(): string {
+    return this.state.strokeStyle;
+  }
+  set strokeStyle(v: string) {
+    this.state.strokeStyle = v;
+  }
+  get lineWidth(): number {
+    return this.state.lineWidth;
+  }
+  set lineWidth(v: number) {
+    this.state.lineWidth = v;
+  }
+  get globalAlpha(): number {
+    return this.state.globalAlpha;
+  }
+  set globalAlpha(v: number) {
+    this.state.globalAlpha = v;
+  }
+  get font(): string {
+    return this.state.font;
+  }
+  set font(v: string) {
+    this.state.font = v;
+  }
+  get textAlign(): string {
+    return this.state.textAlign;
+  }
+  set textAlign(v: string) {
+    this.state.textAlign = v;
+  }
+  get textBaseline(): string {
+    return this.state.textBaseline;
+  }
+  set textBaseline(v: string) {
+    this.state.textBaseline = v;
+  }
+  get lineCap(): string {
+    return this.state.lineCap;
+  }
+  set lineCap(v: string) {
+    this.state.lineCap = v;
+  }
+  get lineJoin(): string {
+    return this.state.lineJoin;
+  }
+  set lineJoin(v: string) {
+    this.state.lineJoin = v;
+  }
+  get filter(): string {
+    return this.state.filter;
+  }
+  set filter(v: string) {
+    this.state.filter = v;
+  }
+  get globalCompositeOperation(): string {
+    return this.state.globalCompositeOperation;
+  }
+  set globalCompositeOperation(v: string) {
+    this.state.globalCompositeOperation = v;
+  }
+  get letterSpacing(): string {
+    return this.state.letterSpacing;
+  }
+  set letterSpacing(v: string) {
+    this.state.letterSpacing = v;
+  }
 
   private rec(name: string, args: unknown[], paint = false): void {
     if (!this.recordAll && !paint) return;
@@ -268,7 +316,12 @@ export class RecordingContext {
   drawImage(...args: unknown[]): void {
     this.rec('drawImage', args, true);
   }
-  getImageData(_x: number, _y: number, w: number, h: number): { data: Uint8ClampedArray; width: number; height: number } {
+  getImageData(
+    _x: number,
+    _y: number,
+    w: number,
+    h: number,
+  ): { data: Uint8ClampedArray; width: number; height: number } {
     this.rec('getImageData', [w, h]);
     return { data: new Uint8ClampedArray(w * h * 4), width: w, height: h };
   }
@@ -309,9 +362,13 @@ export class MockCanvas {
   }
 }
 
-export function mockCanvas(width = 800, height = 600): { canvas: HTMLCanvasElement; ctx: RecordingContext; mock: MockCanvas } {
+export function mockCanvas(
+  width = 800,
+  height = 600,
+): { canvas: HTMLCanvasElement; ctx: RecordingContext; mock: MockCanvas } {
   const mock = new MockCanvas(width, height);
   return { canvas: mock as unknown as HTMLCanvasElement, ctx: mock.ctx, mock };
 }
 
-export const asCtx = (ctx: RecordingContext): CanvasRenderingContext2D => ctx as unknown as CanvasRenderingContext2D;
+export const asCtx = (ctx: RecordingContext): CanvasRenderingContext2D =>
+  ctx as unknown as CanvasRenderingContext2D;

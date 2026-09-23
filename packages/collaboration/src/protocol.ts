@@ -97,8 +97,15 @@ export const clientMessageSchema = z.discriminatedUnion('t', [
     clientId: id,
     lastSeq: z.number().int().min(0),
   }),
-  z.object({ t: z.literal('ops'), batchId: id, ops: z.array(operationSchema).min(1).max(MAX_OPS_PER_BATCH) }),
-  z.object({ t: z.literal('transient'), elements: z.array(z.record(z.string(), z.unknown())).max(2000) }),
+  z.object({
+    t: z.literal('ops'),
+    batchId: id,
+    ops: z.array(operationSchema).min(1).max(MAX_OPS_PER_BATCH),
+  }),
+  z.object({
+    t: z.literal('transient'),
+    elements: z.array(z.record(z.string(), z.unknown())).max(2000),
+  }),
   z.object({
     t: z.literal('presence'),
     state: z

@@ -12,10 +12,22 @@ describe('standalone application context', () => {
     const ctx = await createAppContext(testEnv());
     try {
       const prisma = ctx.get(PrismaService);
-      const user = await prisma.user.create({ data: { email: `ctx-${Date.now()}@example.test`, name: 'Seeder', emailVerifiedAt: new Date() } });
+      const user = await prisma.user.create({
+        data: {
+          email: `ctx-${Date.now()}@example.test`,
+          name: 'Seeder',
+          emailVerifiedAt: new Date(),
+        },
+      });
       const ws = await createWorkspaceRecord(prisma, user.id, 'Seeded');
-      const board = await ctx.get(BoardsService).create(user.id, { workspaceId: ws.id, title: 'Seeded board' });
-      const result = await ctx.get(OperationsService).applyBatch(board.id, { userId: user.id }, 'seed', [createOp('seed', element('rectangle'))]);
+      const board = await ctx
+        .get(BoardsService)
+        .create(user.id, { workspaceId: ws.id, title: 'Seeded board' });
+      const result = await ctx
+        .get(OperationsService)
+        .applyBatch(board.id, { userId: user.id }, 'seed', [
+          createOp('seed', element('rectangle')),
+        ]);
       expect(result.results[0]!.status).toBe('applied');
       expect(await prisma.boardElement.count({ where: { boardId: board.id } })).toBe(1);
     } finally {

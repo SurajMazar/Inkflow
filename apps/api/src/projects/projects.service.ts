@@ -60,7 +60,11 @@ export class ProjectsService {
   }
 
   /** Creator or workspace ADMIN+ may modify a project/folder. */
-  private async requireManage(workspaceId: string, userId: string, createdById: string | null): Promise<void> {
+  private async requireManage(
+    workspaceId: string,
+    userId: string,
+    createdById: string | null,
+  ): Promise<void> {
     const role = await this.access.requireWorkspace(workspaceId, userId);
     if (createdById !== userId && !workspaceRoleAtLeast(role, 'ADMIN')) throw Errors.forbidden();
   }
@@ -69,26 +73,43 @@ export class ProjectsService {
 
   async listProjects(userId: string, workspaceId: string): Promise<ProjectDto[]> {
     await this.access.requireWorkspace(workspaceId, userId);
-    const projects = await this.prisma.project.findMany({ where: { workspaceId }, orderBy: { name: 'asc' } });
+    const projects = await this.prisma.project.findMany({
+      where: { workspaceId },
+      orderBy: { name: 'asc' },
+    });
     const counts = await this.boardCounts(projects.map((p) => p.id));
     return projects.map((p) => this.toProject(p, counts.get(p.id) ?? 0));
   }
 
-  async createProject(userId: string, workspaceId: string, input: CreateProjectRequest): Promise<ProjectDto> {
+  async createProject(
+    userId: string,
+    workspaceId: string,
+    input: CreateProjectRequest,
+  ): Promise<ProjectDto> {
     await this.access.requireWorkspace(workspaceId, userId);
     const project = await this.prisma.project.create({
-      data: { workspaceId, name: input.name, description: input.description || null, createdById: userId },
+      data: {
+        workspaceId,
+        name: input.name,
+        description: input.description || null,
+        createdById: userId,
+      },
     });
     return this.toProject(project, 0);
   }
 
   private async findProject(userId: string, projectId: string): Promise<Project> {
     const project = await this.prisma.project.findUnique({ where: { id: projectId } });
-    if (!project || !(await this.access.workspaceRole(project.workspaceId, userId))) throw Errors.notFound('Project');
+    if (!project || !(await this.access.workspaceRole(project.workspaceId, userId)))
+      throw Errors.notFound('Project');
     return project;
   }
 
-  async updateProject(userId: string, projectId: string, input: UpdateProjectRequest): Promise<ProjectDto> {
+  async updateProject(
+    userId: string,
+    projectId: string,
+    input: UpdateProjectRequest,
+  ): Promise<ProjectDto> {
     const project = await this.findProject(userId, projectId);
     await this.requireManage(project.workspaceId, userId, project.createdById);
     const updated = await this.prisma.project.update({
@@ -106,13 +127,19 @@ export class ProjectsService {
   async deleteProject(userId: string, projectId: string): Promise<void> {
     const project = await this.findProject(userId, projectId);
     await this.requireManage(project.workspaceId, userId, project.createdById);
-    const boards = await this.prisma.board.findMany({ where: { projectId, deletedAt: null }, select: { id: true } });
+    const boards = await this.prisma.board.findMany({
+      where: { projectId, deletedAt: null },
+      select: { id: true },
+    });
     await this.prisma.$transaction(async (tx) => {
       await tx.board.updateMany({
         where: { projectId, deletedAt: null },
         data: { deletedAt: new Date(), deletedById: userId },
       });
-      await tx.board.updateMany({ where: { projectId }, data: { projectId: null, folderId: null } });
+      await tx.board.updateMany({
+        where: { projectId },
+        data: { projectId: null, folderId: null },
+      });
       await tx.project.delete({ where: { id: projectId } });
     });
     await Promise.all(boards.map((b) => this.realtime.emitEvent(b.id, { kind: 'board-deleted' })));
@@ -122,29 +149,43 @@ export class ProjectsService {
 
   async listFolders(userId: string, workspaceId: string): Promise<FolderDto[]> {
     await this.access.requireWorkspace(workspaceId, userId);
-    const folders = await this.prisma.folder.findMany({ where: { workspaceId }, orderBy: { name: 'asc' } });
+    const folders = await this.prisma.folder.findMany({
+      where: { workspaceId },
+      orderBy: { name: 'asc' },
+    });
     return folders.map((f) => this.toFolder(f));
   }
 
   private async folderInWorkspace(folderId: string, workspaceId: string): Promise<Folder> {
-    const folder = isUuid(folderId) ? await this.prisma.folder.findUnique({ where: { id: folderId } }) : null;
-    if (!folder || folder.workspaceId !== workspaceId) throw Errors.validation('Parent folder not found in this workspace');
+    const folder = isUuid(folderId)
+      ? await this.prisma.folder.findUnique({ where: { id: folderId } })
+      : null;
+    if (!folder || folder.workspaceId !== workspaceId)
+      throw Errors.validation('Parent folder not found in this workspace');
     return folder;
   }
 
-  async createFolder(userId: string, workspaceId: string, input: CreateFolderRequest): Promise<FolderDto> {
+  async createFolder(
+    userId: string,
+    workspaceId: string,
+    input: CreateFolderRequest,
+  ): Promise<FolderDto> {
     await this.access.requireWorkspace(workspaceId, userId);
     let projectId = input.projectId ?? null;
     let parentId: string | null = null;
     if (input.parentId) {
       const parent = await this.folderInWorkspace(input.parentId, workspaceId);
-      if (projectId && parent.projectId !== projectId) throw Errors.validation('Parent folder belongs to another project');
+      if (projectId && parent.projectId !== projectId)
+        throw Errors.validation('Parent folder belongs to another project');
       projectId = parent.projectId;
       parentId = parent.id;
     }
     if (projectId) {
-      const project = isUuid(projectId) ? await this.prisma.project.findUnique({ where: { id: projectId } }) : null;
-      if (!project || project.workspaceId !== workspaceId) throw Errors.validation('Project not found in this workspace');
+      const project = isUuid(projectId)
+        ? await this.prisma.project.findUnique({ where: { id: projectId } })
+        : null;
+      if (!project || project.workspaceId !== workspaceId)
+        throw Errors.validation('Project not found in this workspace');
     }
     const folder = await this.prisma.folder.create({
       data: { workspaceId, projectId, parentId, name: input.name, createdById: userId },
@@ -154,11 +195,16 @@ export class ProjectsService {
 
   private async findFolder(userId: string, folderId: string): Promise<Folder> {
     const folder = await this.prisma.folder.findUnique({ where: { id: folderId } });
-    if (!folder || !(await this.access.workspaceRole(folder.workspaceId, userId))) throw Errors.notFound('Folder');
+    if (!folder || !(await this.access.workspaceRole(folder.workspaceId, userId)))
+      throw Errors.notFound('Folder');
     return folder;
   }
 
-  async updateFolder(userId: string, folderId: string, input: UpdateFolderRequest): Promise<FolderDto> {
+  async updateFolder(
+    userId: string,
+    folderId: string,
+    input: UpdateFolderRequest,
+  ): Promise<FolderDto> {
     const folder = await this.findFolder(userId, folderId);
     await this.requireManage(folder.workspaceId, userId, folder.createdById);
     let parentId = folder.parentId;
@@ -167,13 +213,17 @@ export class ProjectsService {
         parentId = null;
       } else {
         const parent = await this.folderInWorkspace(input.parentId, folder.workspaceId);
-        if (parent.projectId !== folder.projectId) throw Errors.validation('Parent folder belongs to another project');
+        if (parent.projectId !== folder.projectId)
+          throw Errors.validation('Parent folder belongs to another project');
         // Reject cycles: walk up from the new parent.
         let cursor: Folder | null = parent;
         for (let depth = 0; cursor; depth++) {
-          if (cursor.id === folder.id) throw Errors.validation('A folder cannot be moved into itself');
+          if (cursor.id === folder.id)
+            throw Errors.validation('A folder cannot be moved into itself');
           if (depth > MAX_FOLDER_DEPTH) throw Errors.validation('Folders are nested too deeply');
-          cursor = cursor.parentId ? await this.prisma.folder.findUnique({ where: { id: cursor.parentId } }) : null;
+          cursor = cursor.parentId
+            ? await this.prisma.folder.findUnique({ where: { id: cursor.parentId } })
+            : null;
         }
         parentId = parent.id;
       }
@@ -191,7 +241,10 @@ export class ProjectsService {
     await this.requireManage(folder.workspaceId, userId, folder.createdById);
     await this.prisma.$transaction(async (tx) => {
       await tx.board.updateMany({ where: { folderId }, data: { folderId: folder.parentId } });
-      await tx.folder.updateMany({ where: { parentId: folderId }, data: { parentId: folder.parentId } });
+      await tx.folder.updateMany({
+        where: { parentId: folderId },
+        data: { parentId: folder.parentId },
+      });
       await tx.folder.delete({ where: { id: folderId } });
     });
   }

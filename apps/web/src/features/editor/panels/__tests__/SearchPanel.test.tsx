@@ -13,7 +13,13 @@ function text(id: string, value: string, x: number, y: number) {
 
 beforeEach(() => {
   __resetClientStateForTests();
-  installFetchMock([{ method: 'GET', path: '/auth/me', respond: { status: 401, body: { error: { code: 'UNAUTHORIZED', message: 'no' } } } }]);
+  installFetchMock([
+    {
+      method: 'GET',
+      path: '/auth/me',
+      respond: { status: 401, body: { error: { code: 'UNAUTHORIZED', message: 'no' } } },
+    },
+  ]);
 });
 
 describe('SearchPanel', () => {

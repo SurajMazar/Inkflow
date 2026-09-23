@@ -15,7 +15,8 @@ export { cleanLabel, mermaidLines, type MermaidResult } from './common';
  */
 export function importMermaid(text: string): MermaidResult {
   if (typeof text !== 'string') throw new Error('Mermaid source must be text');
-  if (text.length > MAX_MERMAID_CHARS) throw new Error('Mermaid source is too large to import (max 1 MB)');
+  if (text.length > MAX_MERMAID_CHARS)
+    throw new Error('Mermaid source is too large to import (max 1 MB)');
   const lines = mermaidLines(text);
   const header = lines[0] ?? '';
   if (/^(flowchart|graph)\b/i.test(header)) return importFlowchart(lines);
@@ -23,5 +24,10 @@ export function importMermaid(text: string): MermaidResult {
   if (/^erDiagram\b/i.test(header)) return importEr(lines);
   if (/^classDiagram(-v2)?\b/i.test(header)) return importClass(lines);
   const kind = /^([A-Za-z-]+)/.exec(header)?.[1];
-  return { elements: [], issues: [kind ? `Unsupported Mermaid diagram type "${kind.slice(0, 40)}"` : 'Empty Mermaid source'] };
+  return {
+    elements: [],
+    issues: [
+      kind ? `Unsupported Mermaid diagram type "${kind.slice(0, 40)}"` : 'Empty Mermaid source',
+    ],
+  };
 }

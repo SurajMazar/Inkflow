@@ -5,7 +5,10 @@ export interface Debounced<A extends unknown[]> {
   pending(): boolean;
 }
 
-export function debounce<A extends unknown[]>(fn: (...args: A) => void, waitMs: number): Debounced<A> {
+export function debounce<A extends unknown[]>(
+  fn: (...args: A) => void,
+  waitMs: number,
+): Debounced<A> {
   let timer: ReturnType<typeof setTimeout> | null = null;
   let lastArgs: A | null = null;
   const invoke = () => {
@@ -41,7 +44,10 @@ export interface Throttled<A extends unknown[]> {
 }
 
 /** Leading + trailing edge throttle. */
-export function throttle<A extends unknown[]>(fn: (...args: A) => void, intervalMs: number): Throttled<A> {
+export function throttle<A extends unknown[]>(
+  fn: (...args: A) => void,
+  intervalMs: number,
+): Throttled<A> {
   let last = 0;
   let timer: ReturnType<typeof setTimeout> | null = null;
   let trailing: A | null = null;

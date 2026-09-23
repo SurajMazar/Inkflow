@@ -1,25 +1,45 @@
 import { describe, expect, it } from 'vitest';
 import { createElement, type ConnectorElement, type NodeElement } from '@inkflow/elements';
 import { Scene } from '@inkflow/scene';
-import { autoLayout, createConnector, createNode, selectConnectedComponent, type AutoLayoutKind } from '../src';
+import {
+  autoLayout,
+  createConnector,
+  createNode,
+  selectConnectedComponent,
+  type AutoLayoutKind,
+} from '../src';
 
 function graph(n: number, edges: [number, number][], seed = 0) {
   const nodes: NodeElement[] = [];
   for (let i = 0; i < n; i++) {
-    nodes.push(createNode(i % 3 === 0 ? 'rectangle' : 'ellipse', { x: ((i * 37 + seed) % 11) * 50, y: ((i * 53 + seed) % 7) * 40, width: 80 + (i % 4) * 20, height: 40 + (i % 3) * 15 }));
+    nodes.push(
+      createNode(i % 3 === 0 ? 'rectangle' : 'ellipse', {
+        x: ((i * 37 + seed) % 11) * 50,
+        y: ((i * 53 + seed) % 7) * 40,
+        width: 80 + (i % 4) * 20,
+        height: 40 + (i % 3) * 15,
+      }),
+    );
   }
   const conns: ConnectorElement[] = edges.map(([a, b]) => createConnector(nodes[a]!, nodes[b]!));
   return { nodes, conns };
 }
 
-function assertNoOverlap(nodes: readonly NodeElement[], pos: Map<string, { x: number; y: number }>) {
+function assertNoOverlap(
+  nodes: readonly NodeElement[],
+  pos: Map<string, { x: number; y: number }>,
+) {
   const boxes = nodes.map((n) => ({ ...pos.get(n.id)!, w: n.width, h: n.height }));
   const overlaps: string[] = [];
   for (let i = 0; i < boxes.length; i++) {
     for (let j = i + 1; j < boxes.length; j++) {
       const a = boxes[i]!;
       const b = boxes[j]!;
-      const overlap = a.x < b.x + b.w - 1e-6 && b.x < a.x + a.w - 1e-6 && a.y < b.y + b.h - 1e-6 && b.y < a.y + a.h - 1e-6;
+      const overlap =
+        a.x < b.x + b.w - 1e-6 &&
+        b.x < a.x + a.w - 1e-6 &&
+        a.y < b.y + b.h - 1e-6 &&
+        b.y < a.y + a.h - 1e-6;
       if (overlap) overlaps.push(`${i}/${j}`);
     }
   }
@@ -27,14 +47,41 @@ function assertNoOverlap(nodes: readonly NodeElement[], pos: Map<string, { x: nu
 }
 
 const TREE_EDGES: [number, number][] = [
-  [0, 1], [0, 2], [0, 3], [1, 4], [1, 5], [2, 6], [3, 7], [3, 8], [3, 9], [7, 10], [7, 11],
+  [0, 1],
+  [0, 2],
+  [0, 3],
+  [1, 4],
+  [1, 5],
+  [2, 6],
+  [3, 7],
+  [3, 8],
+  [3, 9],
+  [7, 10],
+  [7, 11],
 ];
 const DAG_EDGES: [number, number][] = [
-  [0, 1], [0, 2], [1, 3], [2, 3], [3, 4], [1, 4], [0, 4], [4, 5], [5, 6], [2, 6], [6, 1],
+  [0, 1],
+  [0, 2],
+  [1, 3],
+  [2, 3],
+  [3, 4],
+  [1, 4],
+  [0, 4],
+  [4, 5],
+  [5, 6],
+  [2, 6],
+  [6, 1],
 ];
 
 describe('autoLayout', () => {
-  const kinds: AutoLayoutKind[] = ['hierarchical', 'tree', 'grid', 'horizontal', 'vertical', 'force'];
+  const kinds: AutoLayoutKind[] = [
+    'hierarchical',
+    'tree',
+    'grid',
+    'horizontal',
+    'vertical',
+    'force',
+  ];
   it.each(kinds)('%s: no overlaps, deterministic, anchored at the original top-left', (kind) => {
     const { nodes, conns } = graph(12, kind === 'tree' ? TREE_EDGES : DAG_EDGES);
     const a = autoLayout(nodes, conns, kind);
@@ -49,7 +96,16 @@ describe('autoLayout', () => {
   });
 
   it('hierarchical ranks respect edge direction (except broken cycle edges) in every direction', () => {
-    const edges: [number, number][] = [[0, 1], [0, 2], [1, 3], [2, 3], [3, 4], [0, 4], [4, 5], [2, 5]];
+    const edges: [number, number][] = [
+      [0, 1],
+      [0, 2],
+      [1, 3],
+      [2, 3],
+      [3, 4],
+      [0, 4],
+      [4, 5],
+      [2, 5],
+    ];
     const { nodes, conns } = graph(6, edges);
     for (const direction of ['TB', 'BT', 'LR', 'RL'] as const) {
       const pos = autoLayout(nodes, conns, 'hierarchical', { direction });
@@ -68,7 +124,12 @@ describe('autoLayout', () => {
   });
 
   it('hierarchical handles cycles and disconnected components', () => {
-    const { nodes, conns } = graph(8, [[0, 1], [1, 2], [2, 0], [4, 5]]);
+    const { nodes, conns } = graph(8, [
+      [0, 1],
+      [1, 2],
+      [2, 0],
+      [4, 5],
+    ]);
     const pos = autoLayout(nodes, conns, 'hierarchical');
     expect(pos.size).toBe(8);
     assertNoOverlap(nodes, pos);
@@ -87,7 +148,14 @@ describe('autoLayout', () => {
   });
 
   it('tree LR is a mind map with children on both sides', () => {
-    const { nodes, conns } = graph(7, [[0, 1], [0, 2], [0, 3], [0, 4], [1, 5], [3, 6]]);
+    const { nodes, conns } = graph(7, [
+      [0, 1],
+      [0, 2],
+      [0, 3],
+      [0, 4],
+      [1, 5],
+      [3, 6],
+    ]);
     const pos = autoLayout(nodes, conns, 'tree', { direction: 'LR' });
     assertNoOverlap(nodes, pos);
     const cx = (i: number) => pos.get(nodes[i]!.id)!.x + nodes[i]!.width / 2;
@@ -95,18 +163,24 @@ describe('autoLayout', () => {
     expect(kids.some((x) => x > cx(0))).toBe(true);
     expect(kids.some((x) => x < cx(0))).toBe(true);
     const plain = autoLayout(nodes, conns, 'tree', { direction: 'LR', mindMap: false });
-    expect([1, 2, 3, 4].every((i) => plain.get(nodes[i]!.id)!.x > plain.get(nodes[0]!.id)!.x)).toBe(true);
+    expect([1, 2, 3, 4].every((i) => plain.get(nodes[i]!.id)!.x > plain.get(nodes[0]!.id)!.x)).toBe(
+      true,
+    );
   });
 
   it('grid, horizontal and vertical preserve reading order', () => {
-    const nodes = [0, 1, 2, 3].map((i) => createNode('rectangle', { x: [300, 0, 150, 450][i]!, y: 0, width: 100, height: 50 }));
+    const nodes = [0, 1, 2, 3].map((i) =>
+      createNode('rectangle', { x: [300, 0, 150, 450][i]!, y: 0, width: 100, height: 50 }),
+    );
     const h = autoLayout(nodes, [], 'horizontal', { nodeSpacing: 20 });
     const xs = nodes.map((n) => h.get(n.id)!.x);
     expect(xs).toEqual([240, 0, 120, 360]);
     const v = autoLayout(nodes, [], 'vertical', { nodeSpacing: 10 });
     expect(nodes.map((n) => v.get(n.id)!.y)).toEqual([120, 0, 60, 180]);
     const g = autoLayout(nodes, [], 'grid');
-    const order = [...nodes].sort((a, b) => g.get(a.id)!.y - g.get(b.id)!.y || g.get(a.id)!.x - g.get(b.id)!.x).map((n) => n.x);
+    const order = [...nodes]
+      .sort((a, b) => g.get(a.id)!.y - g.get(b.id)!.y || g.get(a.id)!.x - g.get(b.id)!.x)
+      .map((n) => n.x);
     expect(order).toEqual([0, 150, 300, 450]);
   });
 
@@ -125,7 +199,10 @@ describe('autoLayout', () => {
     const edges: [number, number][] = [];
     for (let i = 1; i < n; i++) edges.push([Math.floor((i - 1) / 3), i]);
     for (let i = 0; i < 120; i++) edges.push([(i * 7) % n, (i * 13 + 5) % n]);
-    const { nodes, conns } = graph(n, edges.filter(([a, b]) => a !== b));
+    const { nodes, conns } = graph(
+      n,
+      edges.filter(([a, b]) => a !== b),
+    );
     let t = performance.now();
     const h = autoLayout(nodes, conns, 'hierarchical');
     const hierarchicalMs = performance.now() - t;

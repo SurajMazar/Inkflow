@@ -32,21 +32,21 @@ on the canvas or owns document state.
 
 ## Packages
 
-| Package | Responsibility | Depends on |
-| --- | --- | --- |
-| `@inkflow/shared` | REST DTOs + Zod request schemas, roles, error codes, ids, timing utilities | zod |
-| `@inkflow/config` | Validated environment schema (`parseApiEnv`) | zod |
-| `@inkflow/geometry` | Vectors, matrices, bounds, intersections, béziers, SVG path parsing, simplification, `SpatialIndex`, `SeededRandom` | – |
-| `@inkflow/elements` | Element model (17 types), Zod schema, factories, text layout, element geometry & hit testing | geometry, shared |
-| `@inkflow/scene` | `Scene` store with spatial/binding/group/frame indexes, `Transaction`, `History`, operations (`applyOperation`, `changesToOperations`), fractional indexing, document format + migrations, z-order, alignment, duplication | elements |
-| `@inkflow/diagram-engine` | Shape & icon registries, ports and binding geometry, connector routing (orthogonal A*, elbow, bézier, curved), auto layout (Sugiyama, tidy tree, grid, force), ER/UML/sequence models, library, templates | scene |
-| `@inkflow/renderer` | Deterministic hand-drawn generator, canvas renderer with culling and caches, interactive overlay, SVG renderer | diagram-engine |
-| `@inkflow/canvas-engine` | `Editor`: viewport, tools, interaction controller, selection/transform/snapping, clipboard, shortcuts, actions, text editing, images, presentation | renderer |
-| `@inkflow/collaboration` | WebSocket protocol, `CollabClient` sync engine | scene |
-| `@inkflow/exporters` | PNG (with embedded scene), SVG, PDF (vector/raster, one page per frame), JSON | renderer |
-| `@inkflow/importers` | Native/Excalidraw JSON, SVG → elements, SVG sanitizer, Mermaid → diagrams, image validation | diagram-engine |
-| `@inkflow/database` | Prisma schema, migrations, Prisma client | prisma |
-| `@inkflow/ui` | Accessible shadcn/ui-style components on Radix | react |
+| Package                   | Responsibility                                                                                                                                                                                                             | Depends on       |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- |
+| `@inkflow/shared`         | REST DTOs + Zod request schemas, roles, error codes, ids, timing utilities                                                                                                                                                 | zod              |
+| `@inkflow/config`         | Validated environment schema (`parseApiEnv`)                                                                                                                                                                               | zod              |
+| `@inkflow/geometry`       | Vectors, matrices, bounds, intersections, béziers, SVG path parsing, simplification, `SpatialIndex`, `SeededRandom`                                                                                                        | –                |
+| `@inkflow/elements`       | Element model (17 types), Zod schema, factories, text layout, element geometry & hit testing                                                                                                                               | geometry, shared |
+| `@inkflow/scene`          | `Scene` store with spatial/binding/group/frame indexes, `Transaction`, `History`, operations (`applyOperation`, `changesToOperations`), fractional indexing, document format + migrations, z-order, alignment, duplication | elements         |
+| `@inkflow/diagram-engine` | Shape & icon registries, ports and binding geometry, connector routing (orthogonal A*, elbow, bézier, curved), auto layout (Sugiyama, tidy tree, grid, force), ER/UML/sequence models, library, templates                  | scene            |
+| `@inkflow/renderer`       | Deterministic hand-drawn generator, canvas renderer with culling and caches, interactive overlay, SVG renderer                                                                                                             | diagram-engine   |
+| `@inkflow/canvas-engine`  | `Editor`: viewport, tools, interaction controller, selection/transform/snapping, clipboard, shortcuts, actions, text editing, images, presentation                                                                         | renderer         |
+| `@inkflow/collaboration`  | WebSocket protocol, `CollabClient` sync engine                                                                                                                                                                             | scene            |
+| `@inkflow/exporters`      | PNG (with embedded scene), SVG, PDF (vector/raster, one page per frame), JSON                                                                                                                                              | renderer         |
+| `@inkflow/importers`      | Native/Excalidraw JSON, SVG → elements, SVG sanitizer, Mermaid → diagrams, image validation                                                                                                                                | diagram-engine   |
+| `@inkflow/database`       | Prisma schema, migrations, Prisma client                                                                                                                                                                                   | prisma           |
+| `@inkflow/ui`             | Accessible shadcn/ui-style components on Radix                                                                                                                                                                             | react            |
 
 Packages are built with tsup (ESM + CJS + d.ts). Each exposes a `source` export condition, so Vite
 and Vitest consume TypeScript sources directly while the API (CommonJS) uses the build output.

@@ -24,14 +24,17 @@ export interface Actor {
 const MAX_TX_ATTEMPTS = 3;
 
 function isRetryable(err: unknown): boolean {
-  if (err instanceof Prisma.PrismaClientKnownRequestError) return err.code === 'P2034' || err.code === 'P2002';
+  if (err instanceof Prisma.PrismaClientKnownRequestError)
+    return err.code === 'P2034' || err.code === 'P2002';
   const message = (err as Error | undefined)?.message ?? '';
   return /deadlock detected|could not serialize/i.test(message);
 }
 
 /** Maps logged types (including server-side ones such as `RESTORE_VERSION`) to protocol types. */
 export function toOperationType(type: string): OperationType {
-  return (OPERATION_TYPES as readonly string[]).includes(type) ? (type as OperationType) : 'UPDATE_ELEMENT';
+  return (OPERATION_TYPES as readonly string[]).includes(type)
+    ? (type as OperationType)
+    : 'UPDATE_ELEMENT';
 }
 
 /** Persistent operation pipeline: validation, idempotency, ordering, persistence and fan-out. */
@@ -51,7 +54,12 @@ export class OperationsService {
    * operation with per-property LWW merge, persist element states + the op log with consecutive
    * sequence numbers, then publish the committed changes to every instance.
    */
-  async applyBatch(boardId: string, actor: Actor, clientId: string, rawOps: unknown[]): Promise<BatchResult> {
+  async applyBatch(
+    boardId: string,
+    actor: Actor,
+    clientId: string,
+    rawOps: unknown[],
+  ): Promise<BatchResult> {
     const parsed = parseOps(rawOps, clientId);
     const valid = parsed.flatMap((p) => (p.op ? [p.op] : []));
     let attempt = 0;
@@ -59,7 +67,9 @@ export class OperationsService {
       try {
         const outcome = await this.prisma.$transaction(
           async (tx) => {
-            const boards = await tx.$queryRaw<{ seq: bigint; element_count: number; deleted_at: Date | null }[]>`
+            const boards = await tx.$queryRaw<
+              { seq: bigint; element_count: number; deleted_at: Date | null }[]
+            >`
               SELECT seq, element_count, deleted_at FROM boards WHERE id = ${boardId}::uuid FOR UPDATE`;
             const board = boards[0];
             if (!board || board.deleted_at) throw Errors.notFound('Board');
@@ -83,7 +93,10 @@ export class OperationsService {
 
             const fileIds = candidateFileIds(valid);
             const fileRows = fileIds.length
-              ? await tx.file.findMany({ where: { id: { in: fileIds } }, select: { id: true, boardId: true } })
+              ? await tx.file.findMany({
+                  where: { id: { in: fileIds } },
+                  select: { id: true, boardId: true },
+                })
               : [];
             const fileOwners = new Map(fileRows.map((f) => [f.id, f.boardId]));
 
@@ -145,7 +158,10 @@ export class OperationsService {
 
   /** Current sequence number of a board. */
   async currentSeq(boardId: string): Promise<number> {
-    const board = await this.prisma.board.findUnique({ where: { id: boardId }, select: { seq: true } });
+    const board = await this.prisma.board.findUnique({
+      where: { id: boardId },
+      select: { seq: true },
+    });
     return board ? Number(board.seq) : 0;
   }
 
@@ -154,16 +170,27 @@ export class OperationsService {
    * them. Null when the gap cannot be replayed (op log compacted, or more than
    * `MAX_REPLAY_ELEMENTS` elements) and the client must reload the document.
    */
-  async changesSince(boardId: string, sinceSeq: number): Promise<{ seq: number; changes: ServerChange[] | null }> {
+  async changesSince(
+    boardId: string,
+    sinceSeq: number,
+  ): Promise<{ seq: number; changes: ServerChange[] | null }> {
     const seq = await this.currentSeq(boardId);
     if (sinceSeq >= seq) return { seq, changes: [] };
     const oldest = await this.prisma.$queryRaw<{ min: bigint | null }[]>`
       SELECT min(seq) AS min FROM board_operations WHERE board_id = ${boardId}::uuid`;
-    const min = oldest[0]?.min === null || oldest[0]?.min === undefined ? null : Number(oldest[0].min);
+    const min =
+      oldest[0]?.min === null || oldest[0]?.min === undefined ? null : Number(oldest[0].min);
     if (min === null || min > sinceSeq + 1) return { seq, changes: null };
 
     const touched = await this.prisma.$queryRaw<
-      { element_id: string; seq: bigint; op_id: string; client_id: string; user_id: string | null; type: string }[]
+      {
+        element_id: string;
+        seq: bigint;
+        op_id: string;
+        client_id: string;
+        user_id: string | null;
+        type: string;
+      }[]
     >`
       SELECT DISTINCT ON (t.element_id) t.element_id, o.seq, o.op_id, o.client_id, o.user_id, o.type
       FROM board_operations o, unnest(o.element_ids) AS t(element_id)

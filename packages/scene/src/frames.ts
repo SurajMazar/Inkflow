@@ -2,7 +2,10 @@ import { getElementBounds, type FrameElement, type SceneElement } from '@inkflow
 import { boundsCenter, pointInBounds, rotatedRectBounds, type Bounds } from '@inkflow/geometry';
 
 export function frameBounds(frame: FrameElement): Bounds {
-  return rotatedRectBounds({ x: frame.x, y: frame.y, width: frame.width, height: frame.height }, frame.angle);
+  return rotatedRectBounds(
+    { x: frame.x, y: frame.y, width: frame.width, height: frame.height },
+    frame.angle,
+  );
 }
 
 /**
@@ -63,7 +66,10 @@ export function computeFrameMembership(
 }
 
 /** Frames in presentation order: explicit order first, then remaining frames top-to-bottom, left-to-right. */
-export function orderedFrames(frames: readonly FrameElement[], explicitOrder: readonly string[]): FrameElement[] {
+export function orderedFrames(
+  frames: readonly FrameElement[],
+  explicitOrder: readonly string[],
+): FrameElement[] {
   const live = frames.filter((f) => !f.isDeleted);
   const byId = new Map(live.map((f) => [f.id, f]));
   const ordered: FrameElement[] = [];
@@ -74,6 +80,8 @@ export function orderedFrames(frames: readonly FrameElement[], explicitOrder: re
       byId.delete(id);
     }
   }
-  const rest = [...byId.values()].sort((a, b) => (Math.abs(a.y - b.y) > 40 ? a.y - b.y : a.x - b.x));
+  const rest = [...byId.values()].sort((a, b) =>
+    Math.abs(a.y - b.y) > 40 ? a.y - b.y : a.x - b.x,
+  );
   return [...ordered, ...rest];
 }

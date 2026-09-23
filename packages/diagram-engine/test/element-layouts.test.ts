@@ -27,7 +27,9 @@ describe('table layout', () => {
     const l = computeTableLayout(table);
     const m = tableMetrics(table.fontSize);
     expect(l.headerHeight).toBe(m.headerHeight);
-    expect(l.rows.map((r) => r.y)).toEqual([0, 1, 2, 3].map((i) => m.headerHeight + i * m.rowHeight));
+    expect(l.rows.map((r) => r.y)).toEqual(
+      [0, 1, 2, 3].map((i) => m.headerHeight + i * m.rowHeight),
+    );
     expect(l.rows.map((r) => r.badge)).toEqual(['PK', 'FK', '', 'UQ']);
     expect(l.nameColumnX).toBe(l.keyColumnWidth);
     expect(l.typeColumnX).toBeGreaterThan(l.nameColumnX);
@@ -35,16 +37,27 @@ describe('table layout', () => {
   });
   it('measures a minimum size that fits every row', () => {
     const size = measureTable(table);
-    expect(size.height).toBe(computeTableLayout(table).headerHeight + 4 * tableMetrics(table.fontSize).rowHeight);
-    const wider = createErTable('orders', [{ name: 'a_really_long_column_name_here', dataType: 'timestamp with time zone' }]);
+    expect(size.height).toBe(
+      computeTableLayout(table).headerHeight + 4 * tableMetrics(table.fontSize).rowHeight,
+    );
+    const wider = createErTable('orders', [
+      { name: 'a_really_long_column_name_here', dataType: 'timestamp with time zone' },
+    ]);
     expect(measureTable(wider).width).toBeGreaterThan(size.width);
-    expect(measureTable({ ...table, columns: [] }).height).toBe(tableMetrics(14).headerHeight + tableMetrics(14).rowHeight);
+    expect(measureTable({ ...table, columns: [] }).height).toBe(
+      tableMetrics(14).headerHeight + tableMetrics(14).rowHeight,
+    );
   });
 });
 
 describe('uml class layout', () => {
   it('stacks name, attributes and methods compartments', () => {
-    const el = createUmlClass('Shape', ['- id: string', '+ count: number$'], ['+ area(): number*', '+ draw(): void'], { stereotype: 'abstract', isAbstract: true });
+    const el = createUmlClass(
+      'Shape',
+      ['- id: string', '+ count: number$'],
+      ['+ area(): number*', '+ draw(): void'],
+      { stereotype: 'abstract', isAbstract: true },
+    );
     const l = computeUmlClassLayout(el);
     expect(l.nameLines.map((n) => n.text)).toEqual(['«abstract»', 'Shape']);
     expect(l.nameLines[1]!.italic).toBe(true);
@@ -103,7 +116,12 @@ describe('sequence layout', () => {
     expect(l.messages[1]!.toX).toBeCloseTo(apiCenter - ACTIVATION_WIDTH / 2);
   });
   it('places notes after their message and supports model operations', () => {
-    let el = sequenceOps.addNote(seq, [seq.participants[1]!.id, seq.participants[2]!.id], 'Cache miss', 1);
+    let el = sequenceOps.addNote(
+      seq,
+      [seq.participants[1]!.id, seq.participants[2]!.id],
+      'Cache miss',
+      1,
+    );
     const l = computeSequenceLayout(el);
     const note = l.notes[0]!;
     expect(note.y).toBeGreaterThan(l.messages[1]!.y);
@@ -129,14 +147,20 @@ describe('sequence layout', () => {
     el = sequenceOps.removeNote(el, el.notes[0]!.id);
     expect(el.notes.length).toBe(0);
     expect(validateElement(el).success).toBe(true);
-    expect(sequenceOps.resize({ ...el, width: 1, height: 1 })).toMatchObject({ width: el.width, height: el.height });
+    expect(sequenceOps.resize({ ...el, width: 1, height: 1 })).toMatchObject({
+      width: el.width,
+      height: el.height,
+    });
   });
   it('lays out create and destroy messages', () => {
-    const el = createSequenceDiagram([{ name: 'A' }, { name: 'B' }], [
-      { from: 0, to: 1, label: 'new', kind: 'create' },
-      { from: 0, to: 1, label: 'work' },
-      { from: 0, to: 1, label: 'bye', kind: 'destroy' },
-    ]);
+    const el = createSequenceDiagram(
+      [{ name: 'A' }, { name: 'B' }],
+      [
+        { from: 0, to: 1, label: 'new', kind: 'create' },
+        { from: 0, to: 1, label: 'work' },
+        { from: 0, to: 1, label: 'bye', kind: 'destroy' },
+      ],
+    );
     const l = computeSequenceLayout(el);
     const b = l.participants[1]!;
     expect(b.headerY).toBeGreaterThan(0);

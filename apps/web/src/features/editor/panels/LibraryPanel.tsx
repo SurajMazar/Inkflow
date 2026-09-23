@@ -41,13 +41,17 @@ function LibraryTile({ item, canEdit }: { item: LibraryItem; canEdit: boolean })
   const dark = useDarkCanvas();
   const preview = React.useMemo(() => item.create({ x: 0, y: 0 }), [item]);
   const insert = () => {
-    const created = editor.addElements(item.create(viewportCenterWorld(editor)), { label: `Insert ${item.name}` });
+    const created = editor.addElements(item.create(viewportCenterWorld(editor)), {
+      label: `Insert ${item.name}`,
+    });
     if (created.length) editor.setTool('selection');
   };
   const body = (
     <>
       <ScenePreview elements={preview} width={64} height={44} padding={6} dark={dark} />
-      <span className="line-clamp-2 w-full text-center text-[11px] leading-tight text-muted-foreground">{item.name}</span>
+      <span className="line-clamp-2 w-full text-center text-[11px] leading-tight text-muted-foreground">
+        {item.name}
+      </span>
     </>
   );
   const cls =
@@ -91,7 +95,10 @@ function ShapesTab({ canEdit }: { canEdit: boolean }) {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="relative border-b p-3">
-        <Search className="pointer-events-none absolute top-1/2 left-5 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+        <Search
+          className="pointer-events-none absolute top-1/2 left-5 size-4 -translate-y-1/2 text-muted-foreground"
+          aria-hidden
+        />
         <Input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -103,11 +110,15 @@ function ShapesTab({ canEdit }: { canEdit: boolean }) {
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto p-2">
         {groups.length === 0 ? (
-          <p className="p-4 text-center text-sm text-muted-foreground">No shapes match “{query.trim()}”.</p>
+          <p className="p-4 text-center text-sm text-muted-foreground">
+            No shapes match “{query.trim()}”.
+          </p>
         ) : (
           groups.map(([category, list]) => (
             <section key={category} aria-label={CATEGORY_LABELS[category]} className="mb-3">
-              <h3 className="px-1.5 pb-1 text-[11px] font-medium tracking-wide text-muted-foreground uppercase">{CATEGORY_LABELS[category]}</h3>
+              <h3 className="px-1.5 pb-1 text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+                {CATEGORY_LABELS[category]}
+              </h3>
               <div className="grid grid-cols-4 gap-1">
                 {list.map((item) => (
                   <LibraryTile key={item.id} item={item} canEdit={canEdit} />
@@ -132,7 +143,9 @@ function TemplateCard({ template, canEdit }: { template: TemplateDefinition; can
     }
   }, [template]);
   const insert = () => {
-    const created = insertElementSet(editor, template.build().elements, { label: `Insert template ${template.name}` });
+    const created = insertElementSet(editor, template.build().elements, {
+      label: `Insert template ${template.name}`,
+    });
     if (created.length) {
       editor.fitToElements(
         created.map((e) => e.id),
@@ -158,7 +171,13 @@ function TemplateCard({ template, canEdit }: { template: TemplateDefinition; can
           <p className="line-clamp-2 text-xs text-muted-foreground">{template.description}</p>
         </div>
         {canEdit && (
-          <Button size="sm" variant="outline" className="h-7 text-xs" onClick={insert} data-testid="template-insert">
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-7 text-xs"
+            onClick={insert}
+            data-testid="template-insert"
+          >
             Insert
           </Button>
         )}
@@ -172,12 +191,20 @@ function TemplatesTab({ canEdit }: { canEdit: boolean }) {
   const list = React.useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return SYSTEM_TEMPLATES;
-    return SYSTEM_TEMPLATES.filter((t) => `${t.name} ${t.description} ${t.category}`.toLowerCase().includes(q));
+    return SYSTEM_TEMPLATES.filter((t) =>
+      `${t.name} ${t.description} ${t.category}`.toLowerCase().includes(q),
+    );
   }, [query]);
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="border-b p-3">
-        <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search templates" aria-label="Search templates" className="h-8" />
+        <Input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search templates"
+          aria-label="Search templates"
+          className="h-8"
+        />
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto p-3">
         {list.length === 0 ? (
@@ -201,7 +228,13 @@ const MERMAID_EXAMPLE = `flowchart LR
   C --> E[(Database)]`;
 
 /** Mermaid → editable diagram (also used by the "Diagram from text" dialog). */
-export function DiagramFromText({ onInserted, autoFocus }: { onInserted?(): void; autoFocus?: boolean }) {
+export function DiagramFromText({
+  onInserted,
+  autoFocus,
+}: {
+  onInserted?(): void;
+  autoFocus?: boolean;
+}) {
   const { editor, canEdit } = useBoardSession();
   const [text, setText] = React.useState('');
   const [issues, setIssues] = React.useState<string[]>([]);
@@ -223,14 +256,18 @@ export function DiagramFromText({ onInserted, autoFocus }: { onInserted?(): void
       setError('No diagram elements were found in this text.');
       return;
     }
-    const created = insertElementSet(editor, result.elements, { label: 'Insert diagram from text' });
+    const created = insertElementSet(editor, result.elements, {
+      label: 'Insert diagram from text',
+    });
     if (created.length) {
       editor.fitToElements(
         created.map((e) => e.id),
         1,
       );
       notify.success(`Inserted a diagram with ${created.length} elements`, {
-        description: found.length ? `${found.length} line${found.length === 1 ? ' was' : 's were'} skipped.` : undefined,
+        description: found.length
+          ? `${found.length} line${found.length === 1 ? ' was' : 's were'} skipped.`
+          : undefined,
       });
       if (found.length === 0) setText('');
       onInserted?.();
@@ -238,13 +275,18 @@ export function DiagramFromText({ onInserted, autoFocus }: { onInserted?(): void
   };
 
   if (!canEdit) {
-    return <p className="p-4 text-center text-sm text-muted-foreground">You need edit access to add diagrams to this board.</p>;
+    return (
+      <p className="p-4 text-center text-sm text-muted-foreground">
+        You need edit access to add diagrams to this board.
+      </p>
+    );
   }
 
   return (
     <div className="space-y-3">
       <p className="text-xs text-muted-foreground">
-        Paste Mermaid syntax (flowchart, sequence, class, ER or state diagrams). It is converted into editable shapes and connectors.
+        Paste Mermaid syntax (flowchart, sequence, class, ER or state diagrams). It is converted
+        into editable shapes and connectors.
       </p>
       <Textarea
         value={text}
@@ -268,9 +310,13 @@ export function DiagramFromText({ onInserted, autoFocus }: { onInserted?(): void
         </p>
       )}
       {issues.length > 0 && (
-        <div className="rounded-md border border-amber-300 bg-amber-50 p-2 text-xs text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-100" role="status">
+        <div
+          className="rounded-md border border-amber-300 bg-amber-50 p-2 text-xs text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-100"
+          role="status"
+        >
           <div className="mb-1 flex items-center gap-1 font-medium">
-            <TriangleAlert className="size-3.5" /> {issues.length} issue{issues.length === 1 ? '' : 's'}
+            <TriangleAlert className="size-3.5" /> {issues.length} issue
+            {issues.length === 1 ? '' : 's'}
           </div>
           <ul className="list-disc space-y-0.5 pl-4">
             {issues.slice(0, 8).map((issue, i) => (
@@ -313,7 +359,9 @@ function NodeShapeTile({ def, active }: { def: NodeShapeDefinition; active: bool
       )}
     >
       <ScenePreview elements={preview} width={56} height={40} padding={4} dark={dark} />
-      <span className="line-clamp-1 w-full text-center text-[11px] text-muted-foreground">{def.label}</span>
+      <span className="line-clamp-1 w-full text-center text-[11px] text-muted-foreground">
+        {def.label}
+      </span>
     </button>
   );
 }
@@ -323,7 +371,9 @@ function NodeShapesTab() {
   const shapes = React.useMemo(() => shapeRegistry.list().filter((s) => s.key !== 'custom'), []);
   return (
     <div className="min-h-0 flex-1 overflow-y-auto p-2">
-      <p className="px-1.5 pb-2 text-xs text-muted-foreground">Pick a shape, then click or drag on the canvas to draw nodes (N).</p>
+      <p className="px-1.5 pb-2 text-xs text-muted-foreground">
+        Pick a shape, then click or drag on the canvas to draw nodes (N).
+      </p>
       <div className="grid grid-cols-4 gap-1">
         {shapes.map((def) => (
           <NodeShapeTile key={def.key} def={def} active={current === def.key} />
@@ -337,7 +387,11 @@ function NodeShapesTab() {
 export function LibraryPanel() {
   const { canEdit } = useBoardSession();
   return (
-    <Tabs defaultValue="shapes" className="flex min-h-0 flex-1 flex-col gap-0" data-testid="panel-library">
+    <Tabs
+      defaultValue="shapes"
+      className="flex min-h-0 flex-1 flex-col gap-0"
+      data-testid="panel-library"
+    >
       <TabsList className="mx-3 mt-2 mb-1 grid h-8 grid-cols-4">
         <TabsTrigger value="shapes" className="text-xs">
           Shapes
@@ -352,7 +406,11 @@ export function LibraryPanel() {
           Nodes
         </TabsTrigger>
       </TabsList>
-      {!canEdit && <p className="px-3 pb-1 text-[11px] text-muted-foreground">You can browse the library; editing requires edit access.</p>}
+      {!canEdit && (
+        <p className="px-3 pb-1 text-[11px] text-muted-foreground">
+          You can browse the library; editing requires edit access.
+        </p>
+      )}
       <TabsContent value="shapes" className="mt-0 flex min-h-0 flex-1 flex-col">
         <ShapesTab canEdit={canEdit} />
       </TabsContent>

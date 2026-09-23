@@ -24,8 +24,10 @@ import {
 } from '../src';
 
 const lookup = (els: SceneElement[]) => (id: string) => els.find((e) => e.id === id);
-const worldPoints = (_c: ConnectorElement, r: { x: number; y: number; points: [number, number][] }) =>
-  r.points.map(([x, y]) => ({ x: r.x + x, y: r.y + y }));
+const worldPoints = (
+  _c: ConnectorElement,
+  r: { x: number; y: number; points: [number, number][] },
+) => r.points.map(([x, y]) => ({ x: r.x + x, y: r.y + y }));
 const bends = (pts: Point[]) => {
   let n = 0;
   for (let i = 1; i < pts.length - 1; i++) {
@@ -36,7 +38,11 @@ const bends = (pts: Point[]) => {
   }
   return n;
 };
-const isOrthogonal = (pts: Point[]) => pts.every((p, i) => i === 0 || Math.abs(p.x - pts[i - 1]!.x) < 1e-6 || Math.abs(p.y - pts[i - 1]!.y) < 1e-6);
+const isOrthogonal = (pts: Point[]) =>
+  pts.every(
+    (p, i) =>
+      i === 0 || Math.abs(p.x - pts[i - 1]!.x) < 1e-6 || Math.abs(p.y - pts[i - 1]!.y) < 1e-6,
+  );
 
 describe('ports', () => {
   it('places side ports at box midpoints with outward normals', () => {
@@ -74,7 +80,14 @@ describe('ports', () => {
   });
 
   it('exposes per-column ports on tables and none on linear elements', () => {
-    const t = createErTable('users', [{ name: 'id', dataType: 'uuid', primaryKey: true }, { name: 'email', dataType: 'text' }], { x: 10, y: 20 });
+    const t = createErTable(
+      'users',
+      [
+        { name: 'id', dataType: 'uuid', primaryKey: true },
+        { name: 'email', dataType: 'text' },
+      ],
+      { x: 10, y: 20 },
+    );
     const ports = getElementPorts(t);
     const col = t.columns[1]!;
     const left = ports.find((p) => p.id === `col:${col.id}:left`)!;
@@ -90,7 +103,13 @@ describe('ports', () => {
   it('samples ellipse outlines and rotates outlines', () => {
     const e = createElement('ellipse', { x: 0, y: 0, width: 100, height: 50 });
     expect(getOutlinePolygon(e).length).toBe(64);
-    const r = createElement('rectangle', { x: 0, y: 0, width: 100, height: 50, angle: Math.PI / 2 });
+    const r = createElement('rectangle', {
+      x: 0,
+      y: 0,
+      width: 100,
+      height: 50,
+      angle: Math.PI / 2,
+    });
     const poly = getOutlinePolygon(r);
     expect(Math.min(...poly.map((p) => p.x))).toBeCloseTo(25);
   });
@@ -99,14 +118,24 @@ describe('ports', () => {
 describe('binding resolution', () => {
   const rect = createElement('rectangle', { x: 0, y: 0, width: 100, height: 100 });
   it('resolves named ports with the gap along the normal', () => {
-    const r = resolveBindingPoint(rect, createBinding(rect.id, { portId: 'right', gap: 5 }), { x: 0, y: 0 });
+    const r = resolveBindingPoint(rect, createBinding(rect.id, { portId: 'right', gap: 5 }), {
+      x: 0,
+      y: 0,
+    });
     expect(r.point).toEqual({ x: 105, y: 50 });
     expect(r.normal).toEqual({ x: 1, y: 0 });
   });
   it('resolves anchors to normalized box points', () => {
-    const r = resolveBindingPoint(rect, createBinding(rect.id, { anchor: [0.25, 1], gap: 4 }), { x: 0, y: 0 });
+    const r = resolveBindingPoint(rect, createBinding(rect.id, { anchor: [0.25, 1], gap: 4 }), {
+      x: 0,
+      y: 0,
+    });
     expect(r.point).toEqual({ x: 25, y: 104 });
-    const inner = resolveBindingPoint(rect, createBinding(rect.id, { anchor: [0.5, 0.5], gap: 4 }), { x: 0, y: 0 });
+    const inner = resolveBindingPoint(
+      rect,
+      createBinding(rect.id, { anchor: [0.5, 0.5], gap: 4 }),
+      { x: 0, y: 0 },
+    );
     expect(inner.point).toEqual({ x: 50, y: 50 });
   });
   it('resolves floating bindings on rectangles, ellipses and diamonds', () => {
@@ -115,7 +144,10 @@ describe('binding resolution', () => {
     expect(r.point.y).toBeCloseTo(50);
     const ell = createElement('ellipse', { x: 0, y: 0, width: 200, height: 100 });
     const d = Math.SQRT1_2;
-    const p = resolveBindingPoint(ell, createBinding(ell.id, { gap: 0 }), { x: 100 + 1000, y: 50 + 1000 });
+    const p = resolveBindingPoint(ell, createBinding(ell.id, { gap: 0 }), {
+      x: 100 + 1000,
+      y: 50 + 1000,
+    });
     // Ray at 45°: x = y = 1/sqrt(1/100² + 1/50²)
     const k = 1 / Math.sqrt(1 / 10000 + 1 / 2500);
     expect(p.point.x).toBeCloseTo(100 + k);
@@ -146,19 +178,45 @@ describe('findBindingCandidate', () => {
     const hit = findBindingCandidate([a], { x: 30, y: -3 }, 6, { portSnapDistance: 5 })!;
     expect(hit.anchor![0]).toBeCloseTo(0.3);
     expect(hit.anchor![1]).toBeCloseTo(0);
-    expect(findBindingCandidate([a, b], { x: 75, y: 75 }, 8, { excludeIds: new Set([b.id]) })!.element.id).toBe(a.id);
+    expect(
+      findBindingCandidate([a, b], { x: 75, y: 75 }, 8, { excludeIds: new Set([b.id]) })!.element
+        .id,
+    ).toBe(a.id);
     expect(findBindingCandidate([a], { x: 500, y: 500 }, 8)).toBeNull();
   });
   it('never returns linear, freedraw, locked or hidden elements', () => {
-    const arrow = createElement('arrow', { x: 0, y: 0, width: 100, height: 100, points: [[0, 0], [100, 100]] });
-    const free = createElement('freedraw', { x: 0, y: 0, width: 100, height: 100, points: [[0, 0, 0.5], [100, 100, 0.5]] });
+    const arrow = createElement('arrow', {
+      x: 0,
+      y: 0,
+      width: 100,
+      height: 100,
+      points: [
+        [0, 0],
+        [100, 100],
+      ],
+    });
+    const free = createElement('freedraw', {
+      x: 0,
+      y: 0,
+      width: 100,
+      height: 100,
+      points: [
+        [0, 0, 0.5],
+        [100, 100, 0.5],
+      ],
+    });
     const locked = createNode('rectangle', { x: 0, y: 0, width: 100, height: 100, locked: true });
     const hidden = createNode('rectangle', { x: 0, y: 0, width: 100, height: 100, hidden: true });
     expect(findBindingCandidate([arrow, free, locked, hidden], { x: 50, y: 50 }, 8)).toBeNull();
   });
 });
 
-function connectorBetween(from: SceneElement, to: SceneElement, routing: ConnectorElement['routing'], ports: [string | null, string | null] = ['right', 'left']) {
+function connectorBetween(
+  from: SceneElement,
+  to: SceneElement,
+  routing: ConnectorElement['routing'],
+  ports: [string | null, string | null] = ['right', 'left'],
+) {
   return createConnector(from, to, { routing, fromPort: ports[0], toPort: ports[1] });
 }
 
@@ -235,7 +293,8 @@ describe('routing modes', () => {
     expect(isOrthogonal(pts)).toBe(true);
     for (const ob of [wall, small]) {
       const box = expandBounds(getElementBounds(ob), ROUTING_MARGIN - 1);
-      for (let i = 1; i < pts.length; i++) expect(segmentIntersectsBounds(pts[i - 1]!, pts[i]!, box)).toBe(false);
+      for (let i = 1; i < pts.length; i++)
+        expect(segmentIntersectsBounds(pts[i - 1]!, pts[i]!, box)).toBe(false);
     }
     // Endpoints stay attached to the ports.
     expect(pts[0]).toEqual({ x: 104, y: 230 });
@@ -260,7 +319,10 @@ describe('routing modes', () => {
   });
 
   it('orthogonal: honours waypoints and falls back to elbow when blocked', () => {
-    const c = { ...connectorBetween(a, b, 'orthogonal'), waypoints: [[250, -100]] as [number, number][] };
+    const c = {
+      ...connectorBetween(a, b, 'orthogonal'),
+      waypoints: [[250, -100]] as [number, number][],
+    };
     const pts = worldPoints(c, computeConnectorRoute(c, get, [a, b]));
     expect(pts.some((p) => p.x === 250 && p.y === -100)).toBe(true);
     expect(isOrthogonal(pts)).toBe(true);
@@ -269,7 +331,14 @@ describe('routing modes', () => {
   it('routes 200 obstacles quickly', () => {
     const obstacles: SceneElement[] = [];
     for (let i = 0; i < 200; i++) {
-      obstacles.push(createNode('rectangle', { x: (i % 20) * 160, y: Math.floor(i / 20) * 140, width: 90, height: 60 }));
+      obstacles.push(
+        createNode('rectangle', {
+          x: (i % 20) * 160,
+          y: Math.floor(i / 20) * 140,
+          width: 90,
+          height: 60,
+        }),
+      );
     }
     const from = obstacles[0]!;
     const to = obstacles[57]!;
@@ -286,7 +355,8 @@ describe('routing modes', () => {
     for (const ob of obstacles) {
       const box = expandBounds(getElementBounds(ob), ROUTING_MARGIN - 1);
       if (ob.id === from.id || ob.id === to.id) continue;
-      for (let i = 1; i < pts.length; i++) expect(segmentIntersectsBounds(pts[i - 1]!, pts[i]!, box)).toBe(false);
+      for (let i = 1; i < pts.length; i++)
+        expect(segmentIntersectsBounds(pts[i - 1]!, pts[i]!, box)).toBe(false);
     }
   });
 });
@@ -298,7 +368,11 @@ describe('arrow endpoints and bound updates', () => {
     const arrow = createElement('arrow', {
       x: 100,
       y: 50,
-      points: [[0, 0], [100, -80], [200, 0]],
+      points: [
+        [0, 0],
+        [100, -80],
+        [200, 0],
+      ],
       startBinding: createBinding(a.id, { gap: 0 }),
       endBinding: createBinding(b.id, { portId: 'left', gap: 0 }),
     });
@@ -307,7 +381,9 @@ describe('arrow endpoints and bound updates', () => {
     const pts = r.points.map(([x, y]) => ({ x: r.x + x, y: r.y + y }));
     expect(pts[1]).toEqual({ x: 200, y: -30 });
     expect(pts[2]).toEqual({ x: 400, y: 50 });
-    expect(computeArrowEndpoints({ ...arrow, startBinding: null, endBinding: null }, lookup([]))).toBeNull();
+    expect(
+      computeArrowEndpoints({ ...arrow, startBinding: null, endBinding: null }, lookup([])),
+    ).toBeNull();
   });
 
   it('computes patches for connectors attached to changed elements and unbinds deleted targets', () => {

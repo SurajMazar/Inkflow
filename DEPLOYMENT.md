@@ -41,19 +41,19 @@ before starting. To run migrations as a separate release step instead, run the s
 
 ## Required configuration (production)
 
-| Variable | Notes |
-| --- | --- |
-| `NODE_ENV=production` | Enables production validation and secure defaults |
-| `WEB_ORIGIN` | Public origin of the web app, e.g. `https://inkflow.example.com` (CORS, links in emails, WebSocket origin check) |
-| `PUBLIC_API_URL` | Public API base, e.g. `https://inkflow.example.com/api` (OAuth callbacks) |
-| `DATABASE_URL` | PostgreSQL 15+ connection string (use `sslmode=require` for managed databases) |
-| `REDIS_URL` | Redis 6+ (`rediss://` for TLS) |
-| `JWT_SECRET`, `SESSION_SECRET` | ≥ 32 random characters each (`openssl rand -base64 48`); never reuse between environments |
-| `COOKIE_SECURE=true` | Required behind HTTPS |
-| `TRUST_PROXY=true` | When behind a load balancer (correct client IPs for rate limits) |
+| Variable                                                                                         | Notes                                                                                                            |
+| ------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------- |
+| `NODE_ENV=production`                                                                            | Enables production validation and secure defaults                                                                |
+| `WEB_ORIGIN`                                                                                     | Public origin of the web app, e.g. `https://inkflow.example.com` (CORS, links in emails, WebSocket origin check) |
+| `PUBLIC_API_URL`                                                                                 | Public API base, e.g. `https://inkflow.example.com/api` (OAuth callbacks)                                        |
+| `DATABASE_URL`                                                                                   | PostgreSQL 15+ connection string (use `sslmode=require` for managed databases)                                   |
+| `REDIS_URL`                                                                                      | Redis 6+ (`rediss://` for TLS)                                                                                   |
+| `JWT_SECRET`, `SESSION_SECRET`                                                                   | ≥ 32 random characters each (`openssl rand -base64 48`); never reuse between environments                        |
+| `COOKIE_SECURE=true`                                                                             | Required behind HTTPS                                                                                            |
+| `TRUST_PROXY=true`                                                                               | When behind a load balancer (correct client IPs for rate limits)                                                 |
 | `S3_ENDPOINT`, `S3_BUCKET`, `S3_ACCESS_KEY`, `S3_SECRET_KEY`, `S3_REGION`, `S3_FORCE_PATH_STYLE` | Omit `S3_ENDPOINT` for AWS S3; keep the bucket private (files are served through the API with permission checks) |
-| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_SECURE`, `MAIL_FROM` | Transactional email |
-| `GOOGLE_CLIENT_ID/SECRET`, `GITHUB_CLIENT_ID/SECRET` | Optional OAuth; callback URLs are `${PUBLIC_API_URL}/auth/oauth/{google,github}/callback` |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_SECURE`, `MAIL_FROM`                   | Transactional email                                                                                              |
+| `GOOGLE_CLIENT_ID/SECRET`, `GITHUB_CLIENT_ID/SECRET`                                             | Optional OAuth; callback URLs are `${PUBLIC_API_URL}/auth/oauth/{google,github}/callback`                        |
 
 Optional tuning: `RATE_LIMIT_WINDOW_SECONDS`, `RATE_LIMIT_MAX`, `AUTH_RATE_LIMIT_MAX`,
 `AUTO_VERSION_EVERY_OPS`, `AUTO_VERSION_EVERY_MINUTES`, `TRASH_RETENTION_DAYS`,

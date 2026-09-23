@@ -1,10 +1,18 @@
 import { measureTable, measureUmlClass } from '@inkflow/diagram-engine';
-import type { ElementPatch, SequenceElement, TableColumn, TableElement, UmlClassElement } from '@inkflow/elements';
+import type {
+  ElementPatch,
+  SequenceElement,
+  TableColumn,
+  TableElement,
+  UmlClassElement,
+} from '@inkflow/elements';
 import { generateId } from '@inkflow/shared';
 
 export type StructuredElement = TableElement | UmlClassElement | SequenceElement;
 
-export function isStructuredElement(el: { type: string } | null | undefined): el is StructuredElement {
+export function isStructuredElement(
+  el: { type: string } | null | undefined,
+): el is StructuredElement {
   return !!el && (el.type === 'table' || el.type === 'uml-class' || el.type === 'sequence');
 }
 
@@ -45,8 +53,13 @@ export function newTableColumn(existing: readonly TableColumn[]): TableColumn {
 }
 
 export const tableColumnOps = {
-  add: (el: TableElement): ElementPatch => tablePatch(el, { columns: [...el.columns, newTableColumn(el.columns)] }),
-  update: (el: TableElement, columnId: string, patch: Partial<Omit<TableColumn, 'id'>>): ElementPatch => {
+  add: (el: TableElement): ElementPatch =>
+    tablePatch(el, { columns: [...el.columns, newTableColumn(el.columns)] }),
+  update: (
+    el: TableElement,
+    columnId: string,
+    patch: Partial<Omit<TableColumn, 'id'>>,
+  ): ElementPatch => {
     const columns = el.columns.map((c) => {
       if (c.id !== columnId) return c;
       const next = { ...c, ...patch };
@@ -57,14 +70,23 @@ export const tableColumnOps = {
     });
     return tablePatch(el, { columns });
   },
-  remove: (el: TableElement, columnId: string): ElementPatch => tablePatch(el, { columns: el.columns.filter((c) => c.id !== columnId) }),
+  remove: (el: TableElement, columnId: string): ElementPatch =>
+    tablePatch(el, { columns: el.columns.filter((c) => c.id !== columnId) }),
   move: (el: TableElement, columnId: string, delta: number): ElementPatch =>
-    tablePatch(el, { columns: moveItem(el.columns, el.columns.findIndex((c) => c.id === columnId), delta) }),
+    tablePatch(el, {
+      columns: moveItem(
+        el.columns,
+        el.columns.findIndex((c) => c.id === columnId),
+        delta,
+      ),
+    }),
 };
 
 // ───────────── UML classes ─────────────
 
-type UmlChanges = Partial<Pick<UmlClassElement, 'name' | 'stereotype' | 'isAbstract' | 'attributes' | 'methods'>>;
+type UmlChanges = Partial<
+  Pick<UmlClassElement, 'name' | 'stereotype' | 'isAbstract' | 'attributes' | 'methods'>
+>;
 
 export function umlPatch(el: UmlClassElement, changes: UmlChanges): ElementPatch {
   const size = measureUmlClass({ ...el, ...changes });

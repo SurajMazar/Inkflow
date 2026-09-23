@@ -16,24 +16,56 @@ import {
 
 function rects(n: number): SceneElement[] {
   const keys = indicesAbove([], n);
-  return keys.map((k, i) => createElement('rectangle', { id: `r${i}`, x: i * 100, y: i * 10, width: 50, height: 50, index: k }));
+  return keys.map((k, i) =>
+    createElement('rectangle', {
+      id: `r${i}`,
+      x: i * 100,
+      y: i * 10,
+      width: 50,
+      height: 50,
+      index: k,
+    }),
+  );
 }
 
 function applyIndices(els: SceneElement[], map: Map<string, string>) {
-  return els.map((e) => (map.has(e.id) ? { ...e, index: map.get(e.id)! } : e)).sort(compareOrder).map((e) => e.id);
+  return els
+    .map((e) => (map.has(e.id) ? { ...e, index: map.get(e.id)! } : e))
+    .sort(compareOrder)
+    .map((e) => e.id);
 }
 
 describe('z-order', () => {
   it('brings to front / sends to back', () => {
     const els = rects(4);
-    expect(applyIndices(els, computeZOrder(els, new Set(['r0']), 'bringToFront'))).toEqual(['r1', 'r2', 'r3', 'r0']);
-    expect(applyIndices(els, computeZOrder(els, new Set(['r3']), 'sendToBack'))).toEqual(['r3', 'r0', 'r1', 'r2']);
+    expect(applyIndices(els, computeZOrder(els, new Set(['r0']), 'bringToFront'))).toEqual([
+      'r1',
+      'r2',
+      'r3',
+      'r0',
+    ]);
+    expect(applyIndices(els, computeZOrder(els, new Set(['r3']), 'sendToBack'))).toEqual([
+      'r3',
+      'r0',
+      'r1',
+      'r2',
+    ]);
   });
 
   it('moves one step forward/backward', () => {
     const els = rects(4);
-    expect(applyIndices(els, computeZOrder(els, new Set(['r1']), 'bringForward'))).toEqual(['r0', 'r2', 'r1', 'r3']);
-    expect(applyIndices(els, computeZOrder(els, new Set(['r2']), 'sendBackward'))).toEqual(['r0', 'r2', 'r1', 'r3']);
+    expect(applyIndices(els, computeZOrder(els, new Set(['r1']), 'bringForward'))).toEqual([
+      'r0',
+      'r2',
+      'r1',
+      'r3',
+    ]);
+    expect(applyIndices(els, computeZOrder(els, new Set(['r2']), 'sendBackward'))).toEqual([
+      'r0',
+      'r2',
+      'r1',
+      'r3',
+    ]);
     expect(applyIndices(els, computeZOrder(els, new Set(['r3']), 'bringForward')).length).toBe(4);
   });
 });
@@ -66,7 +98,14 @@ describe('frames', () => {
   it('assigns frame membership by center', () => {
     const frame = createElement('frame', { id: 'f', x: 0, y: 0, width: 300, height: 300 });
     const inside = createElement('rectangle', { id: 'in', x: 10, y: 10, width: 20, height: 20 });
-    const outside = createElement('rectangle', { id: 'out', x: 1000, y: 10, width: 20, height: 20, frameId: 'f' });
+    const outside = createElement('rectangle', {
+      id: 'out',
+      x: 1000,
+      y: 10,
+      width: 20,
+      height: 20,
+      frameId: 'f',
+    });
     const patches = new Map(computeFrameMembership([inside, outside], [frame]));
     expect(patches.get('in')).toEqual({ frameId: 'f' });
     expect(patches.get('out')).toEqual({ frameId: null });

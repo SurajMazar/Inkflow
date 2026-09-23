@@ -1,24 +1,60 @@
 import { COLOR_PALETTE } from '@inkflow/elements';
-import { Button, Input, Popover, PopoverContent, PopoverTrigger, Tabs, TabsContent, TabsList, TabsTrigger, cn } from '@inkflow/ui';
+import {
+  Button,
+  Input,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+  cn,
+} from '@inkflow/ui';
 import { Check, Pipette, Star } from 'lucide-react';
 import * as React from 'react';
-import { contrastColor, hsvToRgb, parseColor, rgbToHsl, rgbToHsv, toHex, type Hsva } from '../lib/color';
+import {
+  contrastColor,
+  hsvToRgb,
+  parseColor,
+  rgbToHsl,
+  rgbToHsv,
+  toHex,
+  type Hsva,
+} from '../lib/color';
 import { colorMemory } from '../lib/color-memory';
 
 const PALETTE_ROWS: string[][] = [
   ['transparent', COLOR_PALETTE.black, COLOR_PALETTE.white, ...COLOR_PALETTE.gray.slice(2)],
-  ...(['red', 'pink', 'grape', 'violet', 'blue', 'cyan', 'teal', 'green', 'yellow', 'orange'] as const).map((k) => [...COLOR_PALETTE[k]]),
+  ...(
+    ['red', 'pink', 'grape', 'violet', 'blue', 'cyan', 'teal', 'green', 'yellow', 'orange'] as const
+  ).map((k) => [...COLOR_PALETTE[k]]),
 ];
 
-const CHECKER =
-  'repeating-conic-gradient(#d4d4d8 0% 25%, #ffffff 0% 50%) 50% / 8px 8px';
+const CHECKER = 'repeating-conic-gradient(#d4d4d8 0% 25%, #ffffff 0% 50%) 50% / 8px 8px';
 
-export function ColorSwatch({ color, size = 20, className }: { color: string; size?: number; className?: string }) {
+export function ColorSwatch({
+  color,
+  size = 20,
+  className,
+}: {
+  color: string;
+  size?: number;
+  className?: string;
+}) {
   return (
     <span
       aria-hidden="true"
-      className={cn('inline-block shrink-0 rounded-[5px] border border-black/10 dark:border-white/15', className)}
-      style={{ width: size, height: size, background: color === 'transparent' ? CHECKER : `linear-gradient(${color}, ${color}), ${CHECKER}` }}
+      className={cn(
+        'inline-block shrink-0 rounded-[5px] border border-black/10 dark:border-white/15',
+        className,
+      )}
+      style={{
+        width: size,
+        height: size,
+        background:
+          color === 'transparent' ? CHECKER : `linear-gradient(${color}, ${color}), ${CHECKER}`,
+      }}
     />
   );
 }
@@ -34,7 +70,15 @@ interface DragAreaProps {
 }
 
 /** Pointer-draggable area reporting normalized coordinates, with arrow-key support. */
-function DragArea({ className, style, label, valueText, onChange, onKey, children }: DragAreaProps) {
+function DragArea({
+  className,
+  style,
+  label,
+  valueText,
+  onChange,
+  onKey,
+  children,
+}: DragAreaProps) {
   const ref = React.useRef<HTMLDivElement>(null);
   const update = (e: React.PointerEvent) => {
     const rect = ref.current!.getBoundingClientRect();
@@ -50,7 +94,10 @@ function DragArea({ className, style, label, valueText, onChange, onKey, childre
       tabIndex={0}
       aria-label={label}
       aria-valuetext={valueText}
-      className={cn('relative touch-none rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring', className)}
+      className={cn(
+        'relative touch-none rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring',
+        className,
+      )}
       style={style}
       onPointerDown={(e) => {
         e.currentTarget.setPointerCapture(e.pointerId);
@@ -81,7 +128,9 @@ function DragArea({ className, style, label, valueText, onChange, onKey, childre
 
 function CustomColor({ value, onChange }: { value: string; onChange(color: string): void }) {
   const parsed = parseColor(value) ?? { r: 30, g: 30, b: 30, a: 1 };
-  const [hsv, setHsv] = React.useState<Hsva>(() => rgbToHsv(parsed.a === 0 ? { ...parsed, a: 1 } : parsed));
+  const [hsv, setHsv] = React.useState<Hsva>(() =>
+    rgbToHsv(parsed.a === 0 ? { ...parsed, a: 1 } : parsed),
+  );
   const rgb = hsvToRgb(hsv);
   const hsl = rgbToHsl(rgb);
   const [hexDraft, setHexDraft] = React.useState(toHex({ ...rgb, a: hsv.a }));
@@ -130,7 +179,9 @@ function CustomColor({ value, onChange }: { value: string; onChange(color: strin
     </label>
   );
 
-  const eyeDropper = (globalThis as { EyeDropper?: new () => { open(): Promise<{ sRGBHex: string }> } }).EyeDropper;
+  const eyeDropper = (
+    globalThis as { EyeDropper?: new () => { open(): Promise<{ sRGBHex: string }> } }
+  ).EyeDropper;
 
   return (
     <div className="flex flex-col gap-3">
@@ -138,9 +189,17 @@ function CustomColor({ value, onChange }: { value: string; onChange(color: strin
         label="Saturation and brightness"
         valueText={`saturation ${Math.round(hsv.s * 100)}%, brightness ${Math.round(hsv.v * 100)}%`}
         className="h-32 w-full cursor-crosshair"
-        style={{ background: `linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, ${pure})` }}
+        style={{
+          background: `linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, ${pure})`,
+        }}
         onChange={(x, y) => commit({ ...hsv, s: x, v: 1 - y })}
-        onKey={(dx, dy) => commit({ ...hsv, s: Math.min(1, Math.max(0, hsv.s + dx)), v: Math.min(1, Math.max(0, hsv.v - dy)) })}
+        onKey={(dx, dy) =>
+          commit({
+            ...hsv,
+            s: Math.min(1, Math.max(0, hsv.s + dx)),
+            v: Math.min(1, Math.max(0, hsv.v - dy)),
+          })
+        }
       >
         <span
           className="pointer-events-none absolute size-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow"
@@ -151,11 +210,16 @@ function CustomColor({ value, onChange }: { value: string; onChange(color: strin
         label="Hue"
         valueText={`${Math.round(hsv.h)} degrees`}
         className="h-3 w-full cursor-pointer"
-        style={{ background: 'linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00)' }}
+        style={{
+          background: 'linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00)',
+        }}
         onChange={(x) => commit({ ...hsv, h: Math.min(359.9, x * 360) })}
         onKey={(dx) => commit({ ...hsv, h: (hsv.h + dx * 360 + 360) % 360 })}
       >
-        <span className="pointer-events-none absolute top-1/2 size-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow" style={{ left: `${(hsv.h / 360) * 100}%`, background: pure }} />
+        <span
+          className="pointer-events-none absolute top-1/2 size-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow"
+          style={{ left: `${(hsv.h / 360) * 100}%`, background: pure }}
+        />
       </DragArea>
       <DragArea
         label="Opacity"
@@ -163,9 +227,14 @@ function CustomColor({ value, onChange }: { value: string; onChange(color: strin
         className="h-3 w-full cursor-pointer"
         style={{ background: `linear-gradient(to right, transparent, ${opaque}), ${CHECKER}` }}
         onChange={(x) => commit({ ...hsv, a: Math.round(x * 100) / 100 })}
-        onKey={(dx) => commit({ ...hsv, a: Math.min(1, Math.max(0.01, Math.round((hsv.a + dx) * 100) / 100)) })}
+        onKey={(dx) =>
+          commit({ ...hsv, a: Math.min(1, Math.max(0.01, Math.round((hsv.a + dx) * 100) / 100)) })
+        }
       >
-        <span className="pointer-events-none absolute top-1/2 size-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow" style={{ left: `${hsv.a * 100}%`, background: opaque }} />
+        <span
+          className="pointer-events-none absolute top-1/2 size-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow"
+          style={{ left: `${hsv.a * 100}%`, background: opaque }}
+        />
       </DragArea>
       <div className="flex items-center gap-2">
         <ColorSwatch color={toHex({ ...rgb, a: hsv.a })} size={28} />
@@ -238,7 +307,14 @@ export interface ColorPickerProps {
 }
 
 /** Color control: quick swatches + popover with palette, custom picker, recent colors and favorites. */
-export function ColorPicker({ label, value, onChange, allowTransparent = false, quick = [], testId }: ColorPickerProps) {
+export function ColorPicker({
+  label,
+  value,
+  onChange,
+  allowTransparent = false,
+  quick = [],
+  testId,
+}: ColorPickerProps) {
   const [open, setOpen] = React.useState(false);
   const [recent, setRecent] = React.useState<string[]>(() => colorMemory.recent());
   const [favorites, setFavorites] = React.useState<string[]>(() => colorMemory.favorites());
@@ -262,23 +338,30 @@ export function ColorPicker({ label, value, onChange, allowTransparent = false, 
         title={color}
         onClick={() => pick(color)}
         className={cn(
-          'relative rounded-md p-0.5 outline-none transition hover:scale-110 focus-visible:ring-2 focus-visible:ring-ring',
-          selected && 'ring-2 ring-primary ring-offset-1 ring-offset-background',
+          'relative rounded-[7px] p-[3px] outline-none transition-transform hover:scale-105 focus-visible:ring-2 focus-visible:ring-ring',
+          selected && 'ring-[1.5px] ring-primary',
         )}
       >
         <ColorSwatch color={color} size={size} />
         {selected && color !== 'transparent' && (
-          <Check className="pointer-events-none absolute inset-0 m-auto size-3" style={{ color: contrastColor(color) }} />
+          <Check
+            className="pointer-events-none absolute inset-0 m-auto size-3"
+            style={{ color: contrastColor(color) }}
+          />
         )}
       </button>
     );
   };
 
-  const palette = allowTransparent ? PALETTE_ROWS : PALETTE_ROWS.map((row, i) => (i === 0 ? row.filter((c) => c !== 'transparent') : row));
+  const palette = allowTransparent
+    ? PALETTE_ROWS
+    : PALETTE_ROWS.map((row, i) => (i === 0 ? row.filter((c) => c !== 'transparent') : row));
 
   return (
     <div className="flex items-center gap-1" data-testid={testId}>
-      {quick.filter((c) => allowTransparent || c !== 'transparent').map((c) => swatchButton(c, `q-${c}`, 20))}
+      {quick
+        .filter((c) => allowTransparent || c !== 'transparent')
+        .map((c) => swatchButton(c, `q-${c}`, 20))}
       <span className="mx-1 h-5 w-px bg-border" aria-hidden="true" />
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
@@ -291,7 +374,13 @@ export function ColorPicker({ label, value, onChange, allowTransparent = false, 
             <ColorSwatch color={value} size={24} />
           </button>
         </PopoverTrigger>
-        <PopoverContent side="left" align="start" className="w-64 p-3" data-inkflow-ui onOpenAutoFocus={(e) => e.preventDefault()}>
+        <PopoverContent
+          side="left"
+          align="start"
+          className="w-64 p-3"
+          data-inkflow-ui
+          onOpenAutoFocus={(e) => e.preventDefault()}
+        >
           <Tabs defaultValue="palette">
             <TabsList className="mb-3 h-8 w-full">
               <TabsTrigger value="palette" className="text-xs">
@@ -308,7 +397,9 @@ export function ColorPicker({ label, value, onChange, allowTransparent = false, 
               {recent.length > 0 && (
                 <div>
                   <p className="mb-1 text-[11px] font-medium text-muted-foreground">Recent</p>
-                  <div className="flex flex-wrap gap-1">{recent.map((c) => swatchButton(c, `r-${c}`, 18))}</div>
+                  <div className="flex flex-wrap gap-1">
+                    {recent.map((c) => swatchButton(c, `r-${c}`, 18))}
+                  </div>
                 </div>
               )}
               <div>
@@ -320,12 +411,19 @@ export function ColorPicker({ label, value, onChange, allowTransparent = false, 
                     onClick={() => setFavorites(colorMemory.toggleFavorite(value))}
                     disabled={value === 'transparent'}
                   >
-                    <Star className={cn('size-3', favorites.includes(value) && 'fill-current text-amber-500')} />
+                    <Star
+                      className={cn(
+                        'size-3',
+                        favorites.includes(value) && 'fill-current text-amber-500',
+                      )}
+                    />
                     {favorites.includes(value) ? 'Remove' : 'Save current'}
                   </button>
                 </div>
                 {favorites.length > 0 ? (
-                  <div className="flex flex-wrap gap-1">{favorites.map((c) => swatchButton(c, `f-${c}`, 18))}</div>
+                  <div className="flex flex-wrap gap-1">
+                    {favorites.map((c) => swatchButton(c, `f-${c}`, 18))}
+                  </div>
                 ) : (
                   <p className="text-[11px] text-muted-foreground">No favorites yet.</p>
                 )}

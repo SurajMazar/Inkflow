@@ -5,7 +5,10 @@ import { useBoardMutations } from '../hooks';
 import { readBoardFile } from '../import-board';
 
 /** Imports a board file into a workspace location and opens it. */
-export function useImportBoard(workspaceId: string, location: { projectId?: string | null; folderId?: string | null } = {}) {
+export function useImportBoard(
+  workspaceId: string,
+  location: { projectId?: string | null; folderId?: string | null } = {},
+) {
   const { mutateAsync: createBoard } = useBoardMutations().create;
   const navigate = useNavigate();
   const [importing, setImporting] = React.useState(false);

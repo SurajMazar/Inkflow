@@ -24,14 +24,26 @@ export function parseColor(input: string): Rgba | null {
     if (hex.length === 3 || hex.length === 4) hex = [...hex].map((c) => c + c).join('');
     if (hex.length !== 6 && hex.length !== 8) return null;
     const n = parseInt(hex.slice(0, 6), 16);
-    return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255, a: hex.length === 8 ? parseInt(hex.slice(6), 16) / 255 : 1 };
+    return {
+      r: (n >> 16) & 255,
+      g: (n >> 8) & 255,
+      b: n & 255,
+      a: hex.length === 8 ? parseInt(hex.slice(6), 16) / 255 : 1,
+    };
   }
   m = /^rgba?\(\s*([\d.]+)[\s,]+([\d.]+)[\s,]+([\d.]+)(?:[\s,/]+([\d.]+%?))?\s*\)$/.exec(s);
   if (m) {
     const a = m[4] ? (m[4].endsWith('%') ? parseFloat(m[4]) / 100 : parseFloat(m[4])) : 1;
-    return { r: clamp(+m[1]!, 0, 255), g: clamp(+m[2]!, 0, 255), b: clamp(+m[3]!, 0, 255), a: clamp(a, 0, 1) };
+    return {
+      r: clamp(+m[1]!, 0, 255),
+      g: clamp(+m[2]!, 0, 255),
+      b: clamp(+m[3]!, 0, 255),
+      a: clamp(a, 0, 1),
+    };
   }
-  m = /^hsla?\(\s*([\d.]+)(?:deg)?[\s,]+([\d.]+)%[\s,]+([\d.]+)%(?:[\s,/]+([\d.]+%?))?\s*\)$/.exec(s);
+  m = /^hsla?\(\s*([\d.]+)(?:deg)?[\s,]+([\d.]+)%[\s,]+([\d.]+)%(?:[\s,/]+([\d.]+%?))?\s*\)$/.exec(
+    s,
+  );
   if (m) {
     const a = m[4] ? (m[4].endsWith('%') ? parseFloat(m[4]) / 100 : parseFloat(m[4])) : 1;
     return { ...hslToRgb(+m[1]!, +m[2]! / 100, +m[3]! / 100), a: clamp(a, 0, 1) };
@@ -46,7 +58,11 @@ export function hslToRgb(h: number, s: number, l: number): { r: number; g: numbe
   return { r: Math.round(f(0) * 255), g: Math.round(f(8) * 255), b: Math.round(f(4) * 255) };
 }
 
-export function rgbToHsl({ r, g, b }: { r: number; g: number; b: number }): { h: number; s: number; l: number } {
+export function rgbToHsl({ r, g, b }: { r: number; g: number; b: number }): {
+  h: number;
+  s: number;
+  l: number;
+} {
   const rn = r / 255;
   const gn = g / 255;
   const bn = b / 255;
@@ -95,10 +111,18 @@ export function hsvToRgb({ h, s, v, a }: Hsva): Rgba {
   else if (h < 240) rgb = [0, x, c];
   else if (h < 300) rgb = [x, 0, c];
   else rgb = [c, 0, x];
-  return { r: Math.round((rgb[0] + m) * 255), g: Math.round((rgb[1] + m) * 255), b: Math.round((rgb[2] + m) * 255), a };
+  return {
+    r: Math.round((rgb[0] + m) * 255),
+    g: Math.round((rgb[1] + m) * 255),
+    b: Math.round((rgb[2] + m) * 255),
+    a,
+  };
 }
 
-const hex2 = (n: number) => Math.round(clamp(n, 0, 255)).toString(16).padStart(2, '0');
+const hex2 = (n: number) =>
+  Math.round(clamp(n, 0, 255))
+    .toString(16)
+    .padStart(2, '0');
 
 /** `#rrggbb`, or `#rrggbbaa` when not fully opaque; `transparent` when alpha is 0. */
 export function toHex({ r, g, b, a }: Rgba): string {

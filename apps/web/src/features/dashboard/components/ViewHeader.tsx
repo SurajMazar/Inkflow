@@ -27,6 +27,16 @@ export function ViewHeader({
 }
 
 /** Standard padded container for dashboard views. */
-export function ViewContainer({ children, className }: { children: React.ReactNode; className?: string }) {
-  return <div className={cn('mx-auto grid w-full max-w-6xl gap-8 px-4 py-6 sm:px-8 sm:py-8', className)}>{children}</div>;
+export function ViewContainer({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={cn('mx-auto grid w-full max-w-6xl gap-8 px-4 py-6 sm:px-8 sm:py-8', className)}>
+      {children}
+    </div>
+  );
 }

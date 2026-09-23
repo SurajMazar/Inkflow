@@ -32,7 +32,12 @@ const crisp = (v: number) => Math.round(v) + 0.5;
  * and adapt to the zoom: spacing below 6px coarsens the grid ×5 (up to 3 times), then hides it.
  * The static renderer always passes the light palette (dark mode is a CSS filter on that canvas).
  */
-export function drawGrid(ctx: Ctx, viewport: ViewportState, grid: GridOptions, theme: RenderTheme): void {
+export function drawGrid(
+  ctx: Ctx,
+  viewport: ViewportState,
+  grid: GridOptions,
+  theme: RenderTheme,
+): void {
   if (!grid.visible) return;
   const zoom = viewport.zoom;
   const step = effectiveGridSize(grid.size, zoom);

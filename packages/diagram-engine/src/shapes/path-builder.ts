@@ -1,4 +1,12 @@
-import { ellipsePath, polygonPath, roundedRectPath, type Path, type PathCommand, type Point, type Rect } from '@inkflow/geometry';
+import {
+  ellipsePath,
+  polygonPath,
+  roundedRectPath,
+  type Path,
+  type PathCommand,
+  type Point,
+  type Rect,
+} from '@inkflow/geometry';
 
 /**
  * Corner radius used for `roundness: 'round'` boxes. Adaptive like Excalidraw: a quarter of the
@@ -36,7 +44,14 @@ export class PathBuilder {
   /** Quadratic curve expressed as a cubic. */
   quadTo(qx: number, qy: number, x: number, y: number): this {
     const c = this.cursor;
-    return this.curveTo(c.x + (2 / 3) * (qx - c.x), c.y + (2 / 3) * (qy - c.y), x + (2 / 3) * (qx - x), y + (2 / 3) * (qy - y), x, y);
+    return this.curveTo(
+      c.x + (2 / 3) * (qx - c.x),
+      c.y + (2 / 3) * (qy - c.y),
+      x + (2 / 3) * (qx - x),
+      y + (2 / 3) * (qy - y),
+      x,
+      y,
+    );
   }
 
   /**
@@ -46,7 +61,8 @@ export class PathBuilder {
   arc(cx: number, cy: number, rx: number, ry: number, a0: number, a1: number): this {
     const start = { x: cx + rx * Math.cos(a0), y: cy + ry * Math.sin(a0) };
     if (this.commands.length === 0) this.moveTo(start.x, start.y);
-    else if (Math.abs(this.cursor.x - start.x) > 1e-9 || Math.abs(this.cursor.y - start.y) > 1e-9) this.lineTo(start.x, start.y);
+    else if (Math.abs(this.cursor.x - start.x) > 1e-9 || Math.abs(this.cursor.y - start.y) > 1e-9)
+      this.lineTo(start.x, start.y);
     const delta = a1 - a0;
     const segments = Math.max(1, Math.ceil(Math.abs(delta) / (Math.PI / 2) - 1e-9));
     const step = delta / segments;

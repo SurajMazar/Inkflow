@@ -17,7 +17,8 @@ export function pointInPolygons(p: Point, polygons: readonly (readonly Point[])[
     for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
       const a = poly[i]!;
       const b = poly[j]!;
-      if (a.y > p.y !== b.y > p.y && p.x < ((b.x - a.x) * (p.y - a.y)) / (b.y - a.y) + a.x) inside = !inside;
+      if (a.y > p.y !== b.y > p.y && p.x < ((b.x - a.x) * (p.y - a.y)) / (b.y - a.y) + a.x)
+        inside = !inside;
     }
   }
   return inside;
@@ -29,7 +30,8 @@ function usableRings(polygons: readonly (readonly Point[])[]): Point[][] {
     const ring: Point[] = [];
     for (const p of poly) {
       const last = ring[ring.length - 1];
-      if (!last || Math.abs(last.x - p.x) > 1e-9 || Math.abs(last.y - p.y) > 1e-9) ring.push({ x: p.x, y: p.y });
+      if (!last || Math.abs(last.x - p.x) > 1e-9 || Math.abs(last.y - p.y) > 1e-9)
+        ring.push({ x: p.x, y: p.y });
     }
     if (ring.length > 1) {
       const first = ring[0]!;
@@ -45,7 +47,11 @@ function usableRings(polygons: readonly (readonly Point[])[]): Point[][] {
  * Scanline hatching of a set of polygon rings (even-odd, so inner rings become holes) with lines at
  * `angleDeg`, spaced by `gap`. Returned segments lie exactly inside the polygons.
  */
-export function hachureLines(polygons: readonly (readonly Point[])[], gapIn: number, angleDeg: number): Line[] {
+export function hachureLines(
+  polygons: readonly (readonly Point[])[],
+  gapIn: number,
+  angleDeg: number,
+): Line[] {
   const rings = usableRings(polygons);
   if (rings.length === 0 || !(gapIn > 0)) return [];
   let gap = gapIn;
@@ -90,14 +96,21 @@ export function hachureLines(polygons: readonly (readonly Point[])[], gapIn: num
       const x1 = xs[i]!;
       const x2 = xs[i + 1]!;
       if (x2 - x1 < 1e-6) continue;
-      out.push([rotate({ x: x1, y }, back.cos, back.sin), rotate({ x: x2, y }, back.cos, back.sin)]);
+      out.push([
+        rotate({ x: x1, y }, back.cos, back.sin),
+        rotate({ x: x2, y }, back.cos, back.sin),
+      ]);
     }
   }
   return out;
 }
 
 /** Clips segment ab to the inside of the polygons (even-odd), returning the inside pieces. */
-export function clipSegmentToPolygons(a: Point, b: Point, polygons: readonly (readonly Point[])[]): Line[] {
+export function clipSegmentToPolygons(
+  a: Point,
+  b: Point,
+  polygons: readonly (readonly Point[])[],
+): Line[] {
   const dx = b.x - a.x;
   const dy = b.y - a.y;
   const ts = [0, 1];
@@ -134,7 +147,10 @@ export function clipSegmentToPolygons(a: Point, b: Point, polygons: readonly (re
     }
   }
   if (open !== null) {
-    out.push([{ x: a.x + dx * open, y: a.y + dy * open }, { x: b.x, y: b.y }]);
+    out.push([
+      { x: a.x + dx * open, y: a.y + dy * open },
+      { x: b.x, y: b.y },
+    ]);
   }
   return out;
 }
@@ -143,7 +159,11 @@ export function clipSegmentToPolygons(a: Point, b: Point, polygons: readonly (re
  * Zigzag fill: a continuous back-and-forth scribble across the (rotated) bounding box, with turns
  * `gap` apart, clipped to the polygons. Pieces are exactly inside the outline.
  */
-export function zigzagLines(polygons: readonly (readonly Point[])[], gapIn: number, angleDeg: number): Line[] {
+export function zigzagLines(
+  polygons: readonly (readonly Point[])[],
+  gapIn: number,
+  angleDeg: number,
+): Line[] {
   const rings = usableRings(polygons);
   if (rings.length === 0 || !(gapIn > 0)) return [];
   let gap = gapIn;
@@ -172,7 +192,7 @@ export function zigzagLines(polygons: readonly (readonly Point[])[], gapIn: numb
   const out: Line[] = [];
   if ((maxY - minY) / gap > MAX_SCANLINES) gap = (maxY - minY) / MAX_SCANLINES;
   const rows = Math.max(1, Math.ceil((maxY - minY) / gap));
-  const startY = minY - ((rows * gap - (maxY - minY)) / 2);
+  const startY = minY - (rows * gap - (maxY - minY)) / 2;
   for (let k = 0; k < rows; k++) {
     const y0 = startY + k * gap;
     const y1 = y0 + gap;

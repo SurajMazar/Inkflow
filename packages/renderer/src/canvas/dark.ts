@@ -85,7 +85,11 @@ const counterFiltered = new WeakMap<object, ScratchCanvas>();
  * Image pre-inverted with `invert(100%) hue-rotate(180deg)` for contexts without `ctx.filter`.
  * Returns null when no scratch canvas is available (or the image is tainted).
  */
-export function getCounterFilteredImage(image: CanvasImageSource, width: number, height: number): ScratchCanvas | null {
+export function getCounterFilteredImage(
+  image: CanvasImageSource,
+  width: number,
+  height: number,
+): ScratchCanvas | null {
   const key = image as unknown as object;
   const cached = counterFiltered.get(key);
   if (cached) return cached;

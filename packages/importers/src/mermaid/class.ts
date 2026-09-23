@@ -1,6 +1,21 @@
 import type { SceneElement, UmlClassElement } from '@inkflow/elements';
-import { autoLayout, createNode, createUmlClass, createUmlRelation, DiagramBuilder, type LayoutDirection, type UmlRelationKind } from '@inkflow/diagram-engine';
-import { cleanLabel, IssueLog, layoutEdge, MAX_MERMAID_EDGES, MAX_MERMAID_NODES, type MermaidResult } from './common';
+import {
+  autoLayout,
+  createNode,
+  createUmlClass,
+  createUmlRelation,
+  DiagramBuilder,
+  type LayoutDirection,
+  type UmlRelationKind,
+} from '@inkflow/diagram-engine';
+import {
+  cleanLabel,
+  IssueLog,
+  layoutEdge,
+  MAX_MERMAID_EDGES,
+  MAX_MERMAID_NODES,
+  type MermaidResult,
+} from './common';
 
 interface ClassDef {
   id: string;
@@ -26,7 +41,22 @@ interface Note {
 
 const CLASS_ID = String.raw`[\p{L}\p{N}_]+(?:~[^~]{1,100}~)?`;
 /** Relation tokens, longest first (left marker, line, right marker). */
-const TOKENS = ['<|--', '<|..', '--|>', '..|>', '*--', 'o--', '--*', '--o', '<--', '<..', '-->', '..>', '--', '..'];
+const TOKENS = [
+  '<|--',
+  '<|..',
+  '--|>',
+  '..|>',
+  '*--',
+  'o--',
+  '--*',
+  '--o',
+  '<--',
+  '<..',
+  '-->',
+  '..>',
+  '--',
+  '..',
+];
 const RELATION = new RegExp(
   String.raw`^(${CLASS_ID})\s*(?:"([^"]*)")?\s*(${TOKENS.map((t) => t.replace(/[|*.]/g, '\\$&')).join('|')})\s*(?:"([^"]*)")?\s*(${CLASS_ID})\s*(?::\s*(.*))?$`,
   'u',
@@ -62,7 +92,13 @@ export function formatMember(raw: string): { text: string; method: boolean } {
       suffix = retMarker[1]! + suffix;
       ret = ret.slice(0, -retMarker[1]!.length).trim();
     }
-    return { text: `${lead}${method[1]}(${method[2]!.trim()})${ret ? `: ${ret}` : ''}${suffix}`.slice(0, 2000), method: true };
+    return {
+      text: `${lead}${method[1]}(${method[2]!.trim()})${ret ? `: ${ret}` : ''}${suffix}`.slice(
+        0,
+        2000,
+      ),
+      method: true,
+    };
   }
   if (s.includes(':')) return { text: `${lead}${s}${suffix}`.slice(0, 2000), method: false };
   const parts = s.split(/\s+/);
@@ -174,10 +210,16 @@ export function importClass(lines: string[]): MermaidResult {
       continue;
     }
     if (/^(title|accTitle|accDescr|style|classDef|cssClass|callback|link|click)\b/i.test(line)) {
-      if (/^(callback|link|click)\b/i.test(line)) issues.add('Interactive "click"/"link" statements are ignored');
+      if (/^(callback|link|click)\b/i.test(line))
+        issues.add('Interactive "click"/"link" statements are ignored');
       continue;
     }
-    if ((m = new RegExp(String.raw`^class\s+(${CLASS_ID})(?:\s*\["([^"]*)"\])?(?::::[\w-]+)?\s*(\{)?\s*(.*?)\s*(\})?$`, 'u').exec(line))) {
+    if (
+      (m = new RegExp(
+        String.raw`^class\s+(${CLASS_ID})(?:\s*\["([^"]*)"\])?(?::::[\w-]+)?\s*(\{)?\s*(.*?)\s*(\})?$`,
+        'u',
+      ).exec(line))
+    ) {
       const c = ensure(m[1]!);
       if (!c) continue;
       if (m[2]) c.name = cleanLabel(m[2]).slice(0, 200);
@@ -206,7 +248,14 @@ export function importClass(lines: string[]): MermaidResult {
         issues.add(`Too many relations; only the first ${MAX_MERMAID_EDGES} were imported`);
         continue;
       }
-      relations.push({ a: a.id, b: b.id, token: m[3]!, cardA: m[2] ?? '', cardB: m[4] ?? '', label: cleanLabel(m[6] ?? '') });
+      relations.push({
+        a: a.id,
+        b: b.id,
+        token: m[3]!,
+        cardA: m[2] ?? '',
+        cardB: m[4] ?? '',
+        label: cleanLabel(m[6] ?? ''),
+      });
       continue;
     }
     if ((m = new RegExp(String.raw`^(${CLASS_ID})\s*:\s*(.+)$`, 'u').exec(line))) {
@@ -225,14 +274,24 @@ export function importClass(lines: string[]): MermaidResult {
   const boxes = new Map<string, UmlClassElement>();
   for (const c of classes.values()) {
     const abstract = c.stereotype?.toLowerCase() === 'abstract';
-    boxes.set(c.id, createUmlClass(c.name, c.attributes, c.methods, { stereotype: c.stereotype, isAbstract: abstract }));
+    boxes.set(
+      c.id,
+      createUmlClass(c.name, c.attributes, c.methods, {
+        stereotype: c.stereotype,
+        isAbstract: abstract,
+      }),
+    );
   }
-  const noteNodes = notes.map((n) => ({ note: n, el: createNode('note', { label: n.text, width: 180, height: 80 }) }));
+  const noteNodes = notes.map((n) => ({
+    note: n,
+    el: createNode('note', { label: n.text, width: 180, height: 80 }),
+  }));
   // Layout edges point from the element that should sit above: supertypes and wholes first.
   const layoutEdges = relations.map((r) => {
     const map = mapToken(r.token);
     const [from, to] = map.from === 'a' ? [r.a, r.b] : [r.b, r.a];
-    const above = map.kind === 'inheritance' || map.kind === 'realization' ? [to, from] : [from, to];
+    const above =
+      map.kind === 'inheritance' || map.kind === 'realization' ? [to, from] : [from, to];
     return layoutEdge(boxes.get(above[0]!)!.id, boxes.get(above[1]!)!.id);
   });
   for (const { note, el } of noteNodes) {
@@ -240,7 +299,11 @@ export function importClass(lines: string[]): MermaidResult {
     if (target) layoutEdges.push(layoutEdge(el.id, target.id));
   }
   const all: SceneElement[] = [...boxes.values(), ...noteNodes.map((n) => n.el)];
-  const pos = autoLayout(all, layoutEdges, 'hierarchical', { direction, nodeSpacing: 60, rankSpacing: 90 });
+  const pos = autoLayout(all, layoutEdges, 'hierarchical', {
+    direction,
+    nodeSpacing: 60,
+    rankSpacing: 90,
+  });
   const b = new DiagramBuilder();
   const placed = new Map<string, SceneElement>();
   for (const [id, box] of boxes) {
@@ -263,7 +326,15 @@ export function importClass(lines: string[]): MermaidResult {
     const p = pos.get(el.id) ?? { x: 0, y: 0 };
     const n = b.add({ ...el, x: p.x, y: p.y });
     const target = note.target ? placed.get(note.target) : undefined;
-    if (target) b.connect(n, target, { routing: 'straight', strokeStyle: 'dashed', endArrowhead: 'none', edgeKind: 'association', fromPort: null, toPort: null });
+    if (target)
+      b.connect(n, target, {
+        routing: 'straight',
+        strokeStyle: 'dashed',
+        endArrowhead: 'none',
+        edgeKind: 'association',
+        fromPort: null,
+        toPort: null,
+      });
   }
   return { elements: b.finish(), issues: issues.list() };
 }

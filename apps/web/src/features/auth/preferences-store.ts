@@ -21,12 +21,21 @@ export function normalizePreferences(raw: unknown): UserPreferences {
   const base = DEFAULT_USER_PREFERENCES;
   if (!isRecord(raw)) return structuredClone(base);
   const result: UserPreferences = {
-    theme: raw.theme === 'light' || raw.theme === 'dark' || raw.theme === 'system' ? raw.theme : base.theme,
+    theme:
+      raw.theme === 'light' || raw.theme === 'dark' || raw.theme === 'system'
+        ? raw.theme
+        : base.theme,
     highContrast: typeof raw.highContrast === 'boolean' ? raw.highContrast : base.highContrast,
     reduceMotion: typeof raw.reduceMotion === 'boolean' ? raw.reduceMotion : base.reduceMotion,
     grid: { ...base.grid, ...(isRecord(raw.grid) ? raw.grid : {}) } as UserPreferences['grid'],
-    snapping: { ...base.snapping, ...(isRecord(raw.snapping) ? raw.snapping : {}) } as UserPreferences['snapping'],
-    canvas: { ...base.canvas, ...(isRecord(raw.canvas) ? raw.canvas : {}) } as UserPreferences['canvas'],
+    snapping: {
+      ...base.snapping,
+      ...(isRecord(raw.snapping) ? raw.snapping : {}),
+    } as UserPreferences['snapping'],
+    canvas: {
+      ...base.canvas,
+      ...(isRecord(raw.canvas) ? raw.canvas : {}),
+    } as UserPreferences['canvas'],
     defaultStyles: {
       ...base.defaultStyles,
       ...(isRecord(raw.defaultStyles) ? raw.defaultStyles : {}),
@@ -36,7 +45,9 @@ export function normalizePreferences(raw: unknown): UserPreferences {
       ...(isRecord(raw.notifications) ? raw.notifications : {}),
     } as UserPreferences['notifications'],
     shortcuts: isRecord(raw.shortcuts)
-      ? Object.fromEntries(Object.entries(raw.shortcuts).filter(([, v]) => typeof v === 'string')) as Record<string, string>
+      ? (Object.fromEntries(
+          Object.entries(raw.shortcuts).filter(([, v]) => typeof v === 'string'),
+        ) as Record<string, string>)
       : {},
   };
   return result;
@@ -73,7 +84,8 @@ const listeners = new Set<Listener>();
 let anonymousCache: UserPreferences | null = null;
 
 export function getAnonymousPreferences(): UserPreferences {
-  if (!anonymousCache) anonymousCache = normalizePreferences(readJson(STORAGE_KEYS.anonymousPreferences));
+  if (!anonymousCache)
+    anonymousCache = normalizePreferences(readJson(STORAGE_KEYS.anonymousPreferences));
   return anonymousCache;
 }
 

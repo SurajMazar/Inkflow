@@ -31,7 +31,9 @@ import { shapeRegistry } from './shapes/registry';
 /** Label style used by diagram builders (clean sans text). */
 export const DIAGRAM_LABEL_STYLE = { fontFamily: 'sans', fontSize: 16 } as const;
 
-export type NodeProps = Partial<Omit<NodeElement, 'label' | 'type'>> & { label?: string | ShapeLabel | null };
+export type NodeProps = Partial<Omit<NodeElement, 'label' | 'type'>> & {
+  label?: string | ShapeLabel | null;
+};
 
 /**
  * Creates a semantic node for a registered shape (unknown shapes fall back to `rectangle`), sized
@@ -40,7 +42,9 @@ export type NodeProps = Partial<Omit<NodeElement, 'label' | 'type'>> & { label?:
 export function createNode(shape: string, props: NodeProps = {}): NodeElement {
   const def = shapeRegistry.get(shape) ?? shapeRegistry.get('rectangle')!;
   const { label, ...given } = props;
-  const rest = Object.fromEntries(Object.entries(given).filter(([, v]) => v !== undefined)) as Partial<NodeElement>;
+  const rest = Object.fromEntries(
+    Object.entries(given).filter(([, v]) => v !== undefined),
+  ) as Partial<NodeElement>;
   const style = def.defaultStyle ?? {};
   const node = createElement('node', {
     width: def.defaultSize.width,
@@ -53,7 +57,10 @@ export function createNode(shape: string, props: NodeProps = {}): NodeElement {
       label === undefined || label === null
         ? null
         : typeof label === 'string'
-          ? createLabel(label, { ...DIAGRAM_LABEL_STYLE, fontSize: labelSizeFor(def.defaultSize.height) })
+          ? createLabel(label, {
+              ...DIAGRAM_LABEL_STYLE,
+              fontSize: labelSizeFor(def.defaultSize.height),
+            })
           : label,
   });
   return node;
@@ -68,8 +75,13 @@ function labelSizeFor(height: number): number {
  * between the two boxes (horizontal when they are side by side, vertical when stacked); with a
  * point, by the dominant direction relative to the element's aspect ratio.
  */
-export function facingPort(el: SceneElement, toward: SceneElement | { x: number; y: number }): string | null {
-  const ports = getElementPorts(el).filter((p) => ['top', 'right', 'bottom', 'left'].includes(p.id));
+export function facingPort(
+  el: SceneElement,
+  toward: SceneElement | { x: number; y: number },
+): string | null {
+  const ports = getElementPorts(el).filter((p) =>
+    ['top', 'right', 'bottom', 'left'].includes(p.id),
+  );
   if (ports.length === 0) return null;
   const c = getElementCenter(el);
   let dir: { x: number; y: number };
@@ -79,9 +91,13 @@ export function facingPort(el: SceneElement, toward: SceneElement | { x: number;
     const oc = getElementCenter(toward);
     const gx = Math.max(b.minX - a.maxX, a.minX - b.maxX);
     const gy = Math.max(b.minY - a.maxY, a.minY - b.maxY);
-    dir = gx >= gy ? { x: Math.sign(oc.x - c.x) || 1, y: 0 } : { x: 0, y: Math.sign(oc.y - c.y) || 1 };
+    dir =
+      gx >= gy ? { x: Math.sign(oc.x - c.x) || 1, y: 0 } : { x: 0, y: Math.sign(oc.y - c.y) || 1 };
   } else {
-    dir = { x: (toward.x - c.x) / Math.max(el.width, 1), y: (toward.y - c.y) / Math.max(el.height, 1) };
+    dir = {
+      x: (toward.x - c.x) / Math.max(el.width, 1),
+      y: (toward.y - c.y) / Math.max(el.height, 1),
+    };
   }
   let best = ports[0]!;
   let bestScore = -Infinity;
@@ -101,7 +117,8 @@ export type ConnectorProps = Partial<Omit<ConnectorElement, 'label'>> & {
   toPort?: string | null;
 };
 
-const lookup = (els: readonly (SceneElement | null)[]) => (id: string) => els.find((e) => e?.id === id) ?? undefined;
+const lookup = (els: readonly (SceneElement | null)[]) => (id: string) =>
+  els.find((e) => e?.id === id) ?? undefined;
 
 /**
  * Creates a connector bound to `from` / `to`. Ports default to the side ports facing each other;
@@ -115,10 +132,14 @@ export function createConnector(
 ): ConnectorElement {
   const { label, fromPort, toPort, ...rest } = props;
   const startBinding = from
-    ? createBinding(from.id, { portId: fromPort === undefined ? (to ? facingPort(from, to) : null) : fromPort })
+    ? createBinding(from.id, {
+        portId: fromPort === undefined ? (to ? facingPort(from, to) : null) : fromPort,
+      })
     : (rest.startBinding ?? null);
   const endBinding = to
-    ? createBinding(to.id, { portId: toPort === undefined ? (from ? facingPort(to, from) : null) : toPort })
+    ? createBinding(to.id, {
+        portId: toPort === undefined ? (from ? facingPort(to, from) : null) : toPort,
+      })
     : (rest.endBinding ?? null);
   let connector = createElement('connector', {
     points: [
@@ -129,7 +150,12 @@ export function createConnector(
     ...rest,
     startBinding,
     endBinding,
-    label: label === undefined || label === null ? null : typeof label === 'string' ? createEdgeLabel(label, { fontFamily: 'sans', fontSize: 14 }) : label,
+    label:
+      label === undefined || label === null
+        ? null
+        : typeof label === 'string'
+          ? createEdgeLabel(label, { fontFamily: 'sans', fontSize: 14 })
+          : label,
   });
   if (from || to) {
     const route = computeConnectorRoute(connector, lookup([from, to]), []);
@@ -177,7 +203,12 @@ export function createErRelationship(
   const tc = getElementCenter(to);
   const toIsRight = tc.x >= fc.x;
   const horizontalGap = toIsRight ? to.x - (from.x + from.width) : from.x - (to.x + to.width);
-  const colPort = (table: TableElement, colId: string | null, side: 'left' | 'right', other: TableElement) => {
+  const colPort = (
+    table: TableElement,
+    colId: string | null,
+    side: 'left' | 'right',
+    other: TableElement,
+  ) => {
     if (colId && table.columns.some((c) => c.id === colId)) return `col:${colId}:${side}`;
     return facingPort(table, other);
   };
@@ -200,15 +231,24 @@ export function createErRelationship(
 }
 
 /** UML class box sized to fit its compartments. */
-export function createUmlClass(name: string, attributes: string[], methods: string[], props: Partial<UmlClassElement> = {}): UmlClassElement {
+export function createUmlClass(
+  name: string,
+  attributes: string[],
+  methods: string[],
+  props: Partial<UmlClassElement> = {},
+): UmlClassElement {
   const el = createElement('uml-class', { name, attributes, methods, ...props });
   const size = measureUmlClass(el);
   return { ...el, width: props.width ?? size.width, height: props.height ?? size.height };
 }
 
-export type UmlRelationKind = 'association' | 'dependency' | 'inheritance' | 'realization' | 'aggregation' | 'composition';
+export type UmlRelationKind =
+  'association' | 'dependency' | 'inheritance' | 'realization' | 'aggregation' | 'composition';
 
-const UML_STYLE: Record<UmlRelationKind, { start: Arrowhead; end: Arrowhead; dashed: boolean; kind: EdgeKind }> = {
+const UML_STYLE: Record<
+  UmlRelationKind,
+  { start: Arrowhead; end: Arrowhead; dashed: boolean; kind: EdgeKind }
+> = {
   association: { start: 'none', end: 'arrow', dashed: false, kind: 'association' },
   dependency: { start: 'none', end: 'arrow', dashed: true, kind: 'dependency' },
   inheritance: { start: 'none', end: 'triangle-outline', dashed: false, kind: 'inheritance' },
@@ -222,7 +262,12 @@ const UML_STYLE: Record<UmlRelationKind, { start: Arrowhead; end: Arrowhead; das
  * from the subtype (`from`) to the supertype (`to`); aggregation/composition put the diamond on the
  * whole (`from`) and connect to the part (`to`); association/dependency point from client to supplier.
  */
-export function createUmlRelation(from: SceneElement, to: SceneElement, kind: UmlRelationKind, props: ConnectorProps = {}): ConnectorElement {
+export function createUmlRelation(
+  from: SceneElement,
+  to: SceneElement,
+  kind: UmlRelationKind,
+  props: ConnectorProps = {},
+): ConnectorElement {
   const s = UML_STYLE[kind];
   return createConnector(from, to, {
     routing: 'orthogonal',
@@ -241,11 +286,25 @@ export function createSequenceDiagram(
   messages: Array<{ from: number; to: number; label: string; kind?: SequenceMessageKind }>,
   props: Partial<SequenceElement> = {},
 ): SequenceElement {
-  const parts = participants.map((p) => ({ id: generateId(10), name: p.name, kind: p.kind ?? 'participant' }));
+  const parts = participants.map((p) => ({
+    id: generateId(10),
+    name: p.name,
+    kind: p.kind ?? 'participant',
+  }));
   const msgs = messages
     .filter((m) => parts[m.from] && parts[m.to])
-    .map((m) => ({ id: generateId(10), from: parts[m.from]!.id, to: parts[m.to]!.id, label: m.label, kind: m.kind ?? 'sync' }));
+    .map((m) => ({
+      id: generateId(10),
+      from: parts[m.from]!.id,
+      to: parts[m.to]!.id,
+      label: m.label,
+      kind: m.kind ?? 'sync',
+    }));
   const el = createElement('sequence', { participants: parts, messages: msgs, ...props });
   const size = measureSequence(el);
-  return { ...el, width: Math.max(size.width, props.width ?? 0), height: Math.max(size.height, props.height ?? 0) };
+  return {
+    ...el,
+    width: Math.max(size.width, props.width ?? 0),
+    height: Math.max(size.height, props.height ?? 0),
+  };
 }

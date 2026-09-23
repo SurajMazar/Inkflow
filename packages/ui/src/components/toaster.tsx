@@ -18,7 +18,11 @@ function readRootTheme(): 'light' | 'dark' {
  * `.dark` class on `<html>`, so it always matches the application theme.
  */
 export function Toaster({ theme, ...props }: ToasterProps) {
-  const rootTheme = React.useSyncExternalStore(subscribeToRootClass, readRootTheme, () => 'light' as const);
+  const rootTheme = React.useSyncExternalStore(
+    subscribeToRootClass,
+    readRootTheme,
+    () => 'light' as const,
+  );
   return (
     <Sonner
       theme={theme ?? rootTheme}

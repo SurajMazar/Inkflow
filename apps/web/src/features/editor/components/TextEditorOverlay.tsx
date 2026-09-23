@@ -36,7 +36,9 @@ export function TextEditorOverlay() {
     if (e.key === 'Escape' || (e.key === 'Enter' && mod)) {
       e.preventDefault();
       editor.commitTextEdit();
-      requestAnimationFrame(() => (document.querySelector('[data-testid="canvas-container"]') as HTMLElement | null)?.focus());
+      requestAnimationFrame(() =>
+        (document.querySelector('[data-testid="canvas-container"]') as HTMLElement | null)?.focus(),
+      );
       return;
     }
     if (e.key === 'Enter' && edit.kind === 'frame-name') {
@@ -46,7 +48,9 @@ export function TextEditorOverlay() {
     }
     if (mod && (e.key === 'b' || e.key === 'i' || e.key === 'u')) {
       e.preventDefault();
-      editor.actions.run(e.key === 'b' ? 'text.bold' : e.key === 'i' ? 'text.italic' : 'text.underline');
+      editor.actions.run(
+        e.key === 'b' ? 'text.bold' : e.key === 'i' ? 'text.italic' : 'text.underline',
+      );
       return;
     }
     if (e.key === 'Tab') {
@@ -68,7 +72,13 @@ export function TextEditorOverlay() {
       ref={ref}
       value={value}
       data-testid="text-editor"
-      aria-label={edit.kind === 'text' ? 'Edit text' : edit.kind === 'frame-name' ? 'Frame name' : 'Edit label'}
+      aria-label={
+        edit.kind === 'text'
+          ? 'Edit text'
+          : edit.kind === 'frame-name'
+            ? 'Frame name'
+            : 'Edit label'
+      }
       placeholder={layout.placeholder}
       spellCheck
       wrap={layout.autoWidth ? 'off' : 'soft'}
@@ -83,7 +93,9 @@ export function TextEditorOverlay() {
       style={{
         left: layout.left,
         top: layout.top,
-        width: layout.autoWidth ? Math.max(layout.width, layout.fontSize) + layout.fontSize : layout.width,
+        width: layout.autoWidth
+          ? Math.max(layout.width, layout.fontSize) + layout.fontSize
+          : layout.width,
         height,
         transform: layout.angle ? `rotate(${layout.angle}rad)` : undefined,
         // Match the canvas, which is color-inverted in dark mode.

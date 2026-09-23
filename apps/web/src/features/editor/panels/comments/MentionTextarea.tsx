@@ -77,9 +77,15 @@ export function MentionTextarea({
 
   const pick = (user: PublicUserDto) => {
     if (!mention) return;
-    const res = insertMention(value, mention.start, caret, { id: user.id, name: user.name || user.email });
+    const res = insertMention(value, mention.start, caret, {
+      id: user.id,
+      name: user.name || user.email,
+    });
     onChange(res.text);
-    onMentionsChange([...mentions.filter((m) => m.id !== res.mention.id || m.name !== res.mention.name), res.mention]);
+    onMentionsChange([
+      ...mentions.filter((m) => m.id !== res.mention.id || m.name !== res.mention.name),
+      res.mention,
+    ]);
     setCaret(res.caret);
     requestAnimationFrame(() => {
       const el = ref.current;
@@ -164,10 +170,19 @@ export function MentionTextarea({
             </div>
           ) : users.length === 0 ? (
             <div className="px-3 py-2 text-xs text-muted-foreground">
-              {results.isError ? 'Could not search people.' : query ? 'No matching people' : 'Type a name…'}
+              {results.isError
+                ? 'Could not search people.'
+                : query
+                  ? 'No matching people'
+                  : 'Type a name…'}
             </div>
           ) : (
-            <ul id={listId} role="listbox" aria-label="People to mention" className="max-h-48 overflow-y-auto py-1">
+            <ul
+              id={listId}
+              role="listbox"
+              aria-label="People to mention"
+              className="max-h-48 overflow-y-auto py-1"
+            >
               {users.map((u, i) => (
                 <li
                   key={u.id}
@@ -180,9 +195,16 @@ export function MentionTextarea({
                     pick(u);
                   }}
                   onMouseEnter={() => setActive(i)}
-                  className={cn('flex cursor-pointer items-center gap-2 px-2.5 py-1.5 text-sm', i === active && 'bg-accent')}
+                  className={cn(
+                    'flex cursor-pointer items-center gap-2 px-2.5 py-1.5 text-sm',
+                    i === active && 'bg-accent',
+                  )}
                 >
-                  <UserAvatar name={u.name || u.email} src={u.avatarUrl} className="size-5 text-[10px]" />
+                  <UserAvatar
+                    name={u.name || u.email}
+                    src={u.avatarUrl}
+                    className="size-5 text-[10px]"
+                  />
                   <span className="min-w-0 flex-1 truncate">{u.name || u.email}</span>
                   <span className="truncate text-xs text-muted-foreground">{u.email}</span>
                 </li>

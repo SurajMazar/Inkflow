@@ -17,13 +17,17 @@ type UserWithProviders = User & { oauthAccounts: { provider: OAuthProvider }[] }
 
 /** Merges stored (partial, possibly outdated) preferences over the defaults. */
 export function resolvePreferences(stored: unknown): UserPreferences {
-  const raw = stored && typeof stored === 'object' && !Array.isArray(stored) ? (stored as Record<string, unknown>) : {};
+  const raw =
+    stored && typeof stored === 'object' && !Array.isArray(stored)
+      ? (stored as Record<string, unknown>)
+      : {};
   const out: Record<string, unknown> = { ...DEFAULT_USER_PREFERENCES };
   for (const [key, def] of Object.entries(DEFAULT_USER_PREFERENCES)) {
     const value = raw[key];
     if (value === undefined) continue;
     if (def && typeof def === 'object' && !Array.isArray(def)) {
-      if (value && typeof value === 'object' && !Array.isArray(value)) out[key] = { ...def, ...(value as object) };
+      if (value && typeof value === 'object' && !Array.isArray(value))
+        out[key] = { ...def, ...(value as object) };
     } else if (typeof value === typeof def) {
       out[key] = value;
     }
@@ -66,8 +70,14 @@ export class UsersService {
     if (input.name !== undefined) data.name = input.name;
     if (input.avatarUrl !== undefined) data.avatarUrl = input.avatarUrl;
     if (input.preferences !== undefined) {
-      const current = await this.prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { preferences: true } });
-      const stored = current.preferences && typeof current.preferences === 'object' ? (current.preferences as Record<string, unknown>) : {};
+      const current = await this.prisma.user.findUniqueOrThrow({
+        where: { id: userId },
+        select: { preferences: true },
+      });
+      const stored =
+        current.preferences && typeof current.preferences === 'object'
+          ? (current.preferences as Record<string, unknown>)
+          : {};
       data.preferences = { ...stored, ...input.preferences } as Prisma.InputJsonValue;
     }
     await this.prisma.user.update({ where: { id: userId }, data });
@@ -93,7 +103,10 @@ export class UsersService {
       : {};
     let scope: Prisma.UserWhereInput;
     if (query.boardId) {
-      const access = await this.access.getBoardAccess(query.boardId, { userId: requesterId, shareToken: null });
+      const access = await this.access.getBoardAccess(query.boardId, {
+        userId: requesterId,
+        shareToken: null,
+      });
       if (!access) throw Errors.notFound('Board');
       const board = access.board;
       scope = {
@@ -118,7 +131,9 @@ export class UsersService {
       scope = { workspaceMemberships: { some: { workspaceId: query.workspaceId } } };
     } else {
       scope = {
-        workspaceMemberships: { some: { workspace: { members: { some: { userId: requesterId } } } } },
+        workspaceMemberships: {
+          some: { workspace: { members: { some: { userId: requesterId } } } },
+        },
       };
     }
     const users = await this.prisma.user.findMany({

@@ -27,7 +27,10 @@ export function readingOrder(nodes: readonly LayoutNode[]): LayoutNode[] {
   return rows.flatMap((r) => r.sort((a, b) => a.cx - b.cx || a.index - b.index));
 }
 
-function gridLayout(nodes: readonly LayoutNode[], spacing: number): Map<number, { x: number; y: number }> {
+function gridLayout(
+  nodes: readonly LayoutNode[],
+  spacing: number,
+): Map<number, { x: number; y: number }> {
   const ordered = readingOrder(nodes);
   const n = ordered.length;
   const cols = Math.max(1, Math.ceil(Math.sqrt(n)));
@@ -51,13 +54,21 @@ function gridLayout(nodes: readonly LayoutNode[], spacing: number): Map<number, 
     acc += rowH[r]! + spacing;
   }
   const out = new Map<number, { x: number; y: number }>();
-  ordered.forEach((v, i) => out.set(v.index, { x: colX[i % cols]!, y: rowY[Math.floor(i / cols)]! }));
+  ordered.forEach((v, i) =>
+    out.set(v.index, { x: colX[i % cols]!, y: rowY[Math.floor(i / cols)]! }),
+  );
   return out;
 }
 
-function lineLayout(nodes: readonly LayoutNode[], spacing: number, horizontal: boolean): Map<number, { x: number; y: number }> {
+function lineLayout(
+  nodes: readonly LayoutNode[],
+  spacing: number,
+  horizontal: boolean,
+): Map<number, { x: number; y: number }> {
   const ordered = [...nodes].sort((a, b) =>
-    horizontal ? a.cx - b.cx || a.cy - b.cy || a.index - b.index : a.cy - b.cy || a.cx - b.cx || a.index - b.index,
+    horizontal
+      ? a.cx - b.cx || a.cy - b.cy || a.index - b.index
+      : a.cy - b.cy || a.cx - b.cx || a.index - b.index,
   );
   const thickness = Math.max(0, ...ordered.map((v) => (horizontal ? v.height : v.width)));
   const out = new Map<number, { x: number; y: number }>();
@@ -88,7 +99,9 @@ export function autoLayout(
   kind: AutoLayoutKind,
   options: AutoLayoutOptions = {},
 ): Map<string, { x: number; y: number }> {
-  const layoutNodes = nodes.filter((n) => !isLinearElement(n) && n.type !== 'freedraw' && !n.isDeleted);
+  const layoutNodes = nodes.filter(
+    (n) => !isLinearElement(n) && n.type !== 'freedraw' && !n.isDeleted,
+  );
   const graph = buildLayoutGraph(layoutNodes, edges);
   const out = new Map<string, { x: number; y: number }>();
   if (graph.nodes.length === 0) return out;
@@ -101,7 +114,13 @@ export function autoLayout(
       centers = hierarchicalLayout(graph, direction, spacing, rankSpacing);
       break;
     case 'tree':
-      centers = treeLayout(graph, direction, spacing, rankSpacing, options.mindMap ?? direction === 'LR');
+      centers = treeLayout(
+        graph,
+        direction,
+        spacing,
+        rankSpacing,
+        options.mindMap ?? direction === 'LR',
+      );
       break;
     case 'grid':
       centers = gridLayout(graph.nodes, spacing);

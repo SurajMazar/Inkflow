@@ -23,8 +23,14 @@ export function cubicPoint(b: CubicBezier, t: number): Point {
 export function cubicTangent(b: CubicBezier, t: number): Point {
   const mt = 1 - t;
   return {
-    x: 3 * mt * mt * (b.c1.x - b.p0.x) + 6 * mt * t * (b.c2.x - b.c1.x) + 3 * t * t * (b.p1.x - b.c2.x),
-    y: 3 * mt * mt * (b.c1.y - b.p0.y) + 6 * mt * t * (b.c2.y - b.c1.y) + 3 * t * t * (b.p1.y - b.c2.y),
+    x:
+      3 * mt * mt * (b.c1.x - b.p0.x) +
+      6 * mt * t * (b.c2.x - b.c1.x) +
+      3 * t * t * (b.p1.x - b.c2.x),
+    y:
+      3 * mt * mt * (b.c1.y - b.p0.y) +
+      6 * mt * t * (b.c2.y - b.c1.y) +
+      3 * t * t * (b.p1.y - b.c2.y),
   };
 }
 

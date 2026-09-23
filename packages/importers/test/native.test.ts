@@ -1,14 +1,38 @@
 import { createElement } from '@inkflow/elements';
-import { CURRENT_DOCUMENT_VERSION, generateNKeysBetween, serializeDocument, DEFAULT_DOCUMENT_APP_STATE } from '@inkflow/scene';
+import {
+  CURRENT_DOCUMENT_VERSION,
+  generateNKeysBetween,
+  serializeDocument,
+  DEFAULT_DOCUMENT_APP_STATE,
+} from '@inkflow/scene';
 import { describe, expect, it } from 'vitest';
 import { MAX_NATIVE_JSON_CHARS } from '../src/limits';
 import { importNativeJson } from '../src/native';
 
 function sampleDocument() {
   const [k1, k2] = generateNKeysBetween(null, null, 2);
-  const rect = createElement('rectangle', { id: 'rect-1', x: 10, y: 20, width: 100, height: 50, index: k1! });
-  const text = createElement('text', { id: 'text-1', x: 0, y: 0, width: 40, height: 25, text: 'Hello', index: k2! });
-  return serializeDocument([rect, text], { ...DEFAULT_DOCUMENT_APP_STATE, viewBackgroundColor: '#fafafa' }, {});
+  const rect = createElement('rectangle', {
+    id: 'rect-1',
+    x: 10,
+    y: 20,
+    width: 100,
+    height: 50,
+    index: k1!,
+  });
+  const text = createElement('text', {
+    id: 'text-1',
+    x: 0,
+    y: 0,
+    width: 40,
+    height: 25,
+    text: 'Hello',
+    index: k2!,
+  });
+  return serializeDocument(
+    [rect, text],
+    { ...DEFAULT_DOCUMENT_APP_STATE, viewBackgroundColor: '#fafafa' },
+    {},
+  );
 }
 
 describe('importNativeJson', () => {
@@ -31,7 +55,10 @@ describe('importNativeJson', () => {
   it('reports invalid elements instead of failing', () => {
     const doc = sampleDocument();
     const raw = JSON.parse(JSON.stringify(doc)) as { elements: unknown[] };
-    raw.elements.push({ id: 'bad', type: 'rectangle', x: 'nope' }, { id: 'weird', type: 'hologram' });
+    raw.elements.push(
+      { id: 'bad', type: 'rectangle', x: 'nope' },
+      { id: 'weird', type: 'hologram' },
+    );
     const result = importNativeJson(JSON.stringify(raw));
     expect(result.document.elements).toHaveLength(2);
     expect(result.issues.map((i) => i.elementId)).toEqual(['bad', 'weird']);
@@ -59,6 +86,8 @@ describe('importNativeJson', () => {
   });
 
   it('rejects documents from a newer format version', () => {
-    expect(() => importNativeJson(JSON.stringify({ type: 'inkflow', version: 999, elements: [] }))).toThrow(/newer version/);
+    expect(() =>
+      importNativeJson(JSON.stringify({ type: 'inkflow', version: 999, elements: [] })),
+    ).toThrow(/newer version/);
   });
 });

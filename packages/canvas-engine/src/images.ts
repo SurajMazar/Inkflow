@@ -27,15 +27,27 @@ function loadImage(url: string): Promise<HTMLImageElement> {
 }
 
 /** Inserts images immediately (local preview) and uploads them in the background. */
-export async function insertImages(editor: Editor, files: readonly File[], center: Point): Promise<void> {
+export async function insertImages(
+  editor: Editor,
+  files: readonly File[],
+  center: Point,
+): Promise<void> {
   const accepted: File[] = [];
   for (const file of files) {
     if (!(ALLOWED_IMAGE_MIME_TYPES as readonly string[]).includes(file.type)) {
-      editor.requestUi({ type: 'toast', level: 'error', message: `${file.name}: unsupported image type` });
+      editor.requestUi({
+        type: 'toast',
+        level: 'error',
+        message: `${file.name}: unsupported image type`,
+      });
       continue;
     }
     if (file.size > MAX_UPLOAD_BYTES) {
-      editor.requestUi({ type: 'toast', level: 'error', message: `${file.name}: larger than ${Math.round(MAX_UPLOAD_BYTES / 1048576)} MB` });
+      editor.requestUi({
+        type: 'toast',
+        level: 'error',
+        message: `${file.name}: larger than ${Math.round(MAX_UPLOAD_BYTES / 1048576)} MB`,
+      });
       continue;
     }
     accepted.push(file);
@@ -56,7 +68,15 @@ export async function insertImages(editor: Editor, files: readonly File[], cente
       const height = nh * scale;
       const fileId = newFileId();
       editor.images.set(fileId, img);
-      const meta: FileMetadata = { id: fileId, mimeType: file.type, url, width: nw, height: nh, size: file.size, created: Date.now() };
+      const meta: FileMetadata = {
+        id: fileId,
+        mimeType: file.type,
+        url,
+        width: nw,
+        height: nh,
+        size: file.size,
+        created: Date.now(),
+      };
       const element = createElement('image', {
         x: center.x - width / 2 + offset,
         y: center.y - height / 2 + offset,
@@ -72,12 +92,19 @@ export async function insertImages(editor: Editor, files: readonly File[], cente
       offset += 24 / zoom;
     } catch (error) {
       URL.revokeObjectURL(url);
-      editor.requestUi({ type: 'toast', level: 'error', message: `${file.name}: ${(error as Error).message}` });
+      editor.requestUi({
+        type: 'toast',
+        level: 'error',
+        message: `${file.name}: ${(error as Error).message}`,
+      });
     }
   }
   if (prepared.length === 0) return;
   for (const p of prepared) editor.registerFile(p.meta);
-  const created = editor.addElements(prepared.map((p) => p.element), { label: 'Insert image' });
+  const created = editor.addElements(
+    prepared.map((p) => p.element),
+    { label: 'Insert image' },
+  );
   const upload = editor.host.uploadImage;
   if (!upload) return;
   await Promise.all(
@@ -86,9 +113,15 @@ export async function insertImages(editor: Editor, files: readonly File[], cente
       try {
         const meta = await upload(file, element.fileId!);
         editor.registerFile(meta);
-        if (editor.scene.getElement(id)) editor.mutate('Image uploaded', (tx) => tx.update(id, { status: 'saved' }), { history: false });
+        if (editor.scene.getElement(id))
+          editor.mutate('Image uploaded', (tx) => tx.update(id, { status: 'saved' }), {
+            history: false,
+          });
       } catch (error) {
-        if (editor.scene.getElement(id)) editor.mutate('Image upload failed', (tx) => tx.update(id, { status: 'error' }), { history: false });
+        if (editor.scene.getElement(id))
+          editor.mutate('Image upload failed', (tx) => tx.update(id, { status: 'error' }), {
+            history: false,
+          });
         editor.host.onError?.(error, 'Upload image');
       }
     }),

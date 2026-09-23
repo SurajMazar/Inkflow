@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { boardSharedEmail, escapeHtml, mentionEmail, plainMentions, verificationEmail } from './templates';
+import {
+  boardSharedEmail,
+  escapeHtml,
+  mentionEmail,
+  plainMentions,
+  verificationEmail,
+} from './templates';
 
 describe('email templates', () => {
   it('escapes user-controlled content in HTML', () => {
@@ -19,10 +25,15 @@ describe('email templates', () => {
   });
 
   it('renders links and mentions', () => {
-    const verify = verificationEmail({ name: 'Ada', url: 'https://app.test/verify-email?token=abc' });
+    const verify = verificationEmail({
+      name: 'Ada',
+      url: 'https://app.test/verify-email?token=abc',
+    });
     expect(verify.subject).toBe('Verify your email for Inkflow');
     expect(verify.text).toContain('https://app.test/verify-email?token=abc');
     expect(plainMentions('Hi @[Bob Smith](u1)!')).toBe('Hi @Bob Smith!');
-    expect(mentionEmail({ actorName: 'Ada', boardTitle: 'B', body: '@[Bob](u1) look', url: 'u' }).text).toContain('@Bob look');
+    expect(
+      mentionEmail({ actorName: 'Ada', boardTitle: 'B', body: '@[Bob](u1) look', url: 'u' }).text,
+    ).toContain('@Bob look');
   });
 });

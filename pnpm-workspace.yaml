@@ -3,10 +3,10 @@ packages:
   - packages/*
   - e2e
 onlyBuiltDependencies:
-  - "@prisma/client"
-  - "@prisma/engines"
+  - '@prisma/client'
+  - '@prisma/engines'
   - prisma
   - esbuild
-  - "@swc/core"
-  - "@nestjs/core"
-  - "@tailwindcss/oxide"
+  - '@swc/core'
+  - '@nestjs/core'
+  - '@tailwindcss/oxide'

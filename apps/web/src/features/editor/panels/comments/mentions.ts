@@ -6,13 +6,17 @@ export interface MentionRef {
   name: string;
 }
 
-export type BodySegment = { type: 'text'; text: string } | { type: 'mention'; name: string; id: string };
+export type BodySegment =
+  { type: 'text'; text: string } | { type: 'mention'; name: string; id: string };
 
 const TOKEN_RE = /@\[([^\]]{1,80})\]\(([A-Za-z0-9_-]{1,64})\)/g;
 
 /** Display name safe to embed in a mention token (no brackets/parentheses, ≤ 80 chars). */
 export function sanitizeMentionName(name: string): string {
-  const clean = name.replace(/[[\]()\r\n]/g, ' ').replace(/\s+/g, ' ').trim();
+  const clean = name
+    .replace(/[[\]()\r\n]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
   return (clean || 'user').slice(0, 80);
 }
 
@@ -20,7 +24,10 @@ export function sanitizeMentionName(name: string): string {
  * Active `@query` directly before the caret, if any: `@` at the start of the text or after
  * whitespace/punctuation, followed by up to 40 non-space characters.
  */
-export function findMentionQuery(text: string, caret: number): { start: number; query: string } | null {
+export function findMentionQuery(
+  text: string,
+  caret: number,
+): { start: number; query: string } | null {
   const before = text.slice(0, caret);
   const match = /(^|[\s([{,;:"'])@([^\s@[\]()]{0,40})$/.exec(before);
   if (!match) return null;
@@ -42,7 +49,10 @@ export function insertMention(
 }
 
 /** Converts `@Name` occurrences of tracked mentions into API tokens `@[Name](id)`. */
-export function encodeMentions(text: string, mentions: readonly MentionRef[]): { body: string; mentions: string[] } {
+export function encodeMentions(
+  text: string,
+  mentions: readonly MentionRef[],
+): { body: string; mentions: string[] } {
   const unique = new Map<string, MentionRef>();
   for (const m of mentions) unique.set(`${m.name}\u0000${m.id}`, m);
   const byLength = [...unique.values()].sort((a, b) => b.name.length - a.name.length);

@@ -24,7 +24,10 @@ export class SharingController {
   @AllowShareToken()
   @Get('boards/:id/sharing')
   @ApiOperation({ summary: 'Members, pending invitations and links (EDITOR+)' })
-  get(@CurrentPrincipal() principal: Principal, @IdParam('id', 'Board') boardId: string): Promise<BoardSharingDto> {
+  get(
+    @CurrentPrincipal() principal: Principal,
+    @IdParam('id', 'Board') boardId: string,
+  ): Promise<BoardSharingDto> {
     return this.sharing.get(principal, boardId);
   }
 

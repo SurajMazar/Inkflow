@@ -28,7 +28,9 @@ export function useNotifications() {
   });
 
   const setData = (updater: (data: NotificationListDto) => NotificationListDto) =>
-    queryClient.setQueryData<NotificationListDto>(queryKeys.notifications.list, (data) => (data ? updater(data) : data));
+    queryClient.setQueryData<NotificationListDto>(queryKeys.notifications.list, (data) =>
+      data ? updater(data) : data,
+    );
 
   const markRead = useMutation({
     mutationFn: (id: string) => api.notifications.markRead(id),
@@ -53,7 +55,10 @@ export function useNotifications() {
     mutationFn: () => api.notifications.markAllRead(),
     onMutate: () => {
       const now = new Date().toISOString();
-      setData((data) => ({ unreadCount: 0, items: data.items.map((n) => (n.readAt ? n : { ...n, readAt: now })) }));
+      setData((data) => ({
+        unreadCount: 0,
+        items: data.items.map((n) => (n.readAt ? n : { ...n, readAt: now })),
+      }));
     },
     onError: (error) => {
       toastApiError(error, "Couldn't mark notifications as read");

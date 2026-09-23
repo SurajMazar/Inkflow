@@ -16,8 +16,16 @@ describe('validateLink', () => {
 
   it('accepts internal board links', () => {
     expect(validateLink('/b/abc123')).toEqual({ ok: true, href: '/b/abc123', internal: true });
-    expect(validateLink('/b/abc_123?frame=2#x')).toEqual({ ok: true, href: '/b/abc_123?frame=2#x', internal: true });
-    expect(validateLink(`${window.location.origin}/b/xyz`)).toEqual({ ok: true, href: '/b/xyz', internal: true });
+    expect(validateLink('/b/abc_123?frame=2#x')).toEqual({
+      ok: true,
+      href: '/b/abc_123?frame=2#x',
+      internal: true,
+    });
+    expect(validateLink(`${window.location.origin}/b/xyz`)).toEqual({
+      ok: true,
+      href: '/b/xyz',
+      internal: true,
+    });
   });
 
   it.each([

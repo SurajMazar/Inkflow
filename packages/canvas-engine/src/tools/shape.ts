@@ -1,5 +1,10 @@
 import { shapeRegistry } from '@inkflow/diagram-engine';
-import { createElement, isElementInsideBounds, type ElementType, type SceneElement } from '@inkflow/elements';
+import {
+  createElement,
+  isElementInsideBounds,
+  type ElementType,
+  type SceneElement,
+} from '@inkflow/elements';
 import type { Point } from '@inkflow/geometry';
 import type { InteractiveRenderState } from '@inkflow/renderer';
 import { indicesAbove } from '@inkflow/scene';
@@ -9,7 +14,15 @@ import { BaseTool, DRAG_THRESHOLD_PX, snapDrawingPoint } from './base';
 
 type ShapeToolType = Extract<
   ToolType,
-  'rectangle' | 'roundedRectangle' | 'ellipse' | 'diamond' | 'triangle' | 'polygon' | 'star' | 'frame' | 'node'
+  | 'rectangle'
+  | 'roundedRectangle'
+  | 'ellipse'
+  | 'diamond'
+  | 'triangle'
+  | 'polygon'
+  | 'star'
+  | 'frame'
+  | 'node'
 >;
 
 const ELEMENT_TYPE: Record<ShapeToolType, ElementType> = {
@@ -38,7 +51,13 @@ const CLICK_SIZE: Record<ShapeToolType, { width: number; height: number }> = {
 
 /** Draws box-like elements: basic shapes, frames and diagram nodes. */
 export class ShapeTool extends BaseTool {
-  private drawing: { id: string; origin: Point; down: CanvasPointerEvent; moved: boolean; guides: SnapGuides } | null = null;
+  private drawing: {
+    id: string;
+    origin: Point;
+    down: CanvasPointerEvent;
+    moved: boolean;
+    guides: SnapGuides;
+  } | null = null;
 
   constructor(
     editor: ConstructorParameters<typeof BaseTool>[0],
@@ -55,7 +74,13 @@ export class ShapeTool extends BaseTool {
     const editor = this.editor;
     const style = editor.state.style;
     const type = ELEMENT_TYPE[this.id];
-    const props: Record<string, unknown> = { ...editor.styleProps(type), x: origin.x, y: origin.y, width: 0, height: 0 };
+    const props: Record<string, unknown> = {
+      ...editor.styleProps(type),
+      x: origin.x,
+      y: origin.y,
+      width: 0,
+      height: 0,
+    };
     switch (this.id) {
       case 'rectangle':
         props.roundness = 'sharp';
@@ -105,7 +130,12 @@ export class ShapeTool extends BaseTool {
     const d = this.drawing;
     const tx = this.editor.activeGesture;
     if (!d || !tx) return;
-    if (!d.moved && Math.hypot(e.screen.x - d.down.screen.x, e.screen.y - d.down.screen.y) < DRAG_THRESHOLD_PX[e.pointerType]) return;
+    if (
+      !d.moved &&
+      Math.hypot(e.screen.x - d.down.screen.x, e.screen.y - d.down.screen.y) <
+        DRAG_THRESHOLD_PX[e.pointerType]
+    )
+      return;
     d.moved = true;
     const snap = snapDrawingPoint(this.editor, e.world, new Set([d.id]), e.mod);
     d.guides = snap;
@@ -141,19 +171,38 @@ export class ShapeTool extends BaseTool {
       return;
     }
     if (!d.moved || el.width < 2 || el.height < 2) {
-      const size = this.id === 'node' ? (shapeRegistry.get(editor.state.style.nodeShape)?.defaultSize ?? CLICK_SIZE.node) : CLICK_SIZE[this.id];
-      tx.update(d.id, { x: d.origin.x - size.width / 2, y: d.origin.y - size.height / 2, width: size.width, height: size.height });
+      const size =
+        this.id === 'node'
+          ? (shapeRegistry.get(editor.state.style.nodeShape)?.defaultSize ?? CLICK_SIZE.node)
+          : CLICK_SIZE[this.id];
+      tx.update(d.id, {
+        x: d.origin.x - size.width / 2,
+        y: d.origin.y - size.height / 2,
+        width: size.width,
+        height: size.height,
+      });
     }
     const created = editor.scene.getElement(d.id)!;
     if (created.type === 'frame') {
       const inside = editor.scene
-        .queryBounds({ minX: created.x, minY: created.y, maxX: created.x + created.width, maxY: created.y + created.height })
-        .filter((other) => other.id !== created.id && other.type !== 'frame' && !other.frameId && isElementInsideBounds(other, {
+        .queryBounds({
           minX: created.x,
           minY: created.y,
           maxX: created.x + created.width,
           maxY: created.y + created.height,
-        }));
+        })
+        .filter(
+          (other) =>
+            other.id !== created.id &&
+            other.type !== 'frame' &&
+            !other.frameId &&
+            isElementInsideBounds(other, {
+              minX: created.x,
+              minY: created.y,
+              maxX: created.x + created.width,
+              maxY: created.y + created.height,
+            }),
+        );
       if (inside.length) tx.updateMany(inside.map((o) => [o.id, { frameId: created.id }] as const));
     } else {
       editor.refreshFrameMembership(tx, [created.id]);

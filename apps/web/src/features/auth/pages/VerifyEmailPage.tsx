@@ -26,7 +26,9 @@ export function VerifyEmailPage() {
   const token = params.get('token') ?? '';
   const { setUser } = useAuth();
   const navigate = useNavigate();
-  const [error, setError] = React.useState<unknown>(token.length < 16 ? new ApiError(400, 'TOKEN_INVALID', 'Missing token') : null);
+  const [error, setError] = React.useState<unknown>(
+    token.length < 16 ? new ApiError(400, 'TOKEN_INVALID', 'Missing token') : null,
+  );
 
   React.useEffect(() => {
     if (token.length < 16) return;
@@ -50,7 +52,11 @@ export function VerifyEmailPage() {
   if (!error) {
     return (
       <AuthLayout title="Verifying your email…">
-        <div className="flex items-center gap-3 text-sm text-muted-foreground" role="status" aria-live="polite">
+        <div
+          className="flex items-center gap-3 text-sm text-muted-foreground"
+          role="status"
+          aria-live="polite"
+        >
           <Spinner label={null} />
           Just a moment while we confirm your address.
         </div>
@@ -65,7 +71,10 @@ export function VerifyEmailPage() {
       title={expired ? 'This link has expired' : title}
       description="Request a new verification link below."
       footer={
-        <Link className="font-medium text-foreground underline-offset-4 hover:underline" to="/login">
+        <Link
+          className="font-medium text-foreground underline-offset-4 hover:underline"
+          to="/login"
+        >
           Back to sign in
         </Link>
       }
@@ -104,14 +113,20 @@ function ResendVerificationForm() {
   if (state === 'sent') {
     return (
       <p className="text-sm" role="status">
-        If an unverified account exists for <span className="font-medium">{email}</span>, a new link is on its way.
+        If an unverified account exists for <span className="font-medium">{email}</span>, a new link
+        is on its way.
       </p>
     );
   }
   return (
     <form className="grid gap-4" onSubmit={onSubmit} noValidate>
       <FormField label="Email" error={error}>
-        <Input type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+        <Input
+          type="email"
+          autoComplete="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
       </FormField>
       <Button type="submit" disabled={state === 'sending'}>
         {state === 'sending' ? <Spinner className="text-current" label={null} /> : null}

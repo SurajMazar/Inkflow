@@ -1,8 +1,19 @@
-import { FONT_FAMILIES, getFontString, type FrameElement, type SceneElement } from '@inkflow/elements';
+import {
+  FONT_FAMILIES,
+  getFontString,
+  type FrameElement,
+  type SceneElement,
+} from '@inkflow/elements';
 import { rotatedRectCorners } from '@inkflow/geometry';
 import type { DrawableCache } from '../drawable/generate';
 import { truncateText } from '../drawable/text';
-import type { DrawLayer, ElementDrawable, ImageLayer, ShapeLayer, TextLayer } from '../drawable/types';
+import type {
+  DrawLayer,
+  ElementDrawable,
+  ImageLayer,
+  ShapeLayer,
+  TextLayer,
+} from '../drawable/types';
 import type { ImageSource, RenderTheme } from '../types';
 import type { BitmapCache } from './bitmap-cache';
 import {
@@ -41,7 +52,10 @@ export interface LayerDrawOptions {
 }
 
 /** Applies translate + rotation (around the box center) so that drawing uses element-local coordinates. */
-export function applyElementTransform(ctx: Ctx, el: Pick<SceneElement, 'x' | 'y' | 'width' | 'height' | 'angle'>): void {
+export function applyElementTransform(
+  ctx: Ctx,
+  el: Pick<SceneElement, 'x' | 'y' | 'width' | 'height' | 'angle'>,
+): void {
   if (el.angle) {
     const cx = el.x + el.width / 2;
     const cy = el.y + el.height / 2;
@@ -121,8 +135,14 @@ function drawTextLayer(ctx: Ctx, layer: TextLayer): void {
     ctx.beginPath();
     for (const run of layer.runs) {
       if (run.width <= 0) continue;
-      const left = layer.align === 'center' ? run.x - run.width / 2 : layer.align === 'right' ? run.x - run.width : run.x;
-      const y = run.y + (layer.decoration === 'underline' ? layer.fontSize * 0.45 : layer.fontSize * 0.05);
+      const left =
+        layer.align === 'center'
+          ? run.x - run.width / 2
+          : layer.align === 'right'
+            ? run.x - run.width
+            : run.x;
+      const y =
+        run.y + (layer.decoration === 'underline' ? layer.fontSize * 0.45 : layer.fontSize * 0.05);
       ctx.moveTo(left, y);
       ctx.lineTo(left + run.width, y);
     }
@@ -141,11 +161,18 @@ export function imageSourceSize(img: CanvasImageSource): { width: number; height
   const w = o['width'];
   const h = o['height'];
   if (typeof w === 'number' && typeof h === 'number') return { width: w, height: h };
-  const anim = (v: unknown) => (v && typeof v === 'object' && 'baseVal' in v ? Number((v as { baseVal: { value: number } }).baseVal.value) : 0);
+  const anim = (v: unknown) =>
+    v && typeof v === 'object' && 'baseVal' in v
+      ? Number((v as { baseVal: { value: number } }).baseVal.value)
+      : 0;
   return { width: anim(w), height: anim(h) };
 }
 
-function drawImagePlaceholder(ctx: Ctx, layer: ImageLayer, status: 'loading' | 'error' | 'missing' | 'loaded'): void {
+function drawImagePlaceholder(
+  ctx: Ctx,
+  layer: ImageLayer,
+  status: 'loading' | 'error' | 'missing' | 'loaded',
+): void {
   const { x, y, width: w, height: h } = layer;
   ctx.fillStyle = status === 'error' ? '#fff5f5' : '#f1f3f5';
   ctx.fillRect(x, y, w, h);
@@ -195,7 +222,8 @@ function drawImageLayer(ctx: Ctx, layer: ImageLayer, opts: LayerDrawOptions): vo
   if (!img || !fileId) {
     const status = fileId ? opts.images.status(fileId) : 'missing';
     const ensure = (opts.images as { ensure?: (id: string) => void }).ensure;
-    if (fileId && status === 'missing' && typeof ensure === 'function') ensure.call(opts.images, fileId);
+    if (fileId && status === 'missing' && typeof ensure === 'function')
+      ensure.call(opts.images, fileId);
     drawImagePlaceholder(ctx, layer, status);
     return;
   }
@@ -207,7 +235,10 @@ function drawImageLayer(ctx: Ctx, layer: ImageLayer, opts: LayerDrawOptions): vo
   const crop = layer.crop ?? { x: 0, y: 0, width: natW, height: natH };
   ctx.save();
   if (layer.flipX || layer.flipY) {
-    ctx.translate(layer.flipX ? layer.x * 2 + layer.width : 0, layer.flipY ? layer.y * 2 + layer.height : 0);
+    ctx.translate(
+      layer.flipX ? layer.x * 2 + layer.width : 0,
+      layer.flipY ? layer.y * 2 + layer.height : 0,
+    );
     ctx.scale(layer.flipX ? -1 : 1, layer.flipY ? -1 : 1);
   }
   let source: CanvasImageSource = img;
@@ -262,7 +293,13 @@ function zoomBucket(scale: number): number {
   return Math.ceil(Math.log2(Math.max(1e-3, scale)) * 2) / 2;
 }
 
-function drawFromBitmap(ctx: Ctx, el: SceneElement, d: ElementDrawable, env: DrawEnv, withLabel: boolean): boolean {
+function drawFromBitmap(
+  ctx: Ctx,
+  el: SceneElement,
+  d: ElementDrawable,
+  env: DrawEnv,
+  withLabel: boolean,
+): boolean {
   const cache = env.bitmaps;
   if (!cache) return false;
   const target = env.zoom * (env.pixelRatio ?? 1);
@@ -276,12 +313,25 @@ function drawFromBitmap(ctx: Ctx, el: SceneElement, d: ElementDrawable, env: Dra
     const lb = d.localBounds;
     const w = Math.ceil((lb.maxX - lb.minX) * scale) + 2;
     const h = Math.ceil((lb.maxY - lb.minY) * scale) + 2;
-    if (!(w > 0 && h > 0) || w > BITMAP_MAX_SIDE || h > BITMAP_MAX_SIDE || w * h > BITMAP_MAX_PIXELS) return false;
+    if (
+      !(w > 0 && h > 0) ||
+      w > BITMAP_MAX_SIDE ||
+      h > BITMAP_MAX_SIDE ||
+      w * h > BITMAP_MAX_PIXELS
+    )
+      return false;
     const canvas = (env.createCanvas ?? createScratchCanvas)(w, h);
     if (!canvas) return false;
     const bctx = getScratchContext(canvas);
     if (!bctx) return false;
-    bctx.setTransform(scale, 0, 0, scale, (-lb.minX + 1 / scale) * scale, (-lb.minY + 1 / scale) * scale);
+    bctx.setTransform(
+      scale,
+      0,
+      0,
+      scale,
+      (-lb.minX + 1 / scale) * scale,
+      (-lb.minY + 1 / scale) * scale,
+    );
     const opts: LayerDrawOptions = { images: env.images, theme: env.theme };
     drawLayers(bctx, d.layers, opts);
     if (withLabel) drawLayers(bctx, d.labelLayers, opts);
@@ -295,7 +345,13 @@ function drawFromBitmap(ctx: Ctx, el: SceneElement, d: ElementDrawable, env: Dra
     };
     cache.set(key, entry);
   }
-  ctx.drawImage(entry.canvas, entry.originX, entry.originY, entry.canvas.width / entry.scale, entry.canvas.height / entry.scale);
+  ctx.drawImage(
+    entry.canvas,
+    entry.originX,
+    entry.originY,
+    entry.canvas.width / entry.scale,
+    entry.canvas.height / entry.scale,
+  );
   return true;
 }
 
@@ -316,9 +372,14 @@ export function drawElementInto(ctx: Ctx, el: SceneElement, env: DrawEnv): void 
   ctx.save();
   if (opacity < 1) ctx.globalAlpha *= opacity;
   applyElementTransform(ctx, el);
-  const usedBitmap = env.bitmaps && isExpensiveDrawable(d) ? drawFromBitmap(ctx, el, d, env, withLabel) : false;
+  const usedBitmap =
+    env.bitmaps && isExpensiveDrawable(d) ? drawFromBitmap(ctx, el, d, env, withLabel) : false;
   if (!usedBitmap) {
-    const opts: LayerDrawOptions = { images: env.images, theme: env.theme, lowFidelity: env.lowFidelity };
+    const opts: LayerDrawOptions = {
+      images: env.images,
+      theme: env.theme,
+      lowFidelity: env.lowFidelity,
+    };
     drawLayers(ctx, d.layers, opts);
     if (withLabel) drawLayers(ctx, d.labelLayers, opts);
   }
@@ -334,7 +395,12 @@ export function drawFrameName(ctx: Ctx, frame: FrameElement, zoom: number): void
   if (frame.isDeleted || frame.hidden || !frame.name) return;
   const z = Math.max(1e-3, zoom);
   const fontSize = FRAME_NAME_FONT_SIZE / z;
-  const font = getFontString({ fontFamily: 'sans', fontSize, fontWeight: 'normal', fontStyle: 'normal' });
+  const font = getFontString({
+    fontFamily: 'sans',
+    fontSize,
+    fontWeight: 'normal',
+    fontStyle: 'normal',
+  });
   const text = truncateText(frame.name, font, frame.width);
   if (!text) return;
   ctx.save();
@@ -351,7 +417,10 @@ export const FRAME_NAME_FONT_CSS = FONT_FAMILIES.sans.css;
 
 /** Clips the context (world space) to a frame's rotated box. Caller wraps in save/restore. */
 export function clipToFrame(ctx: Ctx, frame: FrameElement): void {
-  const corners = rotatedRectCorners({ x: frame.x, y: frame.y, width: frame.width, height: frame.height }, frame.angle);
+  const corners = rotatedRectCorners(
+    { x: frame.x, y: frame.y, width: frame.width, height: frame.height },
+    frame.angle,
+  );
   ctx.beginPath();
   ctx.moveTo(corners[0].x, corners[0].y);
   for (let i = 1; i < 4; i++) ctx.lineTo(corners[i]!.x, corners[i]!.y);

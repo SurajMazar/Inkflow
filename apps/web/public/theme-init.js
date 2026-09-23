@@ -7,7 +7,8 @@
     if (raw) {
       var parsed = JSON.parse(raw);
       if (parsed && typeof parsed === 'object') {
-        if (parsed.theme === 'light' || parsed.theme === 'dark' || parsed.theme === 'system') appearance.theme = parsed.theme;
+        if (parsed.theme === 'light' || parsed.theme === 'dark' || parsed.theme === 'system')
+          appearance.theme = parsed.theme;
         appearance.highContrast = parsed.highContrast === true;
         appearance.reduceMotion = parsed.reduceMotion === true;
       }
@@ -17,11 +18,17 @@
   }
   var dark =
     appearance.theme === 'dark' ||
-    (appearance.theme === 'system' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    (appearance.theme === 'system' &&
+      window.matchMedia &&
+      window.matchMedia('(prefers-color-scheme: dark)').matches);
   if (dark) root.classList.add('dark');
   root.style.colorScheme = dark ? 'dark' : 'light';
   if (appearance.highContrast) root.setAttribute('data-contrast', 'high');
   if (appearance.reduceMotion) root.setAttribute('data-reduce-motion', 'true');
   var meta = document.querySelector('meta[name="theme-color"]');
-  if (meta) meta.setAttribute('content', dark ? (appearance.highContrast ? '#000000' : '#131316') : '#ffffff');
+  if (meta)
+    meta.setAttribute(
+      'content',
+      dark ? (appearance.highContrast ? '#000000' : '#131316') : '#ffffff',
+    );
 })();

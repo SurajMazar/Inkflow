@@ -32,7 +32,9 @@ export function safeEqual(a: string, b: string): boolean {
 
 /** Derives a 32-byte subkey from a master secret for a specific purpose (HKDF-SHA256). */
 export function deriveKey(secret: string, purpose: string): Buffer {
-  return Buffer.from(hkdfSync('sha256', Buffer.from(secret, 'utf8'), Buffer.from('inkflow', 'utf8'), purpose, 32));
+  return Buffer.from(
+    hkdfSync('sha256', Buffer.from(secret, 'utf8'), Buffer.from('inkflow', 'utf8'), purpose, 32),
+  );
 }
 
 export function hmacSha256(key: Buffer | string, value: string): string {
@@ -47,7 +49,12 @@ export function encryptString(key: Buffer, plaintext: string): string {
   const cipher = createCipheriv('aes-256-gcm', key, iv);
   const ciphertext = Buffer.concat([cipher.update(plaintext, 'utf8'), cipher.final()]);
   const tag = cipher.getAuthTag();
-  return [CIPHER_VERSION, iv.toString('base64url'), tag.toString('base64url'), ciphertext.toString('base64url')].join('.');
+  return [
+    CIPHER_VERSION,
+    iv.toString('base64url'),
+    tag.toString('base64url'),
+    ciphertext.toString('base64url'),
+  ].join('.');
 }
 
 /** Decrypts `encryptString` output; returns null when tampered with or encrypted with another key. */

@@ -31,50 +31,60 @@ function parseBody(xhr: XMLHttpRequest): unknown {
 }
 
 function sendOnce(path: string, formData: FormData, csrf: string | null, options: UploadOptions) {
-  return new Promise<{ status: number; body: unknown; retryAfter: string | null }>((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open('POST', buildUrl(path));
-    xhr.withCredentials = true;
-    xhr.setRequestHeader('accept', 'application/json');
-    if (csrf) xhr.setRequestHeader(CSRF_HEADER, csrf);
-    if (options.shareToken) xhr.setRequestHeader(SHARE_TOKEN_HEADER, options.shareToken);
+  return new Promise<{ status: number; body: unknown; retryAfter: string | null }>(
+    (resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', buildUrl(path));
+      xhr.withCredentials = true;
+      xhr.setRequestHeader('accept', 'application/json');
+      if (csrf) xhr.setRequestHeader(CSRF_HEADER, csrf);
+      if (options.shareToken) xhr.setRequestHeader(SHARE_TOKEN_HEADER, options.shareToken);
 
-    const onAbort = () => xhr.abort();
-    options.signal?.addEventListener('abort', onAbort, { once: true });
-    const cleanup = () => options.signal?.removeEventListener('abort', onAbort);
+      const onAbort = () => xhr.abort();
+      options.signal?.addEventListener('abort', onAbort, { once: true });
+      const cleanup = () => options.signal?.removeEventListener('abort', onAbort);
 
-    xhr.upload.onprogress = (event) => {
-      options.onProgress?.({
-        loaded: event.loaded,
-        total: event.total,
-        fraction: event.lengthComputable && event.total > 0 ? event.loaded / event.total : null,
-      });
-    };
-    xhr.onload = () => {
-      cleanup();
-      resolve({ status: xhr.status, body: parseBody(xhr), retryAfter: xhr.getResponseHeader('retry-after') });
-    };
-    xhr.onerror = () => {
-      cleanup();
-      reject(networkError());
-    };
-    xhr.onabort = () => {
-      cleanup();
-      reject(new DOMException('Upload aborted', 'AbortError'));
-    };
-    if (options.signal?.aborted) {
-      xhr.abort();
-      return;
-    }
-    xhr.send(formData);
-  });
+      xhr.upload.onprogress = (event) => {
+        options.onProgress?.({
+          loaded: event.loaded,
+          total: event.total,
+          fraction: event.lengthComputable && event.total > 0 ? event.loaded / event.total : null,
+        });
+      };
+      xhr.onload = () => {
+        cleanup();
+        resolve({
+          status: xhr.status,
+          body: parseBody(xhr),
+          retryAfter: xhr.getResponseHeader('retry-after'),
+        });
+      };
+      xhr.onerror = () => {
+        cleanup();
+        reject(networkError());
+      };
+      xhr.onabort = () => {
+        cleanup();
+        reject(new DOMException('Upload aborted', 'AbortError'));
+      };
+      if (options.signal?.aborted) {
+        xhr.abort();
+        return;
+      }
+      xhr.send(formData);
+    },
+  );
 }
 
 /**
  * Multipart POST with upload progress (XMLHttpRequest), sharing the CSRF and
  * refresh-and-retry behaviour of `request()`.
  */
-export async function uploadWithProgress<T>(path: string, formData: FormData, options: UploadOptions = {}): Promise<T> {
+export async function uploadWithProgress<T>(
+  path: string,
+  formData: FormData,
+  options: UploadOptions = {},
+): Promise<T> {
   let refreshed = false;
   let csrfRetried = false;
   for (;;) {

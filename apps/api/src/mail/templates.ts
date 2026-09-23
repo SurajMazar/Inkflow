@@ -34,7 +34,9 @@ interface LayoutInput {
 }
 
 function layout(input: LayoutInput): { html: string; text: string } {
-  const paragraphs = input.paragraphs.map((p) => `<p style="margin:0 0 16px;line-height:1.5">${escapeHtml(p)}</p>`).join('');
+  const paragraphs = input.paragraphs
+    .map((p) => `<p style="margin:0 0 16px;line-height:1.5">${escapeHtml(p)}</p>`)
+    .join('');
   const quote = input.quote
     ? `<blockquote style="margin:0 0 16px;padding:12px 16px;border-left:3px solid #6741d9;background:#f5f3ff;color:#333">${escapeHtml(input.quote)}</blockquote>`
     : '';
@@ -42,7 +44,9 @@ function layout(input: LayoutInput): { html: string; text: string } {
     ? `<p style="margin:24px 0"><a href="${escapeHtml(input.action.url)}" style="display:inline-block;padding:12px 20px;background:#6741d9;color:#fff;text-decoration:none;border-radius:8px;font-weight:600">${escapeHtml(input.action.label)}</a></p>
 <p style="margin:0 0 16px;font-size:13px;color:#666;word-break:break-all">${escapeHtml(input.action.url)}</p>`
     : '';
-  const footnote = input.footnote ? `<p style="margin:24px 0 0;font-size:12px;color:#888">${escapeHtml(input.footnote)}</p>` : '';
+  const footnote = input.footnote
+    ? `<p style="margin:24px 0 0;font-size:12px;color:#888">${escapeHtml(input.footnote)}</p>`
+    : '';
   const html = `<!doctype html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>${escapeHtml(input.heading)}</title></head>
 <body style="margin:0;padding:0;background:#f4f4f7;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#1e1e1e">
@@ -70,9 +74,13 @@ export function verificationEmail(input: { name: string; url: string }): Rendere
     ...layout({
       preheader: 'Confirm your email address to start using Inkflow.',
       heading: 'Confirm your email address',
-      paragraphs: [`Hi ${input.name},`, 'Please confirm your email address to finish setting up your Inkflow account.'],
+      paragraphs: [
+        `Hi ${input.name},`,
+        'Please confirm your email address to finish setting up your Inkflow account.',
+      ],
       action: { label: 'Verify email', url: input.url },
-      footnote: 'This link expires in 24 hours. If you did not create an account, you can ignore this email.',
+      footnote:
+        'This link expires in 24 hours. If you did not create an account, you can ignore this email.',
     }),
   };
 }
@@ -83,7 +91,10 @@ export function passwordResetEmail(input: { name: string; url: string }): Render
     ...layout({
       preheader: 'Use this link to choose a new password.',
       heading: 'Reset your password',
-      paragraphs: [`Hi ${input.name},`, 'We received a request to reset the password of your Inkflow account.'],
+      paragraphs: [
+        `Hi ${input.name},`,
+        'We received a request to reset the password of your Inkflow account.',
+      ],
       action: { label: 'Choose a new password', url: input.url },
       footnote:
         'This link expires in 1 hour and can be used once. If you did not request a password reset, you can ignore this email — your password stays unchanged.',
@@ -104,8 +115,13 @@ export function workspaceInviteEmail(input: {
       heading: `Join ${input.workspaceName}`,
       paragraphs: input.existingUser
         ? [`${input.inviterName} added you to the workspace “${input.workspaceName}”.`]
-        : [`${input.inviterName} invited you to collaborate in the workspace “${input.workspaceName}” on Inkflow.`],
-      action: { label: input.existingUser ? 'Open workspace' : 'Accept invitation', url: input.url },
+        : [
+            `${input.inviterName} invited you to collaborate in the workspace “${input.workspaceName}” on Inkflow.`,
+          ],
+      action: {
+        label: input.existingUser ? 'Open workspace' : 'Accept invitation',
+        url: input.url,
+      },
       footnote: input.existingUser ? undefined : 'This invitation expires in 7 days.',
     }),
   };
@@ -126,7 +142,9 @@ export function boardSharedEmail(input: {
       heading: 'A board was shared with you',
       paragraphs: [
         `${input.inviterName} gave you ${input.role.toLowerCase()} access to the board “${input.boardTitle}”.`,
-        ...(input.existingUser ? [] : ['Create an Inkflow account with this email address to open it.']),
+        ...(input.existingUser
+          ? []
+          : ['Create an Inkflow account with this email address to open it.']),
       ],
       quote: input.message ?? undefined,
       action: { label: input.existingUser ? 'Open board' : 'Create account', url: input.url },
@@ -134,7 +152,12 @@ export function boardSharedEmail(input: {
   };
 }
 
-export function mentionEmail(input: { actorName: string; boardTitle: string; body: string; url: string }): RenderedEmail {
+export function mentionEmail(input: {
+  actorName: string;
+  boardTitle: string;
+  body: string;
+  url: string;
+}): RenderedEmail {
   return {
     subject: `${input.actorName} mentioned you on “${truncate(input.boardTitle, 80)}”`,
     ...layout({
@@ -154,7 +177,12 @@ export function commentEmail(input: {
   url: string;
   kind: 'comment' | 'reply' | 'resolved';
 }): RenderedEmail {
-  const verb = input.kind === 'comment' ? 'commented on' : input.kind === 'reply' ? 'replied on' : 'resolved a comment on';
+  const verb =
+    input.kind === 'comment'
+      ? 'commented on'
+      : input.kind === 'reply'
+        ? 'replied on'
+        : 'resolved a comment on';
   return {
     subject: `${input.actorName} ${verb} “${truncate(input.boardTitle, 80)}”`,
     ...layout({

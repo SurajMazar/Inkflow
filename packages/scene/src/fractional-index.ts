@@ -10,7 +10,8 @@ const SMALLEST_INTEGER = 'A' + ZERO.repeat(26);
 
 function midpoint(a: string, b: string | null): string {
   if (b !== null && a >= b) throw new Error(`fractional index: ${a} >= ${b}`);
-  if (a.slice(-1) === ZERO || (b && b.slice(-1) === ZERO)) throw new Error('fractional index: trailing zero');
+  if (a.slice(-1) === ZERO || (b && b.slice(-1) === ZERO))
+    throw new Error('fractional index: trailing zero');
   if (b) {
     let n = 0;
     while ((a[n] ?? ZERO) === b[n]) n++;
@@ -48,7 +49,8 @@ export function isValidOrderKey(key: string): boolean {
 
 function validateOrderKey(key: string): void {
   if (key === SMALLEST_INTEGER) throw new Error(`fractional index: invalid key ${key}`);
-  if (!/^[0-9A-Za-z]+$/.test(key)) throw new Error(`fractional index: invalid characters in ${key}`);
+  if (!/^[0-9A-Za-z]+$/.test(key))
+    throw new Error(`fractional index: invalid characters in ${key}`);
   const i = integerPart(key);
   const f = key.slice(i.length);
   if (f.slice(-1) === ZERO) throw new Error(`fractional index: trailing zero in ${key}`);
@@ -160,7 +162,10 @@ export function generateNKeysBetween(a: string | null, b: string | null, n: numb
 }
 
 /** Total order used everywhere elements are sorted: by index, then id as a tie-breaker. */
-export function compareOrder(a: { index: string; id: string }, b: { index: string; id: string }): number {
+export function compareOrder(
+  a: { index: string; id: string },
+  b: { index: string; id: string },
+): number {
   if (a.index < b.index) return -1;
   if (a.index > b.index) return 1;
   return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;

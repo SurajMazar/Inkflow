@@ -2,7 +2,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ApiError } from '@inkflow/shared';
 import { apiError, installFetchMock } from '@/test/fetch-mock';
 import { makeUser } from '@/test/fixtures';
-import { __resetClientStateForTests, onSessionExpired, onSessionRefreshed, request } from './client';
+import {
+  __resetClientStateForTests,
+  onSessionExpired,
+  onSessionRefreshed,
+  request,
+} from './client';
 import { api } from './endpoints';
 
 function setCsrfCookie(value: string) {
@@ -32,7 +37,10 @@ describe('CSRF handling', () => {
     expect(post!.headers.get('x-csrf-token')).toBe('cookie-token');
     expect(post!.headers.get('content-type')).toBe('application/json');
     expect(post!.body).toEqual({ name: 'Acme' });
-    expect(mock.fetchMock.mock.calls[1]![1]).toMatchObject({ credentials: 'include', method: 'POST' });
+    expect(mock.fetchMock.mock.calls[1]![1]).toMatchObject({
+      credentials: 'include',
+      method: 'POST',
+    });
   });
 
   it('fetches a token from /auth/csrf when no cookie is readable', async () => {
@@ -41,7 +49,10 @@ describe('CSRF handling', () => {
       { method: 'DELETE', path: '/boards/b1', respond: { body: { ok: true } } },
     ]);
     await api.boards.remove('b1');
-    expect(mock.calls.map((c) => `${c.method} ${c.path}`)).toEqual(['GET /auth/csrf', 'DELETE /boards/b1']);
+    expect(mock.calls.map((c) => `${c.method} ${c.path}`)).toEqual([
+      'GET /auth/csrf',
+      'DELETE /boards/b1',
+    ]);
     expect(mock.calls[1]!.headers.get('x-csrf-token')).toBe('fetched-token');
   });
 
@@ -56,7 +67,8 @@ describe('CSRF handling', () => {
       {
         method: 'POST',
         path: '/boards/b1/duplicate',
-        respond: (_call, index) => (index === 0 ? apiError(403, 'CSRF_INVALID') : { body: { id: 'b2' } }),
+        respond: (_call, index) =>
+          index === 0 ? apiError(403, 'CSRF_INVALID') : { body: { id: 'b2' } },
       },
     ]);
     await expect(api.boards.duplicate('b1')).resolves.toEqual({ id: 'b2' });
@@ -85,13 +97,18 @@ describe('401 handling', () => {
         method: 'GET',
         path: /^\/(workspaces|notifications)$/,
         respond: (call) =>
-          authorized ? { body: call.path === '/workspaces' ? [] : { items: [], unreadCount: 0 } } : apiError(401, 'UNAUTHORIZED'),
+          authorized
+            ? { body: call.path === '/workspaces' ? [] : { items: [], unreadCount: 0 } }
+            : apiError(401, 'UNAUTHORIZED'),
       },
     ]);
     const refreshed = vi.fn();
     onSessionRefreshed(refreshed);
 
-    const [workspaces, notifications] = await Promise.all([api.workspaces.list(), api.notifications.list()]);
+    const [workspaces, notifications] = await Promise.all([
+      api.workspaces.list(),
+      api.notifications.list(),
+    ]);
 
     expect(workspaces).toEqual([]);
     expect(notifications).toEqual({ items: [], unreadCount: 0 });
@@ -104,8 +121,16 @@ describe('401 handling', () => {
   it('signs out (notifies listeners) when the refresh is rejected', async () => {
     setCsrfCookie('t');
     const mock = installFetchMock([
-      { method: 'POST', path: '/auth/refresh', respond: apiError(401, 'SESSION_EXPIRED', 'Session expired') },
-      { method: 'GET', path: '/boards', respond: apiError(401, 'SESSION_EXPIRED', 'Session expired') },
+      {
+        method: 'POST',
+        path: '/auth/refresh',
+        respond: apiError(401, 'SESSION_EXPIRED', 'Session expired'),
+      },
+      {
+        method: 'GET',
+        path: '/boards',
+        respond: apiError(401, 'SESSION_EXPIRED', 'Session expired'),
+      },
     ]);
     const expired = vi.fn();
     onSessionExpired(expired);
@@ -124,7 +149,11 @@ describe('401 handling', () => {
   it('does not refresh for credential errors on auth endpoints', async () => {
     setCsrfCookie('t');
     const mock = installFetchMock([
-      { method: 'POST', path: '/auth/login', respond: apiError(401, 'INVALID_CREDENTIALS', 'Wrong password') },
+      {
+        method: 'POST',
+        path: '/auth/login',
+        respond: apiError(401, 'INVALID_CREDENTIALS', 'Wrong password'),
+      },
     ]);
     await expect(api.auth.login({ email: 'a@b.co', password: 'x' })).rejects.toMatchObject({
       status: 401,
@@ -140,7 +169,10 @@ describe('error mapping', () => {
       {
         method: 'GET',
         path: '/boards/missing',
-        respond: { status: 404, body: { error: { code: 'NOT_FOUND', message: 'Board not found', requestId: 'r1' } } },
+        respond: {
+          status: 404,
+          body: { error: { code: 'NOT_FOUND', message: 'Board not found', requestId: 'r1' } },
+        },
       },
     ]);
     const error = (await api.boards.get('missing').catch((e: unknown) => e)) as ApiError;
@@ -158,7 +190,13 @@ describe('error mapping', () => {
   });
 
   it('maps non-JSON gateway errors by status', async () => {
-    installFetchMock([{ method: 'GET', path: '/health', respond: { status: 502, body: '<html>Bad gateway</html>' } }]);
+    installFetchMock([
+      {
+        method: 'GET',
+        path: '/health',
+        respond: { status: 502, body: '<html>Bad gateway</html>' },
+      },
+    ]);
     await expect(api.health()).rejects.toMatchObject({ status: 502, code: 'SERVICE_UNAVAILABLE' });
   });
 
@@ -167,7 +205,11 @@ describe('error mapping', () => {
       {
         method: 'GET',
         path: '/search',
-        respond: { status: 429, body: { error: { code: 'RATE_LIMITED', message: 'Too many requests' } }, headers: { 'retry-after': '12' } },
+        respond: {
+          status: 429,
+          body: { error: { code: 'RATE_LIMITED', message: 'Too many requests' } },
+          headers: { 'retry-after': '12' },
+        },
       },
     ]);
     const error = (await api.search({ q: 'x' }).catch((e: unknown) => e)) as ApiError;
@@ -181,7 +223,9 @@ describe('error mapping', () => {
       'fetch',
       vi.fn((_url: string, init: RequestInit) => {
         return new Promise((_resolve, reject) => {
-          init.signal?.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError')));
+          init.signal?.addEventListener('abort', () =>
+            reject(new DOMException('Aborted', 'AbortError')),
+          );
         });
       }),
     );
@@ -194,7 +238,10 @@ describe('error mapping', () => {
 describe('request building', () => {
   it('serializes query parameters (skipping empty values) and sends share tokens', async () => {
     const mock = installFetchMock([{ method: 'GET', path: '/boards', respond: { body: [] } }]);
-    await api.boards.list({ workspaceId: 'w1', filter: 'favorites', q: undefined }, { shareToken: 'share-123' });
+    await api.boards.list(
+      { workspaceId: 'w1', filter: 'favorites', q: undefined },
+      { shareToken: 'share-123' },
+    );
     const call = mock.calls[0]!;
     expect(call.query.get('workspaceId')).toBe('w1');
     expect(call.query.get('filter')).toBe('favorites');

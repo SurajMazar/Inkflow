@@ -12,14 +12,24 @@ export interface FontSpec {
 export type TextWidthMeasurer = (text: string, font: string, letterSpacing: number) => number;
 
 /** Average glyph width ratios per family, used when no DOM measurer is available (server, tests). */
-const HEURISTIC_WIDTH: Record<FontFamily, number> = { hand: 0.52, sans: 0.55, serif: 0.52, mono: 0.6 };
+const HEURISTIC_WIDTH: Record<FontFamily, number> = {
+  hand: 0.52,
+  sans: 0.55,
+  serif: 0.52,
+  mono: 0.6,
+};
 
 const heuristicMeasurer: TextWidthMeasurer = (text, font, letterSpacing) => {
   const sizeMatch = /(\d+(?:\.\d+)?)px/.exec(font);
   const size = sizeMatch ? Number(sizeMatch[1]) : 16;
-  const family = (Object.keys(FONT_FAMILIES) as FontFamily[]).find((f) => font.includes(FONT_FAMILIES[f].css)) ?? 'sans';
+  const family =
+    (Object.keys(FONT_FAMILIES) as FontFamily[]).find((f) => font.includes(FONT_FAMILIES[f].css)) ??
+    'sans';
   const bold = /\bbold\b/.test(font) ? 1.06 : 1;
-  return text.length * size * HEURISTIC_WIDTH[family] * bold + Math.max(0, text.length - 1) * letterSpacing;
+  return (
+    text.length * size * HEURISTIC_WIDTH[family] * bold +
+    Math.max(0, text.length - 1) * letterSpacing
+  );
 };
 
 let activeMeasurer: TextWidthMeasurer = heuristicMeasurer;
@@ -65,7 +75,12 @@ export interface TextLayout {
   lineHeightPx: number;
 }
 
-function breakLongWord(word: string, font: string, letterSpacing: number, maxWidth: number): string[] {
+function breakLongWord(
+  word: string,
+  font: string,
+  letterSpacing: number,
+  maxWidth: number,
+): string[] {
   const parts: string[] = [];
   let current = '';
   for (const ch of word) {
@@ -82,7 +97,12 @@ function breakLongWord(word: string, font: string, letterSpacing: number, maxWid
 }
 
 /** Wraps text into lines no wider than `maxWidth` (null = no wrapping). */
-export function wrapText(text: string, font: string, letterSpacing: number, maxWidth: number | null): string[] {
+export function wrapText(
+  text: string,
+  font: string,
+  letterSpacing: number,
+  maxWidth: number | null,
+): string[] {
   const paragraphs = text.split(/\r?\n/);
   if (maxWidth === null || maxWidth <= 0) return paragraphs;
   const lines: string[] = [];
@@ -120,12 +140,18 @@ export function wrapText(text: string, font: string, letterSpacing: number, maxW
 
 export function layoutText(
   text: string,
-  style: Pick<TextStyle, 'fontFamily' | 'fontSize' | 'fontWeight' | 'fontStyle' | 'lineHeight' | 'letterSpacing'>,
+  style: Pick<
+    TextStyle,
+    'fontFamily' | 'fontSize' | 'fontWeight' | 'fontStyle' | 'lineHeight' | 'letterSpacing'
+  >,
   maxWidth: number | null,
 ): TextLayout {
   const font = getFontString(style);
   const rawLines = wrapText(text, font, style.letterSpacing, maxWidth);
-  const lines = rawLines.map((t) => ({ text: t, width: measureLineWidth(t, font, style.letterSpacing) }));
+  const lines = rawLines.map((t) => ({
+    text: t,
+    width: measureLineWidth(t, font, style.letterSpacing),
+  }));
   const lineHeightPx = style.fontSize * style.lineHeight;
   const width = lines.reduce((m, l) => Math.max(m, l.width), 0);
   return { lines, width, height: Math.max(1, lines.length) * lineHeightPx, lineHeightPx };
@@ -137,11 +163,19 @@ export function minTextWidth(style: Pick<TextStyle, 'fontSize'>): number {
 }
 
 /** Computes width/height for a text element given its content and sizing mode. */
-export function measureTextElement(el: Pick<TextElement, keyof TextStyle | 'text' | 'autoResize' | 'width'>): {
+export function measureTextElement(
+  el: Pick<TextElement, keyof TextStyle | 'text' | 'autoResize' | 'width'>,
+): {
   width: number;
   height: number;
 } {
-  const layout = layoutText(el.text, el, el.autoResize ? null : Math.max(el.width, minTextWidth(el)));
-  const width = el.autoResize ? Math.max(layout.width, minTextWidth(el)) : Math.max(el.width, minTextWidth(el));
+  const layout = layoutText(
+    el.text,
+    el,
+    el.autoResize ? null : Math.max(el.width, minTextWidth(el)),
+  );
+  const width = el.autoResize
+    ? Math.max(layout.width, minTextWidth(el))
+    : Math.max(el.width, minTextWidth(el));
   return { width: Math.ceil(width), height: Math.ceil(layout.height) };
 }

@@ -8,7 +8,10 @@ export const DialogTrigger = DialogPrimitive.Trigger;
 export const DialogPortal = DialogPrimitive.Portal;
 export const DialogClose = DialogPrimitive.Close;
 
-export function DialogOverlay({ className, ...props }: React.ComponentProps<typeof DialogPrimitive.Overlay>) {
+export function DialogOverlay({
+  className,
+  ...props
+}: React.ComponentProps<typeof DialogPrimitive.Overlay>) {
   return (
     <DialogPrimitive.Overlay
       data-slot="dialog-overlay"
@@ -26,7 +29,12 @@ export interface DialogContentProps extends React.ComponentProps<typeof DialogPr
   showCloseButton?: boolean;
 }
 
-export function DialogContent({ className, children, showCloseButton = true, ...props }: DialogContentProps) {
+export function DialogContent({
+  className,
+  children,
+  showCloseButton = true,
+  ...props
+}: DialogContentProps) {
   return (
     <DialogPortal>
       <DialogOverlay />
@@ -55,7 +63,11 @@ export function DialogContent({ className, children, showCloseButton = true, ...
 
 export function DialogHeader({ className, ...props }: React.ComponentProps<'div'>) {
   return (
-    <div data-slot="dialog-header" className={cn('flex flex-col gap-1.5 pr-6 text-left', className)} {...props} />
+    <div
+      data-slot="dialog-header"
+      className={cn('flex flex-col gap-1.5 pr-6 text-left', className)}
+      {...props}
+    />
   );
 }
 
@@ -69,7 +81,10 @@ export function DialogFooter({ className, ...props }: React.ComponentProps<'div'
   );
 }
 
-export function DialogTitle({ className, ...props }: React.ComponentProps<typeof DialogPrimitive.Title>) {
+export function DialogTitle({
+  className,
+  ...props
+}: React.ComponentProps<typeof DialogPrimitive.Title>) {
   return (
     <DialogPrimitive.Title
       data-slot="dialog-title"
@@ -79,7 +94,10 @@ export function DialogTitle({ className, ...props }: React.ComponentProps<typeof
   );
 }
 
-export function DialogDescription({ className, ...props }: React.ComponentProps<typeof DialogPrimitive.Description>) {
+export function DialogDescription({
+  className,
+  ...props
+}: React.ComponentProps<typeof DialogPrimitive.Description>) {
   return (
     <DialogPrimitive.Description
       data-slot="dialog-description"

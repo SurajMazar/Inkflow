@@ -94,7 +94,13 @@ export function forceLayout(
  * the axis of least penetration, half each, until no pair overlaps. Candidate pairs come from a
  * sweep over x-sorted boxes. Deterministic (fixed processing order).
  */
-export function removeOverlaps(w: readonly number[], h: readonly number[], x: Float64Array, y: Float64Array, gap: number): void {
+export function removeOverlaps(
+  w: readonly number[],
+  h: readonly number[],
+  x: Float64Array,
+  y: Float64Array,
+  gap: number,
+): void {
   const n = w.length;
   const order = Array.from({ length: n }, (_, i) => i);
   for (let pass = 0; pass < 1000; pass++) {

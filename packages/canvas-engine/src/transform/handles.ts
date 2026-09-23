@@ -35,7 +35,11 @@ const HANDLE_POS: Record<ResizeHandle, [number, number]> = {
 export function handlePoint(frame: SelectionFrame, handle: ResizeHandle): Point {
   const [nx, ny] = HANDLE_POS[handle];
   const c = { x: frame.x + frame.width / 2, y: frame.y + frame.height / 2 };
-  return rotatePoint({ x: frame.x + nx * frame.width, y: frame.y + ny * frame.height }, c, frame.angle);
+  return rotatePoint(
+    { x: frame.x + nx * frame.width, y: frame.y + ny * frame.height },
+    c,
+    frame.angle,
+  );
 }
 
 export interface SelectionFrame {
@@ -61,7 +65,12 @@ export function getSelectionFrame(elements: readonly SceneElement[]): SelectionF
   for (const el of elements) {
     const eb = getElementBounds(el);
     b = b
-      ? { minX: Math.min(b.minX, eb.minX), minY: Math.min(b.minY, eb.minY), maxX: Math.max(b.maxX, eb.maxX), maxY: Math.max(b.maxY, eb.maxY) }
+      ? {
+          minX: Math.min(b.minX, eb.minX),
+          minY: Math.min(b.minY, eb.minY),
+          maxX: Math.max(b.maxX, eb.maxX),
+          maxY: Math.max(b.maxY, eb.maxY),
+        }
       : eb;
   }
   return { x: b!.minX, y: b!.minY, width: b!.maxX - b!.minX, height: b!.maxY - b!.minY, angle: 0 };
@@ -88,7 +97,10 @@ export interface HandleOptions {
 }
 
 /** Transform handles for a selection frame in world coordinates. */
-export function computeTransformHandles(frame: SelectionFrame, options: HandleOptions): OverlayHandle[] {
+export function computeTransformHandles(
+  frame: SelectionFrame,
+  options: HandleOptions,
+): OverlayHandle[] {
   const pad = SELECTION_PADDING / options.zoom;
   const c = { x: frame.x + frame.width / 2, y: frame.y + frame.height / 2 };
   const handles: OverlayHandle[] = [];
@@ -117,7 +129,10 @@ export function computeTransformHandles(frame: SelectionFrame, options: HandleOp
 }
 
 /** Point handles (and insertion midpoints) for a single linear element. */
-export function computeLinearHandles(el: SceneElement, options: { endpointsOnly: boolean }): OverlayHandle[] {
+export function computeLinearHandles(
+  el: SceneElement,
+  options: { endpointsOnly: boolean },
+): OverlayHandle[] {
   if (!isLinearElement(el)) return [];
   const pts = getLinearWorldPoints(el);
   const handles: OverlayHandle[] = [];
@@ -129,7 +144,13 @@ export function computeLinearHandles(el: SceneElement, options: { endpointsOnly:
     for (let i = 0; i < pts.length - 1; i++) {
       const a = pts[i]!;
       const b = pts[i + 1]!;
-      handles.push({ id: `mid:${i}`, kind: 'midpoint', x: (a.x + b.x) / 2, y: (a.y + b.y) / 2, angle: 0 });
+      handles.push({
+        id: `mid:${i}`,
+        kind: 'midpoint',
+        x: (a.x + b.x) / 2,
+        y: (a.y + b.y) / 2,
+        angle: 0,
+      });
     }
   }
   return handles;

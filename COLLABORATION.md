@@ -8,13 +8,13 @@ through Redis. Offline edits are queued durably and replayed idempotently.
 
 Defined in `packages/scene/src/operations.ts`. Every operation carries:
 
-| Field | Meaning |
-| --- | --- |
-| `opId` | Unique id; `(boardId, clientId, opId)` is the idempotency key |
-| `clientId` | Editor session that produced it |
-| `clientSeq` | Monotonic per-client counter |
-| `timestamp` | Client clock (informational) |
-| `baseVersion` | Element version the change was based on (conflict detection) |
+| Field         | Meaning                                                       |
+| ------------- | ------------------------------------------------------------- |
+| `opId`        | Unique id; `(boardId, clientId, opId)` is the idempotency key |
+| `clientId`    | Editor session that produced it                               |
+| `clientSeq`   | Monotonic per-client counter                                  |
+| `timestamp`   | Client clock (informational)                                  |
+| `baseVersion` | Element version the change was based on (conflict detection)  |
 
 Types: `CREATE_ELEMENT`, `UPDATE_ELEMENT`, `DELETE_ELEMENT`, `MOVE_ELEMENT`, `RESIZE_ELEMENT`,
 `ROTATE_ELEMENT`, `GROUP_ELEMENTS`, `UNGROUP_ELEMENTS`, `CREATE_CONNECTION`, `DELETE_CONNECTION`.

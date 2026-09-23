@@ -11,7 +11,10 @@ import type { DrawLayer, ElementDrawable } from './types';
 
 function layersFor(el: SceneElement): { layers: DrawLayer[]; labelLayers: DrawLayer[] } {
   if (isShapeElement(el)) {
-    return { layers: shapeLayers(el), labelLayers: shapeLabelLayers(el.label, el.strokeColor, shapeLabelBox(el)) };
+    return {
+      layers: shapeLayers(el),
+      labelLayers: shapeLabelLayers(el.label, el.strokeColor, shapeLabelBox(el)),
+    };
   }
   switch (el.type) {
     case 'line':
@@ -51,7 +54,11 @@ function walk(layers: readonly DrawLayer[], stats: Stats, collectSets: boolean):
   for (const layer of layers) {
     switch (layer.kind) {
       case 'shape': {
-        const pad = Math.max(layer.stroke ? layer.stroke.width / 2 : 0, layer.sketch ? layer.sketch.width / 2 : 0) + 1;
+        const pad =
+          Math.max(
+            layer.stroke ? layer.stroke.width / 2 : 0,
+            layer.sketch ? layer.sketch.width / 2 : 0,
+          ) + 1;
         for (const set of layer.sets) {
           if (collectSets) stats.sets.push(set);
           stats.complexity += set.path.length;
@@ -69,7 +76,12 @@ function walk(layers: readonly DrawLayer[], stats: Stats, collectSets: boolean):
       case 'text':
         for (const run of layer.runs) {
           stats.complexity += Math.ceil(run.text.length / 2) + 1;
-          const left = layer.align === 'center' ? run.x - run.width / 2 : layer.align === 'right' ? run.x - run.width : run.x;
+          const left =
+            layer.align === 'center'
+              ? run.x - run.width / 2
+              : layer.align === 'right'
+                ? run.x - run.width
+                : run.x;
           const half = layer.fontSize * 0.75;
           stats.bounds.minX = Math.min(stats.bounds.minX, left - 2);
           stats.bounds.maxX = Math.max(stats.bounds.maxX, left + run.width + 2);
@@ -101,12 +113,20 @@ function safeLayersFor(el: SceneElement): { layers: DrawLayer[]; labelLayers: Dr
     return layersFor(el);
   } catch (error) {
     console.warn(`[renderer] could not build drawable for ${el.type} ${el.id}`, error);
-    const stroke = strokePaint(el) ?? { color: '#868e96', width: 1, dash: [4, 4], cap: 'round', join: 'round' };
+    const stroke = strokePaint(el) ?? {
+      color: '#868e96',
+      width: 1,
+      dash: [4, 4],
+      cap: 'round',
+      join: 'round',
+    };
     return {
       layers: [
         {
           kind: 'shape',
-          sets: [{ type: 'stroke', path: rectPath(0, 0, Math.max(1, el.width), Math.max(1, el.height)) }],
+          sets: [
+            { type: 'stroke', path: rectPath(0, 0, Math.max(1, el.width), Math.max(1, el.height)) },
+          ],
           stroke,
           fill: null,
           sketch: null,
@@ -132,7 +152,9 @@ export function generateElementDrawable(el: SceneElement): ElementDrawable {
   walk(labelLayers, stats, false);
   const b = stats.bounds;
   const localBounds =
-    b.minX <= b.maxX ? b : { minX: 0, minY: 0, maxX: Math.max(0, el.width), maxY: Math.max(0, el.height) };
+    b.minX <= b.maxX
+      ? b
+      : { minX: 0, minY: 0, maxX: Math.max(0, el.width), maxY: Math.max(0, el.height) };
   return {
     sets: stats.sets,
     layers,
@@ -159,12 +181,20 @@ export class DrawableCache {
 
   get(el: SceneElement): ElementDrawable {
     const hit = this.entries.get(el.id);
-    if (hit && (hit.ref === el || (hit.version === el.version && hit.versionNonce === el.versionNonce))) {
+    if (
+      hit &&
+      (hit.ref === el || (hit.version === el.version && hit.versionNonce === el.versionNonce))
+    ) {
       hit.ref = el;
       return hit.drawable;
     }
     const drawable = generateElementDrawable(el);
-    this.entries.set(el.id, { version: el.version, versionNonce: el.versionNonce, ref: el, drawable });
+    this.entries.set(el.id, {
+      version: el.version,
+      versionNonce: el.versionNonce,
+      ref: el,
+      drawable,
+    });
     return drawable;
   }
 

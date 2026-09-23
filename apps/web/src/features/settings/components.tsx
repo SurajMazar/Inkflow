@@ -36,7 +36,9 @@ export function SettingsSection({
           <h2 id={id} className="text-base font-semibold">
             {title}
           </h2>
-          {description ? <p className="mt-0.5 text-sm text-muted-foreground">{description}</p> : null}
+          {description ? (
+            <p className="mt-0.5 text-sm text-muted-foreground">{description}</p>
+          ) : null}
         </div>
         {action}
       </div>
@@ -96,9 +98,19 @@ export function SwitchRow({
   disabled?: boolean;
 }) {
   return (
-    <SettingRow label={label} description={description} className="flex-row items-center justify-between">
+    <SettingRow
+      label={label}
+      description={description}
+      className="flex-row items-center justify-between"
+    >
       {(props) => (
-        <Switch {...props} checked={checked} onCheckedChange={onCheckedChange} disabled={disabled} data-testid={testId} />
+        <Switch
+          {...props}
+          checked={checked}
+          onCheckedChange={onCheckedChange}
+          disabled={disabled}
+          data-testid={testId}
+        />
       )}
     </SettingRow>
   );

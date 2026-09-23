@@ -1,7 +1,10 @@
 import { Input, cn } from '@inkflow/ui';
 import * as React from 'react';
 
-export interface CommitInputProps extends Omit<React.ComponentProps<'input'>, 'value' | 'onChange' | 'defaultValue'> {
+export interface CommitInputProps extends Omit<
+  React.ComponentProps<'input'>,
+  'value' | 'onChange' | 'defaultValue'
+> {
   value: string;
   /** Called once per edit (on blur or Enter) when the text changed. */
   onCommit(value: string): void;
@@ -14,7 +17,16 @@ export interface CommitInputProps extends Omit<React.ComponentProps<'input'>, 'v
  * field edit becomes a single history entry. Escape reverts. External changes are picked up
  * while the field is not being edited.
  */
-export function CommitInput({ value, onCommit, normalize = (v) => v.trim(), className, onKeyDown, onBlur, onFocus, ...props }: CommitInputProps) {
+export function CommitInput({
+  value,
+  onCommit,
+  normalize = (v) => v.trim(),
+  className,
+  onKeyDown,
+  onBlur,
+  onFocus,
+  ...props
+}: CommitInputProps) {
   const [draft, setDraft] = React.useState(value);
   const [editing, setEditing] = React.useState(false);
   const cancelled = React.useRef(false);

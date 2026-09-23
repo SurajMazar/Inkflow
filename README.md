@@ -92,21 +92,21 @@ This builds and runs the API and the web app (nginx) as well; open http://localh
 
 ## Commands
 
-| Command | Description |
-| --- | --- |
-| `pnpm dev` | Build packages, then run packages in watch mode, the API and the web dev server |
-| `pnpm build` | Production build of all packages, the API and the web app |
-| `pnpm test` | Unit tests for every package and the web app, plus API unit tests |
-| `pnpm test:integration` | API integration tests against real PostgreSQL, Redis, MinIO and Mailpit |
-| `pnpm test:e2e` | Playwright end-to-end tests (starts the API and web app) |
-| `pnpm lint` / `pnpm lint:fix` | ESLint (zero warnings allowed) |
-| `pnpm format` / `pnpm format:check` | Prettier |
-| `pnpm typecheck` | TypeScript for every workspace |
-| `pnpm db:migrate` | Create/apply migrations in development (`prisma migrate dev`) |
-| `pnpm db:migrate:deploy` | Apply migrations in production (`prisma migrate deploy`) |
-| `pnpm db:seed` | Seed the demo workspace, boards and templates |
-| `pnpm db:reset` | Drop and recreate the development database |
-| `pnpm infra:up` / `pnpm infra:down` | Start/stop the Podman infrastructure services |
+| Command                             | Description                                                                     |
+| ----------------------------------- | ------------------------------------------------------------------------------- |
+| `pnpm dev`                          | Build packages, then run packages in watch mode, the API and the web dev server |
+| `pnpm build`                        | Production build of all packages, the API and the web app                       |
+| `pnpm test`                         | Unit tests for every package and the web app, plus API unit tests               |
+| `pnpm test:integration`             | API integration tests against real PostgreSQL, Redis, MinIO and Mailpit         |
+| `pnpm test:e2e`                     | Playwright end-to-end tests (starts the API and web app)                        |
+| `pnpm lint` / `pnpm lint:fix`       | ESLint (zero warnings allowed)                                                  |
+| `pnpm format` / `pnpm format:check` | Prettier                                                                        |
+| `pnpm typecheck`                    | TypeScript for every workspace                                                  |
+| `pnpm db:migrate`                   | Create/apply migrations in development (`prisma migrate dev`)                   |
+| `pnpm db:migrate:deploy`            | Apply migrations in production (`prisma migrate deploy`)                        |
+| `pnpm db:seed`                      | Seed the demo workspace, boards and templates                                   |
+| `pnpm db:reset`                     | Drop and recreate the development database                                      |
+| `pnpm infra:up` / `pnpm infra:down` | Start/stop the Podman infrastructure services                                   |
 
 ## Repository layout
 

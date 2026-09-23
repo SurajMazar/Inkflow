@@ -18,11 +18,22 @@ function distanceToPolyline(p: Point, pts: Point[]): number {
   return best;
 }
 
-const opts = { size: 8, thinning: 0.7, smoothing: 0.3, streamline: 0.2, simulatePressure: false, last: true };
+const opts = {
+  size: 8,
+  thinning: 0.7,
+  smoothing: 0.3,
+  streamline: 0.2,
+  simulatePressure: false,
+  last: true,
+};
 
 describe('getFreedrawOutline', () => {
   it('returns a closed polygon around the stroke', () => {
-    const points: PressurePoint[] = Array.from({ length: 40 }, (_, i) => [i * 5, Math.sin(i / 4) * 20, 0.5]);
+    const points: PressurePoint[] = Array.from({ length: 40 }, (_, i) => [
+      i * 5,
+      Math.sin(i / 4) * 20,
+      0.5,
+    ]);
     const outline = getFreedrawOutline(points, opts);
     expect(outline.length).toBeGreaterThan(40);
     // The polygon wraps around the stroke: first and last outline points are near the start point.
@@ -38,7 +49,11 @@ describe('getFreedrawOutline', () => {
   });
 
   it('width varies with pressure', () => {
-    const points: PressurePoint[] = Array.from({ length: 60 }, (_, i) => [i * 4, 0, i < 30 ? 0.1 : 1]);
+    const points: PressurePoint[] = Array.from({ length: 60 }, (_, i) => [
+      i * 4,
+      0,
+      i < 30 ? 0.1 : 1,
+    ]);
     const outline = getFreedrawOutline(points, { ...opts, streamline: 0 });
     const widthNear = (x: number) => {
       const ys = outline.filter((p) => Math.abs(p.x - x) < 3).map((p) => Math.abs(p.y));
@@ -54,7 +69,8 @@ describe('getFreedrawOutline', () => {
     const slow: PressurePoint[] = Array.from({ length: 80 }, (_, i) => [i * 0.8, 0, 0.5]);
     const fast: PressurePoint[] = Array.from({ length: 80 }, (_, i) => [i * 8, 0, 0.5]);
     const o = { ...opts, simulatePressure: true };
-    const maxY = (pts: Point[]) => Math.max(...pts.slice(20, pts.length - 20).map((p) => Math.abs(p.y)));
+    const maxY = (pts: Point[]) =>
+      Math.max(...pts.slice(20, pts.length - 20).map((p) => Math.abs(p.y)));
     expect(maxY(getFreedrawOutline(fast, o))).toBeLessThan(maxY(getFreedrawOutline(slow, o)));
   });
 
@@ -67,7 +83,13 @@ describe('getFreedrawOutline', () => {
   it('renders freedraw elements as filled outlines (never rasters)', () => {
     const pts: PressurePoint[] = Array.from({ length: 30 }, (_, i) => [i * 3, i * 2, 0.5]);
     for (const brush of ['pencil', 'brush', 'highlighter'] as const) {
-      const el = make('freedraw', { points: pts, brush, width: 90, height: 60, strokeColor: '#e03131' });
+      const el = make('freedraw', {
+        points: pts,
+        brush,
+        width: 90,
+        height: 60,
+        strokeColor: '#e03131',
+      });
       const d = generateElementDrawable(el);
       const layer = d.layers[d.layers.length - 1]!;
       expect(layer.kind).toBe('shape');
@@ -78,8 +100,12 @@ describe('getFreedrawOutline', () => {
       if (brush === 'highlighter') expect(layer.alpha).toBeLessThan(1);
       else expect(layer.alpha).toBeUndefined();
     }
-    const pencil = generateElementDrawable(make('freedraw', { points: pts, brush: 'pencil', strokeWidth: 2 }));
-    const brush = generateElementDrawable(make('freedraw', { points: pts, brush: 'brush', strokeWidth: 2 }));
+    const pencil = generateElementDrawable(
+      make('freedraw', { points: pts, brush: 'pencil', strokeWidth: 2 }),
+    );
+    const brush = generateElementDrawable(
+      make('freedraw', { points: pts, brush: 'brush', strokeWidth: 2 }),
+    );
     const w = (d: typeof pencil) => d.localBounds.maxX - d.localBounds.minX;
     expect(w(brush)).toBeGreaterThan(w(pencil));
   });

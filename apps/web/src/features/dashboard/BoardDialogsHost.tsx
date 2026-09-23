@@ -32,7 +32,9 @@ export function BoardDialogsHost() {
         title="Rename board"
         label="Board title"
         initialValue={lastRename?.title ?? ''}
-        onSubmit={(title) => (lastRename ? rename.mutateAsync({ board: lastRename, title }) : Promise.resolve())}
+        onSubmit={(title) =>
+          lastRename ? rename.mutateAsync({ board: lastRename, title }) : Promise.resolve()
+        }
       />
       <MoveBoardDialog board={moveBoard} onOpenChange={(open) => !open && setMoveBoard(null)} />
       {lastShare ? (

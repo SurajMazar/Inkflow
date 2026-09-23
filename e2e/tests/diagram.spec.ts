@@ -10,7 +10,9 @@ import {
   waitSaved,
 } from '../helpers';
 
-test('templates, library items, Mermaid import and auto layout create real diagrams', async ({ page }) => {
+test('templates, library items, Mermaid import and auto layout create real diagrams', async ({
+  page,
+}) => {
   test.setTimeout(180_000);
   await registerAndVerify(page, uniqueUser('diagram'));
   await createWorkspace(page, 'Diagrams');
@@ -33,9 +35,13 @@ test('templates, library items, Mermaid import and auto layout create real diagr
 
   // Mermaid → diagram
   await page.getByRole('tab', { name: /text|mermaid/i }).click();
-  await page.getByTestId('mermaid-input').fill('flowchart LR\n  A[Start] --> B{Valid?}\n  B -->|yes| C[Save]\n  B -->|no| D[Reject]');
+  await page
+    .getByTestId('mermaid-input')
+    .fill('flowchart LR\n  A[Start] --> B{Valid?}\n  B -->|yes| C[Save]\n  B -->|no| D[Reject]');
   await page.getByTestId('mermaid-insert').click();
-  await expect.poll(async () => (await sceneElements(page)).length).toBeGreaterThan(afterTemplate.length + 5);
+  await expect
+    .poll(async () => (await sceneElements(page)).length)
+    .toBeGreaterThan(afterTemplate.length + 5);
 
   // Auto layout the newly inserted diagram (it is selected after insertion).
   const before = await sceneElements(page);

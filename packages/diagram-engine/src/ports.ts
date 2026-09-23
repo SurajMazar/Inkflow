@@ -36,8 +36,18 @@ const SIDE_NORMALS: Record<PortSide, Point> = {
   left: { x: -1, y: 0 },
 };
 
-const FLIP_X: Record<PortSide, PortSide> = { top: 'top', bottom: 'bottom', left: 'right', right: 'left' };
-const FLIP_Y: Record<PortSide, PortSide> = { top: 'bottom', bottom: 'top', left: 'left', right: 'right' };
+const FLIP_X: Record<PortSide, PortSide> = {
+  top: 'top',
+  bottom: 'bottom',
+  left: 'right',
+  right: 'left',
+};
+const FLIP_Y: Record<PortSide, PortSide> = {
+  top: 'bottom',
+  bottom: 'top',
+  left: 'left',
+  right: 'right',
+};
 
 /** Side whose outward normal is closest to the given world direction. */
 export function sideForDirection(dir: Point): PortSide {
@@ -50,7 +60,12 @@ export function sideNormal(side: PortSide): Point {
 }
 
 const rotateVec = (v: Point, angle: number): Point =>
-  angle === 0 ? v : { x: v.x * Math.cos(angle) - v.y * Math.sin(angle), y: v.x * Math.sin(angle) + v.y * Math.cos(angle) };
+  angle === 0
+    ? v
+    : {
+        x: v.x * Math.cos(angle) - v.y * Math.sin(angle),
+        y: v.x * Math.sin(angle) + v.y * Math.cos(angle),
+      };
 
 /** Outline of an element in its unrotated frame (world units, flips applied). */
 export function getLocalOutline(el: SceneElement): Point[] {
@@ -58,7 +73,9 @@ export function getLocalOutline(el: SceneElement): Point[] {
   switch (el.type) {
     case 'node': {
       const g = getNodeGeometry(el);
-      const subpaths = flattenPath(g.connectionOutline ?? g.outline, g.elliptical ? 16 : 8).filter((s) => s.points.length > 1);
+      const subpaths = flattenPath(g.connectionOutline ?? g.outline, g.elliptical ? 16 : 8).filter(
+        (s) => s.points.length > 1,
+      );
       const pts =
         subpaths.length === 1 ? subpaths[0]!.points : convexHull(subpaths.flatMap((s) => s.points));
       return dedupeClosing(pts.map((p) => ({ x: p.x + x, y: p.y + y })));
@@ -115,7 +132,12 @@ export function getOutlinePolygon(el: SceneElement): Point[] {
 }
 
 /** Moves a box-side point inward along -normal onto the outline (for non-rectangular shapes). */
-function projectOntoOutline(p: Point, normal: Point, outline: readonly Point[], reach: number): Point {
+function projectOntoOutline(
+  p: Point,
+  normal: Point,
+  outline: readonly Point[],
+  reach: number,
+): Point {
   if (outline.length < 3) return p;
   if (distanceToPolyline(p, outline, true) < 0.5) return p;
   const end = { x: p.x - normal.x * reach, y: p.y - normal.y * reach };
@@ -133,7 +155,12 @@ function projectOntoOutline(p: Point, normal: Point, outline: readonly Point[], 
   return best ?? p;
 }
 
-function segmentHit(p1: Point, p2: Point, p3: Point, p4: Point): { point: Point; t: number } | null {
+function segmentHit(
+  p1: Point,
+  p2: Point,
+  p3: Point,
+  p4: Point,
+): { point: Point; t: number } | null {
   const rx = p2.x - p1.x;
   const ry = p2.y - p1.y;
   const sx = p4.x - p3.x;
@@ -185,7 +212,12 @@ function boxPortPoint(el: SceneElement, side: PortSide, offset: number): Point {
 
 function localPorts(el: SceneElement): LocalPort[] {
   const fromPorts = (ports: readonly Port[], project: boolean): LocalPort[] =>
-    ports.map((p) => ({ id: p.id, side: p.side, point: boxPortPoint(el, p.side, p.offset), project }));
+    ports.map((p) => ({
+      id: p.id,
+      side: p.side,
+      point: boxPortPoint(el, p.side, p.offset),
+      project,
+    }));
   switch (el.type) {
     case 'node':
       return fromPorts(portsForNode(el), true);
@@ -201,8 +233,18 @@ function localPorts(el: SceneElement): LocalPort[] {
       const layout = computeTableLayout(el);
       for (const row of layout.rows) {
         const cy = el.y + row.y + row.height / 2;
-        out.push({ id: `col:${row.columnId}:left`, side: 'left', point: { x: el.x, y: cy }, project: false });
-        out.push({ id: `col:${row.columnId}:right`, side: 'right', point: { x: el.x + el.width, y: cy }, project: false });
+        out.push({
+          id: `col:${row.columnId}:left`,
+          side: 'left',
+          point: { x: el.x, y: cy },
+          project: false,
+        });
+        out.push({
+          id: `col:${row.columnId}:right`,
+          side: 'right',
+          point: { x: el.x + el.width, y: cy },
+          project: false,
+        });
       }
       return out;
     }
@@ -275,13 +317,20 @@ export function rayPolygonExit(origin: Point, dir: Point, polygon: readonly Poin
 }
 
 /** Floating attachment: outline point along the ray from the target centre toward `toward`. */
-export function floatingAttachment(target: SceneElement, toward: Point, gap: number): { point: Point; normal: Point } {
+export function floatingAttachment(
+  target: SceneElement,
+  toward: Point,
+  gap: number,
+): { point: Point; normal: Point } {
   const c = getElementCenter(target);
   const dir = unit({ x: toward.x - c.x, y: toward.y - c.y });
   let hit: Point | null;
   if (target.type === 'ellipse' && target.width > 0 && target.height > 0) {
     const localToward = target.angle === 0 ? toward : rotatePoint(toward, c, -target.angle);
-    const lt = Math.hypot(localToward.x - c.x, localToward.y - c.y) < 1e-9 ? { x: c.x + 1, y: c.y } : localToward;
+    const lt =
+      Math.hypot(localToward.x - c.x, localToward.y - c.y) < 1e-9
+        ? { x: c.x + 1, y: c.y }
+        : localToward;
     const local = ellipseRayIntersection(c, target.width / 2, target.height / 2, lt);
     hit = target.angle === 0 ? local : rotatePoint(local, c, target.angle);
   } else {
@@ -311,11 +360,19 @@ function nearestSide(el: SceneElement, p: Point): PortSide {
  * - floating → intersection of the ray from the target centre toward `toward` with the outline,
  *   pushed out by `gap` along the ray.
  */
-export function resolveBindingPoint(target: SceneElement, binding: Binding, toward: Point): { point: Point; normal: Point } {
+export function resolveBindingPoint(
+  target: SceneElement,
+  binding: Binding,
+  toward: Point,
+): { point: Point; normal: Point } {
   const gap = binding.gap;
   if (binding.portId) {
     const port = getElementPorts(target).find((p) => p.id === binding.portId);
-    if (port) return { point: { x: port.point.x + port.normal.x * gap, y: port.point.y + port.normal.y * gap }, normal: port.normal };
+    if (port)
+      return {
+        point: { x: port.point.x + port.normal.x * gap, y: port.point.y + port.normal.y * gap },
+        normal: port.normal,
+      };
   }
   if (binding.anchor) {
     let [ax, ay] = binding.anchor;
@@ -325,7 +382,8 @@ export function resolveBindingPoint(target: SceneElement, binding: Binding, towa
     const side = nearestSide(target, local);
     const outline = getLocalOutline(target);
     const outside = outline.length >= 3 && !pointInPolygon(local, outline);
-    const onOutline = outline.length < 3 || outside || distanceToPolyline(local, outline, true) <= 1.5;
+    const onOutline =
+      outline.length < 3 || outside || distanceToPolyline(local, outline, true) <= 1.5;
     const n = SIDE_NORMALS[side];
     const pushed = onOutline ? { x: local.x + n.x * gap, y: local.y + n.y * gap } : local;
     const c = getElementCenter(target);
@@ -345,7 +403,14 @@ export interface FindBindingOptions {
 
 /** Elements connectors may attach to (visible, unlocked, bindable, not linear/freedraw/sequence). */
 export function canBindTo(el: SceneElement): boolean {
-  return !el.isDeleted && !el.hidden && !el.locked && isBindableElement(el) && !isLinearElement(el) && el.type !== 'freedraw';
+  return (
+    !el.isDeleted &&
+    !el.hidden &&
+    !el.locked &&
+    isBindableElement(el) &&
+    !isLinearElement(el) &&
+    el.type !== 'freedraw'
+  );
 }
 
 /**
@@ -380,14 +445,19 @@ export function findBindingCandidate(
         bestPort = port;
       }
     }
-    if (bestPort) return { element: el, portId: bestPort.id, anchor: null, point: { ...bestPort.point } };
+    if (bestPort)
+      return { element: el, portId: bestPort.id, anchor: null, point: { ...bestPort.point } };
 
     if (dist <= tolerance) {
       // Anchor at the closest outline point, expressed in the unrotated, unflipped box.
       let closest = point;
       let best = Infinity;
       for (let k = 0; k < outline.length; k++) {
-        const c = closestPointOnSegment(point, outline[k]!, outline[(k + 1) % outline.length]!).point;
+        const c = closestPointOnSegment(
+          point,
+          outline[k]!,
+          outline[(k + 1) % outline.length]!,
+        ).point;
         const d = Math.hypot(c.x - point.x, c.y - point.y);
         if (d < best) {
           best = d;

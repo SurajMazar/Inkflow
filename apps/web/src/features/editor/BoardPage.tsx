@@ -35,7 +35,10 @@ async function loadCanvasFonts(): Promise<void> {
     document.fonts.load(`20px ${f.css}`),
     document.fonts.load(`bold 20px ${f.css}`),
   ]);
-  await Promise.race([Promise.allSettled(loads), new Promise((r) => setTimeout(r, FONT_LOAD_TIMEOUT_MS))]);
+  await Promise.race([
+    Promise.allSettled(loads),
+    new Promise((r) => setTimeout(r, FONT_LOAD_TIMEOUT_MS)),
+  ]);
 }
 
 async function loadBoard(boardId: string, shareToken: string | null): Promise<LoadState> {
@@ -115,7 +118,11 @@ export default function BoardPage() {
 
   if (state.status === 'loading') {
     return (
-      <div className="flex h-dvh items-center justify-center bg-background" role="status" aria-live="polite">
+      <div
+        className="flex h-dvh items-center justify-center bg-background"
+        role="status"
+        aria-live="polite"
+      >
         <Spinner />
         <span className="sr-only">Loading board…</span>
       </div>
@@ -200,7 +207,9 @@ function EditorRoot({
           backgroundColor: preferences.defaultStyles.backgroundColor,
           strokeWidth: preferences.defaultStyles.strokeWidth,
           roughness: preferences.defaultStyles.roughness,
-          fontFamily: (['hand', 'sans', 'serif', 'mono'].includes(preferences.defaultStyles.fontFamily)
+          fontFamily: (['hand', 'sans', 'serif', 'mono'].includes(
+            preferences.defaultStyles.fontFamily,
+          )
             ? preferences.defaultStyles.fontFamily
             : 'hand') as 'hand',
           fontSize: preferences.defaultStyles.fontSize,
@@ -227,14 +236,18 @@ function EditorRoot({
     return () => cancelAnimationFrame(id);
   }, [editor]);
 
-  React.useEffect(() => () => {
-    editor.destroy();
-    resetUi();
-  }, [editor, resetUi]);
+  React.useEffect(
+    () => () => {
+      editor.destroy();
+      resetUi();
+    },
+    [editor, resetUi],
+  );
 
   React.useEffect(() => {
     editor.setState({ readOnly: !canEdit });
-    if (!canEdit && editor.state.tool !== 'selection' && editor.state.tool !== 'hand') editor.setTool('selection');
+    if (!canEdit && editor.state.tool !== 'selection' && editor.state.tool !== 'hand')
+      editor.setTool('selection');
   }, [editor, canEdit]);
 
   React.useEffect(() => {
@@ -243,7 +256,10 @@ function EditorRoot({
 
   React.useEffect(() => {
     editor.shortcuts.setOverrides(preferences.shortcuts);
-    editor.setState({ penMode: preferences.canvas.penMode, zoomWithWheel: preferences.canvas.zoomWithWheel });
+    editor.setState({
+      penMode: preferences.canvas.penMode,
+      zoomWithWheel: preferences.canvas.zoomWithWheel,
+    });
   }, [editor, preferences.shortcuts, preferences.canvas.penMode, preferences.canvas.zoomWithWheel]);
 
   // Persist grid/snapping toggles made inside the editor to the user's preferences.
@@ -395,7 +411,19 @@ function EditorRoot({
         await reload();
       },
     }),
-    [editor, boardId, board, role, canEdit, canComment, shareToken, status, offline, renameBoard, reload],
+    [
+      editor,
+      boardId,
+      board,
+      role,
+      canEdit,
+      canComment,
+      shareToken,
+      status,
+      offline,
+      renameBoard,
+      reload,
+    ],
   );
 
   return (

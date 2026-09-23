@@ -1,5 +1,11 @@
 import { getElementBounds, type FrameElement, type SceneElement } from '@inkflow/elements';
-import { boundsIntersect, expandBounds, rotatedRectBounds, type Bounds, type Rect } from '@inkflow/geometry';
+import {
+  boundsIntersect,
+  expandBounds,
+  rotatedRectBounds,
+  type Bounds,
+  type Rect,
+} from '@inkflow/geometry';
 import { measureRenderPadding } from './padding';
 
 export interface RenderPlan {
@@ -94,7 +100,18 @@ export function planRender(elements: readonly SceneElement[], options: PlanOptio
 }
 
 /** Viewport rectangle in world coordinates. */
-export function viewportWorldBounds(viewport: { x: number; y: number; zoom: number; width: number; height: number }): Bounds {
+export function viewportWorldBounds(viewport: {
+  x: number;
+  y: number;
+  zoom: number;
+  width: number;
+  height: number;
+}): Bounds {
   const z = Math.max(1e-6, viewport.zoom);
-  return { minX: viewport.x, minY: viewport.y, maxX: viewport.x + viewport.width / z, maxY: viewport.y + viewport.height / z };
+  return {
+    minX: viewport.x,
+    minY: viewport.y,
+    maxX: viewport.x + viewport.width / z,
+    maxY: viewport.y + viewport.height / z,
+  };
 }

@@ -3,7 +3,13 @@ import { Reflector } from '@nestjs/core';
 import type { Request } from 'express';
 import { ACCESS_COOKIE } from '../common/cookies';
 import { Errors } from '../common/errors';
-import { ALLOW_SHARE_TOKEN, getShareToken, IS_PUBLIC, type AppRequest, type AuthInfo } from '../common/request';
+import {
+  ALLOW_SHARE_TOKEN,
+  getShareToken,
+  IS_PUBLIC,
+  type AppRequest,
+  type AuthInfo,
+} from '../common/request';
 import { TokensService } from './tokens.service';
 
 export type ExtractedToken = { token: string; via: 'cookie' | 'bearer' } | null;
@@ -37,7 +43,8 @@ export class AuthGuard implements CanActivate {
     const req = context.switchToHttp().getRequest<AppRequest>();
     const targets = [context.getHandler(), context.getClass()];
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC, targets) ?? false;
-    const allowShare = this.reflector.getAllAndOverride<boolean>(ALLOW_SHARE_TOKEN, targets) ?? false;
+    const allowShare =
+      this.reflector.getAllAndOverride<boolean>(ALLOW_SHARE_TOKEN, targets) ?? false;
 
     const extracted = extractAccessToken(req);
     req.auth = null;
@@ -46,7 +53,12 @@ export class AuthGuard implements CanActivate {
       const result = this.tokens.verifyAccessToken(extracted.token);
       if (result.status === 'valid') {
         if (await this.tokens.isSessionRevoked(result.claims.sid)) failure = 'expired';
-        else req.auth = { userId: result.claims.sub, sessionId: result.claims.sid, via: extracted.via } satisfies AuthInfo;
+        else
+          req.auth = {
+            userId: result.claims.sub,
+            sessionId: result.claims.sid,
+            via: extracted.via,
+          } satisfies AuthInfo;
       } else {
         failure = result.status;
       }

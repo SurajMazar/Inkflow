@@ -15,16 +15,24 @@ function isAbort(error: unknown): boolean {
 function firstValidationIssue(details: unknown): string | null {
   const issues = Array.isArray(details)
     ? details
-    : details && typeof details === 'object' && Array.isArray((details as { issues?: unknown }).issues)
+    : details &&
+        typeof details === 'object' &&
+        Array.isArray((details as { issues?: unknown }).issues)
       ? (details as { issues: unknown[] }).issues
       : null;
   if (!issues) return null;
   for (const issue of issues) {
-    if (issue && typeof issue === 'object' && typeof (issue as { message?: unknown }).message === 'string') {
+    if (
+      issue &&
+      typeof issue === 'object' &&
+      typeof (issue as { message?: unknown }).message === 'string'
+    ) {
       const path = (issue as { path?: unknown }).path;
       const field = Array.isArray(path) && path.length > 0 ? String(path[path.length - 1]) : null;
       const message = (issue as { message: string }).message;
-      return field && !message.toLowerCase().includes(field.toLowerCase()) ? `${field}: ${message}` : message;
+      return field && !message.toLowerCase().includes(field.toLowerCase())
+        ? `${field}: ${message}`
+        : message;
     }
   }
   return null;
@@ -34,7 +42,10 @@ function firstValidationIssue(details: unknown): string | null {
  * Maps any thrown value (usually an `ApiError`) to a short, human-friendly message.
  * `fallback` is used as the title for unexpected errors.
  */
-export function describeApiError(error: unknown, fallback = 'Something went wrong'): ErrorDescription {
+export function describeApiError(
+  error: unknown,
+  fallback = 'Something went wrong',
+): ErrorDescription {
   const { title, description } = describe(error, fallback);
   return { title, description: description ?? '' };
 }
@@ -54,9 +65,15 @@ function describe(error: unknown, fallback: string): { title: string; descriptio
       };
     case 'UNAUTHORIZED':
     case 'SESSION_EXPIRED':
-      return { title: 'Your session has expired', description: 'Please sign in again to continue.' };
+      return {
+        title: 'Your session has expired',
+        description: 'Please sign in again to continue.',
+      };
     case 'FORBIDDEN':
-      return { title: "You don't have permission to do that", description: 'Ask an owner for access.' };
+      return {
+        title: "You don't have permission to do that",
+        description: 'Ask an owner for access.',
+      };
     case 'NOT_FOUND':
       return {
         title: "We couldn't find that",
@@ -66,7 +83,9 @@ function describe(error: unknown, fallback: string): { title: string; descriptio
       const seconds = retryAfterSeconds(error);
       return {
         title: 'Slow down a little',
-        description: seconds ? `Too many requests — try again in ${seconds}s.` : 'Too many requests — try again shortly.',
+        description: seconds
+          ? `Too many requests — try again in ${seconds}s.`
+          : 'Too many requests — try again shortly.',
       };
     }
     case 'VALIDATION_FAILED':
@@ -81,7 +100,10 @@ function describe(error: unknown, fallback: string): { title: string; descriptio
     case 'CSRF_INVALID':
       return { title: 'Security check failed', description: 'Reload the page and try again.' };
     case 'EMAIL_NOT_VERIFIED':
-      return { title: 'Verify your email first', description: 'Check your inbox for the verification link.' };
+      return {
+        title: 'Verify your email first',
+        description: 'Check your inbox for the verification link.',
+      };
     case 'INVALID_CREDENTIALS':
       return { title: 'Incorrect email or password' };
     case 'TOKEN_INVALID':
@@ -94,7 +116,10 @@ function describe(error: unknown, fallback: string): { title: string; descriptio
       return { title: error.message || 'That conflicts with an existing item' };
     case 'INTERNAL':
     default:
-      return { title: 'Something went wrong on our side', description: 'Please try again in a moment.' };
+      return {
+        title: 'Something went wrong on our side',
+        description: 'Please try again in a moment.',
+      };
   }
 }
 

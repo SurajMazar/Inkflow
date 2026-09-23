@@ -1,5 +1,13 @@
 import { expect, test } from '@playwright/test';
-import { extractLink, login, logout, query, registerAndVerify, uniqueUser, waitForEmail } from '../helpers';
+import {
+  extractLink,
+  login,
+  logout,
+  query,
+  registerAndVerify,
+  uniqueUser,
+  waitForEmail,
+} from '../helpers';
 
 test.describe('authentication', () => {
   test('register, verify email, sign out, sign in, reset password', async ({ page }) => {
@@ -15,7 +23,8 @@ test.describe('authentication', () => {
     expect(row?.password_hash).not.toContain(user.password);
     expect(row?.password_hash).toMatch(/^\$argon2id\$/);
 
-    await page.getByTestId('create-workspace-name').waitFor();
+    // Sign-up provisions a personal workspace.
+    await expect(page.getByTestId('new-board').first()).toBeVisible();
     await logout(page);
 
     // Wrong password is rejected.
@@ -25,7 +34,7 @@ test.describe('authentication', () => {
     await expect(page.getByRole('alert')).toContainText(/incorrect|invalid/i);
 
     await login(page, user);
-    await expect(page.getByTestId('create-workspace-name')).toBeVisible();
+    await expect(page.getByTestId('new-board').first()).toBeVisible();
     await logout(page);
 
     // Forgot password → email → reset → sign in with the new password.
@@ -41,7 +50,7 @@ test.describe('authentication', () => {
     await page.getByRole('button', { name: /reset|update|save/i }).click();
     await page.waitForURL(/\/login/);
     await login(page, { ...user, password: newPassword });
-    await expect(page.getByTestId('create-workspace-name')).toBeVisible();
+    await expect(page.getByTestId('new-board').first()).toBeVisible();
   });
 
   test('unverified accounts cannot sign in', async ({ page }) => {

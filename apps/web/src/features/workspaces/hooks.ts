@@ -32,7 +32,9 @@ export function useWorkspace(workspaceId: string | undefined) {
     queryFn: ({ signal }) => api.workspaces.get(workspaceId!, { signal }),
     enabled: !!workspaceId,
     initialData: () =>
-      queryClient.getQueryData<WorkspaceDto[]>(queryKeys.workspaces.list)?.find((w) => w.id === workspaceId),
+      queryClient
+        .getQueryData<WorkspaceDto[]>(queryKeys.workspaces.list)
+        ?.find((w) => w.id === workspaceId),
     initialDataUpdatedAt: () => queryClient.getQueryState(queryKeys.workspaces.list)?.dataUpdatedAt,
   });
 }
@@ -70,7 +72,9 @@ export function useUpdateWorkspace(workspaceId: string) {
 function useForgetWorkspace() {
   const queryClient = useQueryClient();
   return (workspaceId: string) => {
-    queryClient.setQueryData<WorkspaceDto[]>(queryKeys.workspaces.list, (list) => list?.filter((w) => w.id !== workspaceId));
+    queryClient.setQueryData<WorkspaceDto[]>(queryKeys.workspaces.list, (list) =>
+      list?.filter((w) => w.id !== workspaceId),
+    );
     queryClient.removeQueries({ queryKey: queryKeys.workspaces.detail(workspaceId) });
     void queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.list });
     void queryClient.invalidateQueries({ queryKey: queryKeys.boards.all });
@@ -117,7 +121,9 @@ export function useWorkspaceMemberMutations(workspaceId: string) {
       queryClient.setQueryData<WorkspaceMemberDto[]>(membersKey, (list) =>
         list?.map((m) => (m.user.id === member.user.id ? member : m)),
       );
-      notify.success(`${member.user.name} is now ${member.role.toLowerCase() === 'admin' ? 'an' : 'a'} ${member.role.toLowerCase()}`);
+      notify.success(
+        `${member.user.name} is now ${member.role.toLowerCase() === 'admin' ? 'an' : 'a'} ${member.role.toLowerCase()}`,
+      );
     },
     onError: (error) => {
       toastApiError(error, "Couldn't change the role");
@@ -128,7 +134,9 @@ export function useWorkspaceMemberMutations(workspaceId: string) {
   const remove = useMutation({
     mutationFn: (userId: string) => api.workspaces.removeMember(workspaceId, userId),
     onSuccess: (_ok, userId) => {
-      queryClient.setQueryData<WorkspaceMemberDto[]>(membersKey, (list) => list?.filter((m) => m.user.id !== userId));
+      queryClient.setQueryData<WorkspaceMemberDto[]>(membersKey, (list) =>
+        list?.filter((m) => m.user.id !== userId),
+      );
       void queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.detail(workspaceId) });
       notify.success('Member removed');
     },
@@ -148,17 +156,23 @@ export function useWorkspaceMemberMutations(workspaceId: string) {
     mutationFn: (body: InviteMemberRequest) => api.workspaces.invite(workspaceId, body),
     onSuccess: (result) => {
       void queryClient.invalidateQueries({ queryKey: membersKey });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.invitations(workspaceId) });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.workspaces.invitations(workspaceId),
+      });
       void queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.detail(workspaceId) });
-      if (result.status === 'added') notify.success(`${result.member?.user.name ?? 'They'} joined the workspace`);
+      if (result.status === 'added')
+        notify.success(`${result.member?.user.name ?? 'They'} joined the workspace`);
       else notify.success('Invitation sent', { description: result.invitation?.email });
     },
   });
 
   const revokeInvitation = useMutation({
-    mutationFn: (invitationId: string) => api.workspaces.revokeInvitation(workspaceId, invitationId),
+    mutationFn: (invitationId: string) =>
+      api.workspaces.revokeInvitation(workspaceId, invitationId),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.invitations(workspaceId) });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.workspaces.invitations(workspaceId),
+      });
       notify.success('Invitation revoked');
     },
     onError: (error) => toastApiError(error, "Couldn't revoke the invitation"),

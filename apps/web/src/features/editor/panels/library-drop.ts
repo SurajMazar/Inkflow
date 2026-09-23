@@ -19,7 +19,11 @@ export function startLibraryDrag(dataTransfer: DataTransfer, itemId: string): vo
  * Handles a drop on the canvas. Returns true when the drop carried a library item (it is then
  * inserted centered at `world`), false for any other payload so the caller can handle files.
  */
-export function handleLibraryDrop(editor: Editor, dataTransfer: DataTransfer, world: Point): boolean {
+export function handleLibraryDrop(
+  editor: Editor,
+  dataTransfer: DataTransfer,
+  world: Point,
+): boolean {
   if (!dataTransfer.types.includes(LIBRARY_DRAG_MIME)) return false;
   const id = dataTransfer.getData(LIBRARY_DRAG_MIME);
   const item = id ? findLibraryItem(id) : undefined;

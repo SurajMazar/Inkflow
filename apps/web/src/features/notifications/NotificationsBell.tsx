@@ -18,7 +18,8 @@ import { useNotifications } from './useNotifications';
 
 /** Bell button with unread badge and a popover listing recent notifications. */
 export function NotificationsBell() {
-  const { notifications, unreadCount, isLoading, isError, refetch, markRead, markAllRead } = useNotifications();
+  const { notifications, unreadCount, isLoading, isError, refetch, markRead, markAllRead } =
+    useNotifications();
   const [open, setOpen] = React.useState(false);
   const navigate = useNavigate();
 
@@ -65,7 +66,10 @@ export function NotificationsBell() {
             Mark all as read
           </Button>
         </div>
-        <ScrollArea className="max-h-[min(420px,60dvh)]" viewportClassName="max-h-[min(420px,60dvh)]">
+        <ScrollArea
+          className="max-h-[min(420px,60dvh)]"
+          viewportClassName="max-h-[min(420px,60dvh)]"
+        >
           {isLoading ? (
             <div className="grid gap-3 p-4" aria-busy="true">
               {[0, 1, 2].map((i) => (
@@ -81,12 +85,22 @@ export function NotificationsBell() {
           ) : isError && notifications.length === 0 ? (
             <div className="p-6 text-center text-sm text-muted-foreground" role="alert">
               Couldn't load notifications.{' '}
-              <button type="button" className="font-medium text-foreground underline underline-offset-4" onClick={() => void refetch()}>
+              <button
+                type="button"
+                className="font-medium text-foreground underline underline-offset-4"
+                onClick={() => void refetch()}
+              >
                 Retry
               </button>
             </div>
           ) : notifications.length === 0 ? (
-            <EmptyState size="sm" className="m-4 border-0" icon={<Bell />} title="You're all caught up" description="Mentions, shares and comments show up here." />
+            <EmptyState
+              size="sm"
+              className="m-4 border-0"
+              icon={<Bell />}
+              title="You're all caught up"
+              description="Mentions, shares and comments show up here."
+            />
           ) : (
             <ul className="grid p-1" aria-label="Notifications" data-testid="notifications-list">
               {notifications.map((notification) => (
@@ -101,7 +115,11 @@ export function NotificationsBell() {
                     data-testid="notification-item"
                   >
                     {notification.actor ? (
-                      <UserAvatar name={notification.actor.name} src={notification.actor.avatarUrl} className="size-8" />
+                      <UserAvatar
+                        name={notification.actor.name}
+                        src={notification.actor.avatarUrl}
+                        className="size-8"
+                      />
                     ) : (
                       <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
                         <Bell className="size-4" aria-hidden />
@@ -109,13 +127,20 @@ export function NotificationsBell() {
                     )}
                     <span className="grid min-w-0 flex-1 gap-0.5">
                       <span className="flex items-start gap-2">
-                        <span className="min-w-0 flex-1 text-sm font-medium">{notification.title}</span>
+                        <span className="min-w-0 flex-1 text-sm font-medium">
+                          {notification.title}
+                        </span>
                         {!notification.readAt ? (
-                          <span className="mt-1.5 size-2 shrink-0 rounded-full bg-primary" aria-label="Unread" />
+                          <span
+                            className="mt-1.5 size-2 shrink-0 rounded-full bg-primary"
+                            aria-label="Unread"
+                          />
                         ) : null}
                       </span>
                       {notification.body ? (
-                        <span className="line-clamp-2 text-[13px] text-muted-foreground">{notification.body}</span>
+                        <span className="line-clamp-2 text-[13px] text-muted-foreground">
+                          {notification.body}
+                        </span>
                       ) : null}
                       <time
                         dateTime={notification.createdAt}

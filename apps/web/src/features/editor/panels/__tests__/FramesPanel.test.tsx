@@ -7,18 +7,30 @@ import { installFetchMock } from '@/test/fetch-mock';
 import { FramesPanel } from '../FramesPanel';
 import { createTestEditor, renderInSession } from './test-session';
 
-const frame = (id: string, name: string, x: number) => createElement('frame', { id, name, x, y: 0, width: 200, height: 150 });
+const frame = (id: string, name: string, x: number) =>
+  createElement('frame', { id, name, x, y: 0, width: 200, height: 150 });
 
-const rowNames = () => screen.getAllByTestId('frame-row').map((r) => r.getAttribute('data-frame-id'));
+const rowNames = () =>
+  screen.getAllByTestId('frame-row').map((r) => r.getAttribute('data-frame-id'));
 
 beforeEach(() => {
   __resetClientStateForTests();
-  installFetchMock([{ method: 'GET', path: '/auth/me', respond: { status: 401, body: { error: { code: 'UNAUTHORIZED', message: 'no' } } } }]);
+  installFetchMock([
+    {
+      method: 'GET',
+      path: '/auth/me',
+      respond: { status: 401, body: { error: { code: 'UNAUTHORIZED', message: 'no' } } },
+    },
+  ]);
 });
 
 describe('FramesPanel', () => {
   it('reorders frames with the up/down buttons and persists the presentation order', async () => {
-    const editor = createTestEditor([frame('f1', 'Intro', 0), frame('f2', 'Problem', 300), frame('f3', 'Solution', 600)]);
+    const editor = createTestEditor([
+      frame('f1', 'Intro', 0),
+      frame('f2', 'Problem', 300),
+      frame('f3', 'Solution', 600),
+    ]);
     const user = userEvent.setup();
     renderInSession(<FramesPanel />, editor);
 
@@ -37,7 +49,11 @@ describe('FramesPanel', () => {
   });
 
   it('reorders frames by dragging a row onto another', () => {
-    const editor = createTestEditor([frame('f1', 'A', 0), frame('f2', 'B', 300), frame('f3', 'C', 600)]);
+    const editor = createTestEditor([
+      frame('f1', 'A', 0),
+      frame('f2', 'B', 300),
+      frame('f3', 'C', 600),
+    ]);
     renderInSession(<FramesPanel />, editor);
     const [r1, , r3] = screen.getAllByTestId('frame-row');
     const store = new Map<string, string>();
@@ -52,7 +68,17 @@ describe('FramesPanel', () => {
     };
     fireEvent.dragStart(r1!, { dataTransfer });
     // Drop on the lower half of the last row → after it.
-    r3!.getBoundingClientRect = () => ({ top: 0, height: 40, bottom: 40, left: 0, right: 100, width: 100, x: 0, y: 0, toJSON: () => ({}) });
+    r3!.getBoundingClientRect = () => ({
+      top: 0,
+      height: 40,
+      bottom: 40,
+      left: 0,
+      right: 100,
+      width: 100,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
+    });
     // jsdom has no DragEvent, so pointer coordinates are attached to the events by hand.
     const at = (ev: Event) => Object.defineProperty(ev, 'clientY', { value: 30 });
     fireEvent(r3!, at(createEvent.dragOver(r3!, { dataTransfer })));
@@ -73,7 +99,9 @@ describe('FramesPanel', () => {
   });
 
   it('is read-only for viewers', () => {
-    const editor = createTestEditor([frame('f1', 'Intro', 0), frame('f2', 'Next', 300)], { readOnly: true });
+    const editor = createTestEditor([frame('f1', 'Intro', 0), frame('f2', 'Next', 300)], {
+      readOnly: true,
+    });
     renderInSession(<FramesPanel />, editor, { role: 'VIEWER' });
     expect(screen.queryByTestId('frame-move-down')).not.toBeInTheDocument();
     expect(screen.getByTestId('frames-present')).toBeEnabled();

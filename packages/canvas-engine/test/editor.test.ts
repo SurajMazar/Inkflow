@@ -10,7 +10,15 @@ function makeEditor() {
 }
 
 function rect(id: string, x: number, y: number, extra: Partial<SceneElement> = {}) {
-  return createElement('rectangle', { id, x, y, width: 100, height: 60, backgroundColor: '#ffffff', ...(extra as object) });
+  return createElement('rectangle', {
+    id,
+    x,
+    y,
+    width: 100,
+    height: 60,
+    backgroundColor: '#ffffff',
+    ...(extra as object),
+  });
 }
 
 function load(editor: Editor, elements: SceneElement[]) {
@@ -23,7 +31,11 @@ function load(editor: Editor, elements: SceneElement[]) {
   });
 }
 
-function pointer(x: number, y: number, extra: Partial<CanvasPointerEvent> = {}): CanvasPointerEvent {
+function pointer(
+  x: number,
+  y: number,
+  extra: Partial<CanvasPointerEvent> = {},
+): CanvasPointerEvent {
   return {
     pointerId: 1,
     pointerType: 'mouse',
@@ -44,7 +56,12 @@ function pointer(x: number, y: number, extra: Partial<CanvasPointerEvent> = {}):
   };
 }
 
-function drag(editor: Editor, from: [number, number], to: [number, number], extra: Partial<CanvasPointerEvent> = {}) {
+function drag(
+  editor: Editor,
+  from: [number, number],
+  to: [number, number],
+  extra: Partial<CanvasPointerEvent> = {},
+) {
   const tool = editor.activeTool;
   tool.onPointerDown(pointer(from[0], from[1], extra));
   for (let i = 1; i <= 5; i++) {
@@ -280,7 +297,8 @@ describe('Editor', () => {
   it('handles 10,000 elements with fast spatial queries', () => {
     const editor = makeEditor();
     const els: SceneElement[] = [];
-    for (let i = 0; i < 10_000; i++) els.push(rect(`r${i}`, (i % 100) * 150, Math.floor(i / 100) * 100));
+    for (let i = 0; i < 10_000; i++)
+      els.push(rect(`r${i}`, (i % 100) * 150, Math.floor(i / 100) * 100));
     const t0 = performance.now();
     load(editor, els);
     const t1 = performance.now();

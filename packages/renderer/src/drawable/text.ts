@@ -14,7 +14,10 @@ import type { TextLayer, TextRun } from './types';
 
 export interface TextBlockOptions {
   text: string;
-  style: Pick<TextStyle, 'fontFamily' | 'fontSize' | 'fontWeight' | 'fontStyle' | 'lineHeight' | 'letterSpacing'>;
+  style: Pick<
+    TextStyle,
+    'fontFamily' | 'fontSize' | 'fontWeight' | 'fontStyle' | 'lineHeight' | 'letterSpacing'
+  >;
   color: string;
   align: TextAlign;
   verticalAlign: VerticalAlign;
@@ -26,7 +29,11 @@ export interface TextBlockOptions {
 }
 
 /** Lays out text inside a box and returns a text layer (plus the laid-out block height). */
-export function textBlock(o: TextBlockOptions): { layer: TextLayer; height: number; width: number } {
+export function textBlock(o: TextBlockOptions): {
+  layer: TextLayer;
+  height: number;
+  width: number;
+} {
   const layout = layoutText(o.text, o.style, o.wrapWidth);
   const lh = layout.lineHeightPx;
   const blockHeight = layout.lines.length * lh;
@@ -41,7 +48,12 @@ export function textBlock(o: TextBlockOptions): { layer: TextLayer; height: numb
     default:
       top = o.box.y;
   }
-  const anchorX = o.align === 'center' ? o.box.x + o.box.width / 2 : o.align === 'right' ? o.box.x + o.box.width : o.box.x;
+  const anchorX =
+    o.align === 'center'
+      ? o.box.x + o.box.width / 2
+      : o.align === 'right'
+        ? o.box.x + o.box.width
+        : o.box.x;
   const runs: TextRun[] = layout.lines.map((line, i) => ({
     text: line.text,
     x: anchorX,
@@ -102,7 +114,13 @@ export function textLine(
     letterSpacing: 0,
   };
   const width = measureLineWidth(text, getFontString(style), 0);
-  const layer = makeTextLayer([{ text, x, y, width }], style, opts.color, opts.align ?? 'left', opts.decoration ?? 'none');
+  const layer = makeTextLayer(
+    [{ text, x, y, width }],
+    style,
+    opts.color,
+    opts.align ?? 'left',
+    opts.decoration ?? 'none',
+  );
   if (opts.alpha !== undefined) layer.alpha = opts.alpha;
   return layer;
 }

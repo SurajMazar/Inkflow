@@ -8,7 +8,10 @@ export type ZOrderAction = 'bringForward' | 'sendBackward' | 'bringToFront' | 's
  * by `desired`. Only moved elements receive new keys; everyone else keeps theirs, which keeps
  * concurrent reorders by collaborators conflict-free.
  */
-export function reindexForOrder(desired: readonly SceneElement[], movedIds: ReadonlySet<string>): Map<string, string> {
+export function reindexForOrder(
+  desired: readonly SceneElement[],
+  movedIds: ReadonlySet<string>,
+): Map<string, string> {
   const result = new Map<string, string>();
   let i = 0;
   let prevKey: string | null = null;

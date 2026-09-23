@@ -7,7 +7,13 @@ import {
   type Point,
 } from '@inkflow/geometry';
 import { hachureLines, zigzagLines, type Line } from './fill';
-import { deriveSeed, resolveRoughOptions, type DrawOpSet, type ResolvedRoughOptions, type RoughOptions } from './types';
+import {
+  deriveSeed,
+  resolveRoughOptions,
+  type DrawOpSet,
+  type ResolvedRoughOptions,
+  type RoughOptions,
+} from './types';
 
 /** Random offsets scaled by roughness (the core of the hand-drawn look). */
 class Jitter {
@@ -139,7 +145,8 @@ function roughStroke(path: Path, j: Jitter): PathCommand[] {
         start = cursor;
         break;
       case 'L':
-        if (c.x !== cursor.x || c.y !== cursor.y) doubleLineOps(cursor.x, cursor.y, c.x, c.y, j, out);
+        if (c.x !== cursor.x || c.y !== cursor.y)
+          doubleLineOps(cursor.x, cursor.y, c.x, c.y, j, out);
         cursor = { x: c.x, y: c.y };
         break;
       case 'C':
@@ -222,7 +229,11 @@ function sketchLinesOps(lines: readonly Line[], j: Jitter, double: boolean): Pat
 }
 
 /** Hachure / cross-hatch / zigzag lines of polygon rings, clipped to the outline incl. holes. */
-function sketchFill(polygons: readonly (readonly Point[])[], o: ResolvedRoughOptions, j: Jitter): DrawOpSet {
+function sketchFill(
+  polygons: readonly (readonly Point[])[],
+  o: ResolvedRoughOptions,
+  j: Jitter,
+): DrawOpSet {
   const gap = o.hachureGap;
   const angle = o.hachureAngle;
   let lines: Line[];
@@ -271,7 +282,13 @@ export function roughPath(path: Path, options: RoughOptions, fill: boolean): Dra
 }
 
 /** Hand-drawn straight line (double stroke jitter). */
-export function roughLine(x1: number, y1: number, x2: number, y2: number, options: RoughOptions): DrawOpSet {
+export function roughLine(
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+  options: RoughOptions,
+): DrawOpSet {
   const o = resolveRoughOptions(options);
   if (o.roughness === 0) return { type: 'stroke', path: [M(x1, y1), L(x2, y2)] };
   const j = new Jitter(new SeededRandom(o.seed), o);
@@ -281,7 +298,12 @@ export function roughLine(x1: number, y1: number, x2: number, y2: number, option
 }
 
 /** Rough.js-style curve through points (Catmull-Rom → cubic). */
-function curveOps(points: readonly Point[], closePoint: Point | null, j: Jitter, out: PathCommand[]): void {
+function curveOps(
+  points: readonly Point[],
+  closePoint: Point | null,
+  j: Jitter,
+  out: PathCommand[],
+): void {
   const len = points.length;
   if (len > 3) {
     const s = 1 - j.o.curveTightness;
@@ -323,7 +345,9 @@ interface EllipseParams {
 function ellipseParams(width: number, height: number, j: Jitter): EllipseParams {
   const o = j.o;
   const psq = Math.sqrt(Math.PI * 2 * Math.sqrt(((width / 2) ** 2 + (height / 2) ** 2) / 2));
-  const stepCount = Math.ceil(Math.max(o.curveStepCount, (o.curveStepCount / Math.sqrt(200)) * psq));
+  const stepCount = Math.ceil(
+    Math.max(o.curveStepCount, (o.curveStepCount / Math.sqrt(200)) * psq),
+  );
   const increment = (Math.PI * 2) / stepCount;
   let rx = Math.abs(width / 2);
   let ry = Math.abs(height / 2);
@@ -385,7 +409,14 @@ function closedCurvePath(points: readonly Point[]): PathCommand[] {
     const p2 = points[(i + 1) % n]!;
     const p3 = points[(i + 2) % n]!;
     out.push(
-      C(p1.x + (p2.x - p0.x) / 6, p1.y + (p2.y - p0.y) / 6, p2.x - (p3.x - p1.x) / 6, p2.y - (p3.y - p1.y) / 6, p2.x, p2.y),
+      C(
+        p1.x + (p2.x - p0.x) / 6,
+        p1.y + (p2.y - p0.y) / 6,
+        p2.x - (p3.x - p1.x) / 6,
+        p2.y - (p3.y - p1.y) / 6,
+        p2.x,
+        p2.y,
+      ),
     );
   }
   out.push({ type: 'Z' });

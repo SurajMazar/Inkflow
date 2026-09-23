@@ -1,5 +1,10 @@
 import type { NodeElement, TableElement } from '@inkflow/elements';
-import { createErRelationship, createErTable, createUmlClass, createUmlRelation } from '../builders';
+import {
+  createErRelationship,
+  createErTable,
+  createUmlClass,
+  createUmlRelation,
+} from '../builders';
 import type { TemplateContent } from '../types';
 import { DiagramBuilder, PALETTE } from './builder';
 
@@ -26,7 +31,13 @@ export function buildFlowchartBasics(): TemplateContent {
   b.connect(process, decision, ortho);
   b.connect(decision, output, { ...ortho, label: 'Yes' });
   b.connect(decision, fix, { ...ortho, label: 'No' });
-  b.connect(fix, process, { ...ortho, strokeStyle: 'dashed', label: 'retry', fromPort: 'right', toPort: 'right' });
+  b.connect(fix, process, {
+    ...ortho,
+    strokeStyle: 'dashed',
+    label: 'retry',
+    fromPort: 'right',
+    toPort: 'right',
+  });
   b.connect(output, end, ortho);
   layoutFlow(b, [start, input, process, decision, fix, output, end]);
   return b.build();
@@ -44,7 +55,10 @@ export function buildAuthFlow(): TemplateContent {
   const mfa = b.node('decision', 0, 0, 'MFA enabled?', { width: 170, height: 100 });
   const code = b.node('manual-input', 0, 0, 'Enter one-time code');
   const codeOk = b.node('decision', 0, 0, 'Code valid?');
-  const session = b.node('process', 0, 0, 'Issue session & refresh token', { color: 'green', width: 190 });
+  const session = b.node('process', 0, 0, 'Issue session & refresh token', {
+    color: 'green',
+    width: 190,
+  });
   const done = b.node('terminator', 0, 0, 'Redirect to app', { color: 'green' });
   b.connect(start, creds, ortho);
   b.connect(creds, valid, ortho);
@@ -52,7 +66,13 @@ export function buildAuthFlow(): TemplateContent {
   b.connect(valid, locked, { ...ortho, label: 'No' });
   b.connect(locked, lock, { ...ortho, label: 'Yes' });
   b.connect(locked, error, { ...ortho, label: 'No' });
-  b.connect(error, creds, { ...ortho, strokeStyle: 'dashed', label: 'retry', fromPort: 'left', toPort: 'left' });
+  b.connect(error, creds, {
+    ...ortho,
+    strokeStyle: 'dashed',
+    label: 'retry',
+    fromPort: 'left',
+    toPort: 'left',
+  });
   b.connect(mfa, code, { ...ortho, label: 'Yes' });
   b.connect(mfa, session, { ...ortho, label: 'No' });
   b.connect(code, codeOk, ortho);
@@ -94,7 +114,21 @@ export function buildUserRegistration(): TemplateContent {
   b.connect(welcome, end, ortho);
   b.connect(expire, end, ortho);
   b.connect(login, end, ortho);
-  layoutFlow(b, [start, form, valid, fix, exists, login, create, send, clicked, expire, activate, welcome, end]);
+  layoutFlow(b, [
+    start,
+    form,
+    valid,
+    fix,
+    exists,
+    login,
+    create,
+    send,
+    clicked,
+    expire,
+    activate,
+    welcome,
+    end,
+  ]);
   return b.build();
 }
 
@@ -119,7 +153,12 @@ export function buildUserFlow(): TemplateContent {
   b.connect(dashboard, create, { ...ortho, label: '“New project”' });
   b.connect(create, invite, ortho);
   b.connect(invite, project, { ...ortho, label: 'skip or send' });
-  b.layout([landing, hasAccount, signup, signin, onboarding, dashboard, create, invite, project], 'hierarchical', { direction: 'LR', nodeSpacing: 50, rankSpacing: 70 }, { x: 0, y: 0 });
+  b.layout(
+    [landing, hasAccount, signup, signin, onboarding, dashboard, create, invite, project],
+    'hierarchical',
+    { direction: 'LR', nodeSpacing: 50, rankSpacing: 70 },
+    { x: 0, y: 0 },
+  );
   return b.build();
 }
 
@@ -128,14 +167,40 @@ export function buildDataFlow(): TemplateContent {
   b.text(0, -100, 'Data flow diagram (level 1)', { fontSize: 28, fontWeight: 'bold' });
   const customer = b.node('rectangle', 0, 170, 'Customer', { color: 'gray', roundness: 'sharp' });
   const bank = b.node('rectangle', 1080, 170, 'Bank', { color: 'gray', roundness: 'sharp' });
-  const warehouse = b.node('rectangle', 1080, 460, 'Warehouse', { color: 'gray', roundness: 'sharp' });
-  const p1 = b.node('circle', 300, 140, '1.0 Place order', { width: 130, height: 130, color: 'blue' });
-  const p2 = b.node('circle', 700, 140, '2.0 Process payment', { width: 130, height: 130, color: 'blue' });
-  const p3 = b.node('circle', 700, 430, '3.0 Fulfil order', { width: 130, height: 130, color: 'blue' });
+  const warehouse = b.node('rectangle', 1080, 460, 'Warehouse', {
+    color: 'gray',
+    roundness: 'sharp',
+  });
+  const p1 = b.node('circle', 300, 140, '1.0 Place order', {
+    width: 130,
+    height: 130,
+    color: 'blue',
+  });
+  const p2 = b.node('circle', 700, 140, '2.0 Process payment', {
+    width: 130,
+    height: 130,
+    color: 'blue',
+  });
+  const p3 = b.node('circle', 700, 430, '3.0 Fulfil order', {
+    width: 130,
+    height: 130,
+    color: 'blue',
+  });
   const d1 = b.node('data-store', 280, 440, 'D1 Orders');
   const d2 = b.node('data-store', 660, -60, 'D2 Payments');
-  const flow = (from: NodeElement, to: NodeElement, label: string, fromPort?: string, toPort?: string) =>
-    b.connect(from, to, { routing: 'curved', label, ...(fromPort ? { fromPort } : {}), ...(toPort ? { toPort } : {}) });
+  const flow = (
+    from: NodeElement,
+    to: NodeElement,
+    label: string,
+    fromPort?: string,
+    toPort?: string,
+  ) =>
+    b.connect(from, to, {
+      routing: 'curved',
+      label,
+      ...(fromPort ? { fromPort } : {}),
+      ...(toPort ? { toPort } : {}),
+    });
   flow(customer, p1, 'order details');
   flow(p1, d1, 'new order');
   flow(p1, p2, 'payment request');
@@ -169,7 +234,13 @@ export function buildDatabaseErd(): TemplateContent {
       'orders',
       [
         { name: 'id', dataType: 'uuid', primaryKey: true },
-        { name: 'user_id', dataType: 'uuid', foreignKey: true, nullable: false, references: 'users.id' },
+        {
+          name: 'user_id',
+          dataType: 'uuid',
+          foreignKey: true,
+          nullable: false,
+          references: 'users.id',
+        },
         { name: 'status', dataType: 'order_status', nullable: false },
         { name: 'total_cents', dataType: 'bigint', nullable: false },
         { name: 'placed_at', dataType: 'timestamptz' },
@@ -182,8 +253,20 @@ export function buildDatabaseErd(): TemplateContent {
       'order_items',
       [
         { name: 'id', dataType: 'uuid', primaryKey: true },
-        { name: 'order_id', dataType: 'uuid', foreignKey: true, nullable: false, references: 'orders.id' },
-        { name: 'product_id', dataType: 'uuid', foreignKey: true, nullable: false, references: 'products.id' },
+        {
+          name: 'order_id',
+          dataType: 'uuid',
+          foreignKey: true,
+          nullable: false,
+          references: 'orders.id',
+        },
+        {
+          name: 'product_id',
+          dataType: 'uuid',
+          foreignKey: true,
+          nullable: false,
+          references: 'products.id',
+        },
         { name: 'quantity', dataType: 'integer', nullable: false },
         { name: 'unit_price_cents', dataType: 'bigint', nullable: false },
       ],
@@ -214,31 +297,123 @@ export function buildDatabaseErd(): TemplateContent {
     ),
   );
   const col = (t: TableElement, name: string) => t.columns.find((c) => c.name === name)!.id;
-  b.add(createErRelationship(users, col(users, 'id'), orders, col(orders, 'user_id'), 'one-to-many'));
-  b.add(createErRelationship(orders, col(orders, 'id'), items, col(items, 'order_id'), 'one-to-many'));
-  b.add(createErRelationship(products, col(products, 'id'), items, col(items, 'product_id'), 'one-to-many'));
-  b.add(createErRelationship(categories, col(categories, 'id'), products, col(products, 'category_id'), 'one-to-many'));
+  b.add(
+    createErRelationship(users, col(users, 'id'), orders, col(orders, 'user_id'), 'one-to-many'),
+  );
+  b.add(
+    createErRelationship(orders, col(orders, 'id'), items, col(items, 'order_id'), 'one-to-many'),
+  );
+  b.add(
+    createErRelationship(
+      products,
+      col(products, 'id'),
+      items,
+      col(items, 'product_id'),
+      'one-to-many',
+    ),
+  );
+  b.add(
+    createErRelationship(
+      categories,
+      col(categories, 'id'),
+      products,
+      col(products, 'category_id'),
+      'one-to-many',
+    ),
+  );
   return b.build();
 }
 
 export function buildUmlClassDiagram(): TemplateContent {
   const b = new DiagramBuilder();
   b.text(0, -90, 'UML class diagram: online store', { fontSize: 28, fontWeight: 'bold' });
-  const user = b.add(createUmlClass('User', ['- id: UUID', '- email: string', '# passwordHash: string'], ['+ login(password: string): boolean', '+ logout(): void'], { stereotype: 'abstract', isAbstract: true, x: 260, y: 0 }));
-  const customer = b.add(createUmlClass('Customer', ['- shippingAddress: Address'], ['+ placeOrder(cart: Cart): Order'], { x: 60, y: 260 }));
-  const admin = b.add(createUmlClass('Admin', ['- permissions: string[]'], ['+ refund(order: Order): void'], { x: 460, y: 260 }));
-  const order = b.add(createUmlClass('Order', ['- id: UUID', '- status: OrderStatus', '- placedAt: Date'], ['+ total(): Money', '+ cancel(): void'], { x: 60, y: 480 }));
-  const item = b.add(createUmlClass('OrderItem', ['- quantity: int', '- unitPrice: Money'], ['+ subtotal(): Money'], { x: 60, y: 760 }));
-  const product = b.add(createUmlClass('Product', ['- sku: string', '- name: string', '- price: Money'], [], { x: 460, y: 760 }));
-  const pay = b.add(createUmlClass('PaymentMethod', [], ['+ charge(amount: Money): Receipt'], { stereotype: 'interface', x: 520, y: 500 }));
-  const card = b.add(createUmlClass('CreditCard', ['- last4: string'], ['+ charge(amount: Money): Receipt'], { x: 920, y: 380 }));
-  const paypal = b.add(createUmlClass('PayPal', ['- account: string'], ['+ charge(amount: Money): Receipt'], { x: 920, y: 620 }));
+  const user = b.add(
+    createUmlClass(
+      'User',
+      ['- id: UUID', '- email: string', '# passwordHash: string'],
+      ['+ login(password: string): boolean', '+ logout(): void'],
+      { stereotype: 'abstract', isAbstract: true, x: 260, y: 0 },
+    ),
+  );
+  const customer = b.add(
+    createUmlClass(
+      'Customer',
+      ['- shippingAddress: Address'],
+      ['+ placeOrder(cart: Cart): Order'],
+      { x: 60, y: 260 },
+    ),
+  );
+  const admin = b.add(
+    createUmlClass('Admin', ['- permissions: string[]'], ['+ refund(order: Order): void'], {
+      x: 460,
+      y: 260,
+    }),
+  );
+  const order = b.add(
+    createUmlClass(
+      'Order',
+      ['- id: UUID', '- status: OrderStatus', '- placedAt: Date'],
+      ['+ total(): Money', '+ cancel(): void'],
+      { x: 60, y: 480 },
+    ),
+  );
+  const item = b.add(
+    createUmlClass(
+      'OrderItem',
+      ['- quantity: int', '- unitPrice: Money'],
+      ['+ subtotal(): Money'],
+      { x: 60, y: 760 },
+    ),
+  );
+  const product = b.add(
+    createUmlClass('Product', ['- sku: string', '- name: string', '- price: Money'], [], {
+      x: 460,
+      y: 760,
+    }),
+  );
+  const pay = b.add(
+    createUmlClass('PaymentMethod', [], ['+ charge(amount: Money): Receipt'], {
+      stereotype: 'interface',
+      x: 520,
+      y: 500,
+    }),
+  );
+  const card = b.add(
+    createUmlClass('CreditCard', ['- last4: string'], ['+ charge(amount: Money): Receipt'], {
+      x: 920,
+      y: 380,
+    }),
+  );
+  const paypal = b.add(
+    createUmlClass('PayPal', ['- account: string'], ['+ charge(amount: Money): Receipt'], {
+      x: 920,
+      y: 620,
+    }),
+  );
   b.add(createUmlRelation(customer, user, 'inheritance', { fromPort: 'top', toPort: 'bottom' }));
   b.add(createUmlRelation(admin, user, 'inheritance', { fromPort: 'top', toPort: 'bottom' }));
-  b.add(createUmlRelation(customer, order, 'association', { label: '1 places *', fromPort: 'bottom', toPort: 'top' }));
-  b.add(createUmlRelation(order, item, 'composition', { label: '1..*', fromPort: 'bottom', toPort: 'top' }));
+  b.add(
+    createUmlRelation(customer, order, 'association', {
+      label: '1 places *',
+      fromPort: 'bottom',
+      toPort: 'top',
+    }),
+  );
+  b.add(
+    createUmlRelation(order, item, 'composition', {
+      label: '1..*',
+      fromPort: 'bottom',
+      toPort: 'top',
+    }),
+  );
   b.add(createUmlRelation(item, product, 'association', { fromPort: 'right', toPort: 'left' }));
-  b.add(createUmlRelation(order, pay, 'dependency', { label: 'pays with', fromPort: 'right', toPort: 'left' }));
+  b.add(
+    createUmlRelation(order, pay, 'dependency', {
+      label: 'pays with',
+      fromPort: 'right',
+      toPort: 'left',
+    }),
+  );
   b.add(createUmlRelation(card, pay, 'realization', { fromPort: 'left', toPort: 'right' }));
   b.add(createUmlRelation(paypal, pay, 'realization', { fromPort: 'left', toPort: 'right' }));
   return b.build();
@@ -262,7 +437,12 @@ export function buildStateMachine(): TemplateContent {
   b.connect(paid, shipped, { ...t, label: 'ship' });
   b.connect(shipped, delivered, { ...t, label: 'deliver' });
   b.connect(delivered, final, t);
-  b.connect(created, cancelled, { ...t, label: 'cancel / timeout', fromPort: 'bottom', toPort: 'top' });
+  b.connect(created, cancelled, {
+    ...t,
+    label: 'cancel / timeout',
+    fromPort: 'bottom',
+    toPort: 'top',
+  });
   b.connect(paid, refunded, { ...t, label: 'refund', fromPort: 'bottom', toPort: 'top' });
   b.connect(delivered, refunded, { ...t, label: 'return', fromPort: 'bottom', toPort: 'right' });
   b.connect(cancelled, final2, t);
@@ -275,7 +455,11 @@ export function buildActivityDiagram(): TemplateContent {
   b.text(0, -90, 'Activity diagram: order fulfilment', { fontSize: 28, fontWeight: 'bold' });
   const laneW = 300;
   ['Customer', 'Order system', 'Warehouse'].forEach((name, i) =>
-    b.node('swimlane', i * laneW, 0, name, { width: laneW, height: 900, color: (['blue', 'violet', 'orange'] as const)[i] }),
+    b.node('swimlane', i * laneW, 0, name, {
+      width: laneW,
+      height: 900,
+      color: (['blue', 'violet', 'orange'] as const)[i],
+    }),
   );
   const cx = (lane: number) => lane * laneW + laneW / 2;
   const init = b.nodeAt('initial-state', cx(0), 80, null);
@@ -283,10 +467,10 @@ export function buildActivityDiagram(): TemplateContent {
   const validate = b.nodeAt('state', cx(1), 170, 'Validate order');
   const stock = b.nodeAt('decision', cx(1), 300, 'In stock?');
   const notify = b.nodeAt('state', cx(0), 300, 'Notify back-order', red);
-  const fork = b.nodeAt('fork-join', cx(1) + laneW / 2, 420, null, { width: (laneW / 0.6) });
+  const fork = b.nodeAt('fork-join', cx(1) + laneW / 2, 420, null, { width: laneW / 0.6 });
   const charge = b.nodeAt('state', cx(1), 520, 'Charge card');
   const pick = b.nodeAt('state', cx(2), 520, 'Pick & pack');
-  const join = b.nodeAt('fork-join', cx(1) + laneW / 2, 630, null, { width: (laneW / 0.6) });
+  const join = b.nodeAt('fork-join', cx(1) + laneW / 2, 630, null, { width: laneW / 0.6 });
   const ship = b.nodeAt('state', cx(2), 730, 'Ship parcel');
   const receive = b.nodeAt('state', cx(0), 730, 'Receive parcel', { color: 'green' });
   const end = b.nodeAt('final-state', cx(0), 840, null);
@@ -315,7 +499,8 @@ export function buildUseCaseDiagram(): TemplateContent {
   const admin = b.node('actor', 0, 520, 'Admin');
   const psp = b.node('actor', 820, 300, 'Payment gateway');
   b.node('system-boundary', 180, 0, 'Online store', { width: 540, height: 640 });
-  const uc = (y: number, x: number, name: string) => b.node('use-case', x, y, name, { width: 190, height: 80 });
+  const uc = (y: number, x: number, name: string) =>
+    b.node('use-case', x, y, name, { width: 190, height: 80 });
   const browse = uc(60, 230, 'Browse catalog');
   const cart = uc(170, 230, 'Add to cart');
   const checkout = uc(280, 230, 'Checkout');
@@ -324,8 +509,22 @@ export function buildUseCaseDiagram(): TemplateContent {
   const inventory = uc(470, 230, 'Manage inventory');
   const reports = uc(560, 480, 'View sales reports');
   const login = uc(130, 480, 'Sign in');
-  const assoc = { routing: 'straight' as const, endArrowhead: 'none' as const, edgeKind: 'association' as const, fromPort: null, toPort: null };
-  const include = { routing: 'straight' as const, strokeStyle: 'dashed' as const, endArrowhead: 'arrow' as const, edgeKind: 'dependency' as const, label: '«include»', fromPort: null, toPort: null };
+  const assoc = {
+    routing: 'straight' as const,
+    endArrowhead: 'none' as const,
+    edgeKind: 'association' as const,
+    fromPort: null,
+    toPort: null,
+  };
+  const include = {
+    routing: 'straight' as const,
+    strokeStyle: 'dashed' as const,
+    endArrowhead: 'arrow' as const,
+    edgeKind: 'dependency' as const,
+    label: '«include»',
+    fromPort: null,
+    toPort: null,
+  };
   for (const u of [browse, cart, checkout, track]) b.connect(customer, u, assoc);
   for (const u of [inventory, reports]) b.connect(admin, u, assoc);
   b.connect(psp, pay, assoc);

@@ -9,7 +9,9 @@ const DOUBLE_CLICK_DISTANCE = 8;
 const LONG_PRESS_MS = 550;
 const LONG_PRESS_MOVE_TOLERANCE = 8;
 
-const isMac = () => typeof navigator !== 'undefined' && /Mac|iPhone|iPad/i.test(navigator.platform || navigator.userAgent);
+const isMac = () =>
+  typeof navigator !== 'undefined' &&
+  /Mac|iPhone|iPad/i.test(navigator.platform || navigator.userAgent);
 
 interface PanState {
   pointerId: number;
@@ -82,6 +84,23 @@ export class InteractionController {
     };
   }
 
+  /** Pointer capture can throw (pointer already gone, synthetic events); input must keep working. */
+  private capture(pointerId: number) {
+    try {
+      this.surface.setPointerCapture(pointerId);
+    } catch {
+      // Without capture, moves outside the canvas are simply not tracked.
+    }
+  }
+
+  private release(pointerId: number) {
+    try {
+      if (this.surface.hasPointerCapture(pointerId)) this.surface.releasePointerCapture(pointerId);
+    } catch {
+      // Capture was already released by the browser.
+    }
+  }
+
   private toScreen(e: { clientX: number; clientY: number }): Point {
     const rect = this.surface.getBoundingClientRect();
     return { x: e.clientX - rect.left, y: e.clientY - rect.top };
@@ -89,7 +108,9 @@ export class InteractionController {
 
   private toCanvasEvent(e: PointerEvent): CanvasPointerEvent {
     const screen = this.toScreen(e);
-    const pointerType = (e.pointerType === 'pen' || e.pointerType === 'touch' ? e.pointerType : 'mouse') as CanvasPointerEvent['pointerType'];
+    const pointerType = (
+      e.pointerType === 'pen' || e.pointerType === 'touch' ? e.pointerType : 'mouse'
+    ) as CanvasPointerEvent['pointerType'];
     const hasPressure = pointerType === 'pen' && e.pressure > 0 && e.pressure !== 0.5;
     return {
       pointerId: e.pointerId,
@@ -133,7 +154,7 @@ export class InteractionController {
       return;
     }
     if (e.button === 2) return; // context menu handles right clicks
-    this.surface.setPointerCapture(e.pointerId);
+    this.capture(e.pointerId);
 
     if (this.shouldPan(e)) {
       this.pan = { pointerId: e.pointerId, last: this.toScreen(e) };
@@ -158,7 +179,8 @@ export class InteractionController {
   };
 
   private onPointerMove = (e: PointerEvent) => {
-    if (e.pointerType === 'touch' && this.touches.has(e.pointerId)) this.touches.set(e.pointerId, this.toScreen(e));
+    if (e.pointerType === 'touch' && this.touches.has(e.pointerId))
+      this.touches.set(e.pointerId, this.toScreen(e));
     if (this.pinch && this.touches.size >= 2) {
       this.updatePinch();
       return;
@@ -172,7 +194,11 @@ export class InteractionController {
       return;
     }
     const ev = this.toCanvasEvent(e);
-    if (this.longPressOrigin && Math.hypot(ev.screen.x - this.longPressOrigin.x, ev.screen.y - this.longPressOrigin.y) > LONG_PRESS_MOVE_TOLERANCE) {
+    if (
+      this.longPressOrigin &&
+      Math.hypot(ev.screen.x - this.longPressOrigin.x, ev.screen.y - this.longPressOrigin.y) >
+        LONG_PRESS_MOVE_TOLERANCE
+    ) {
       this.clearLongPress();
     }
     if (e.pointerType !== 'touch' || this.toolPointerId === e.pointerId) {
@@ -206,7 +232,7 @@ export class InteractionController {
       this.toolPointerId = null;
       this.editor.activeTool.onPointerUp(this.toCanvasEvent(e));
     }
-    if (this.surface.hasPointerCapture(e.pointerId)) this.surface.releasePointerCapture(e.pointerId);
+    this.release(e.pointerId);
   };
 
   private onPointerCancel = (e: PointerEvent) => {
@@ -279,8 +305,12 @@ export class InteractionController {
   private isDoubleClick(ev: CanvasPointerEvent): boolean {
     if (!this.lastClick) return false;
     const dt = ev.timeStamp - this.lastClick.time;
-    const d = Math.hypot(ev.screen.x - this.lastClick.point.x, ev.screen.y - this.lastClick.point.y);
-    const maxDistance = ev.pointerType === 'touch' ? DOUBLE_CLICK_DISTANCE * 3 : DOUBLE_CLICK_DISTANCE;
+    const d = Math.hypot(
+      ev.screen.x - this.lastClick.point.x,
+      ev.screen.y - this.lastClick.point.y,
+    );
+    const maxDistance =
+      ev.pointerType === 'touch' ? DOUBLE_CLICK_DISTANCE * 3 : DOUBLE_CLICK_DISTANCE;
     return dt > 0 && dt < DOUBLE_CLICK_MS && d < maxDistance;
   }
 
@@ -304,7 +334,11 @@ export class InteractionController {
     const [a, b] = pts as [Point, Point];
     const center = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
     const distance = Math.max(1, Math.hypot(a.x - b.x, a.y - b.y));
-    let vp = panBy(this.editor.state.viewport, center.x - pinch.lastCenter.x, center.y - pinch.lastCenter.y);
+    let vp = panBy(
+      this.editor.state.viewport,
+      center.x - pinch.lastCenter.x,
+      center.y - pinch.lastCenter.y,
+    );
     vp = zoomAtPoint(vp, pinch.startZoom * (distance / pinch.startDistance), center);
     pinch.lastCenter = center;
     this.editor.setViewport(vp);
@@ -341,7 +375,9 @@ export class InteractionController {
     e.preventDefault();
     if (this.safariGestureZoom === null || typeof e.scale !== 'number') return;
     const screen = this.toScreen({ clientX: e.clientX ?? 0, clientY: e.clientY ?? 0 });
-    this.editor.setViewport(zoomAtPoint(this.editor.state.viewport, this.safariGestureZoom * e.scale, screen));
+    this.editor.setViewport(
+      zoomAtPoint(this.editor.state.viewport, this.safariGestureZoom * e.scale, screen),
+    );
   };
 
   private onGestureEnd = (e: Event) => {
@@ -378,8 +414,17 @@ export class InteractionController {
 
   private focusSurface() {
     const active = this.container.ownerDocument.activeElement as HTMLElement | null;
-    if (active && active !== this.container && isEditableTarget(active) && !this.editor.state.textEdit) active.blur();
-    if (this.container.tabIndex >= 0 && this.container.ownerDocument.activeElement !== this.container) {
+    if (
+      active &&
+      active !== this.container &&
+      isEditableTarget(active) &&
+      !this.editor.state.textEdit
+    )
+      active.blur();
+    if (
+      this.container.tabIndex >= 0 &&
+      this.container.ownerDocument.activeElement !== this.container
+    ) {
       this.container.focus({ preventScroll: true });
     }
   }

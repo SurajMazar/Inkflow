@@ -1,7 +1,8 @@
 import type { SerializedDocument } from '@inkflow/shared';
 
 /** File extensions accepted by "Import board". */
-export const IMPORT_ACCEPT = '.inkflow,.json,.excalidraw,application/json,application/vnd.inkflow+json';
+export const IMPORT_ACCEPT =
+  '.inkflow,.json,.excalidraw,application/json,application/vnd.inkflow+json';
 
 export const MAX_IMPORT_BYTES = 50 * 1024 * 1024;
 
@@ -34,7 +35,8 @@ function readText(file: Blob): Promise<string> {
  * `POST /boards { document }`. Throws an `Error` with a user-facing message on failure.
  */
 export async function readBoardFile(file: File): Promise<ImportedBoardFile> {
-  if (file.size > MAX_IMPORT_BYTES) throw new Error('This file is too large to import (max 50 MB).');
+  if (file.size > MAX_IMPORT_BYTES)
+    throw new Error('This file is too large to import (max 50 MB).');
   const text = await readText(file);
   let json: unknown;
   try {
@@ -50,7 +52,7 @@ export async function readBoardFile(file: File): Promise<ImportedBoardFile> {
   const parsed = isExcalidraw ? importExcalidraw(json) : importNativeJson(text);
   const rawCount =
     json && typeof json === 'object' && Array.isArray((json as { elements?: unknown }).elements)
-      ? ((json as { elements: unknown[] }).elements.length)
+      ? (json as { elements: unknown[] }).elements.length
       : 0;
   if (parsed.document.elements.length === 0 && rawCount > 0) {
     throw new Error("We couldn't read any shapes from this file.");

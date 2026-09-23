@@ -29,7 +29,8 @@ function useFullscreen(onExit: () => void) {
     }
     return () => {
       document.removeEventListener('fullscreenchange', onChange);
-      if (document.fullscreenElement && typeof document.exitFullscreen === 'function') void document.exitFullscreen().catch(() => undefined);
+      if (document.fullscreenElement && typeof document.exitFullscreen === 'function')
+        void document.exitFullscreen().catch(() => undefined);
     };
   }, []);
 }
@@ -87,7 +88,8 @@ export function PresentationOverlay() {
   // Touch: tapping the left / right third of the screen goes back / forward.
   React.useEffect(() => {
     let start: { x: number; y: number; t: number; id: number } | null = null;
-    const isControl = (t: EventTarget | null) => t instanceof Element && !!t.closest('[data-presentation-controls]');
+    const isControl = (t: EventTarget | null) =>
+      t instanceof Element && !!t.closest('[data-presentation-controls]');
     const down = (e: PointerEvent) => {
       if (e.pointerType !== 'touch' || !e.isPrimary || isControl(e.target)) return;
       start = { x: e.clientX, y: e.clientY, t: e.timeStamp, id: e.pointerId };
@@ -96,7 +98,11 @@ export function PresentationOverlay() {
       const s = start;
       start = null;
       if (!s || s.id !== e.pointerId || editor.state.tool === 'laser') return;
-      if (Math.hypot(e.clientX - s.x, e.clientY - s.y) > TAP_SLOP_PX || e.timeStamp - s.t > TAP_MAX_MS) return;
+      if (
+        Math.hypot(e.clientX - s.x, e.clientY - s.y) > TAP_SLOP_PX ||
+        e.timeStamp - s.t > TAP_MAX_MS
+      )
+        return;
       const w = window.innerWidth;
       if (e.clientX > (w * 2) / 3) editor.nextFrame();
       else if (e.clientX < w / 3) editor.previousFrame();
@@ -124,7 +130,11 @@ export function PresentationOverlay() {
     'inline-flex size-9 items-center justify-center rounded-lg text-white/90 outline-none transition-colors hover:bg-white/15 focus-visible:ring-2 focus-visible:ring-white/70 disabled:opacity-35';
 
   return (
-    <div className="pointer-events-none fixed inset-0 z-40" data-testid="presentation-overlay" data-inkflow-ui>
+    <div
+      className="pointer-events-none fixed inset-0 z-40"
+      data-testid="presentation-overlay"
+      data-inkflow-ui
+    >
       <div
         role="toolbar"
         aria-label="Presentation controls"
@@ -136,10 +146,19 @@ export function PresentationOverlay() {
         onFocus={() => setVisible(true)}
         className={cn(
           'pointer-events-auto absolute bottom-5 left-1/2 flex -translate-x-1/2 items-center gap-1 rounded-xl bg-neutral-900/85 p-1 text-white shadow-lg backdrop-blur transition-opacity duration-300',
-          shown ? 'opacity-100' : 'pointer-events-none opacity-0 focus-within:pointer-events-auto focus-within:opacity-100',
+          shown
+            ? 'opacity-100'
+            : 'pointer-events-none opacity-0 focus-within:pointer-events-auto focus-within:opacity-100',
         )}
       >
-        <button type="button" className={btn} aria-label="Previous slide" data-testid="presentation-prev" disabled={index <= 0} onClick={() => editor.previousFrame()}>
+        <button
+          type="button"
+          className={btn}
+          aria-label="Previous slide"
+          data-testid="presentation-prev"
+          disabled={index <= 0}
+          onClick={() => editor.previousFrame()}
+        >
           <ChevronLeft className="size-5" />
         </button>
         <Popover open={listOpen} onOpenChange={setListOpen}>
@@ -157,7 +176,12 @@ export function PresentationOverlay() {
               {frameName && <span className="truncate text-white/70">{frameName}</span>}
             </button>
           </PopoverTrigger>
-          <PopoverContent side="top" className="w-64 p-1" data-inkflow-ui data-presentation-controls>
+          <PopoverContent
+            side="top"
+            className="w-64 p-1"
+            data-inkflow-ui
+            data-presentation-controls
+          >
             <ul role="listbox" aria-label="Slides" className="max-h-72 overflow-y-auto">
               {presentation.frameIds.map((id, i) => {
                 const f = editor.getElement(id);
@@ -170,9 +194,14 @@ export function PresentationOverlay() {
                         editor.goToFrame(i);
                         setListOpen(false);
                       }}
-                      className={cn('flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm hover:bg-accent', i === index && 'bg-accent font-medium')}
+                      className={cn(
+                        'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm hover:bg-accent',
+                        i === index && 'bg-accent font-medium',
+                      )}
                     >
-                      <span className="w-5 text-right text-xs tabular-nums text-muted-foreground">{i + 1}</span>
+                      <span className="w-5 text-right text-xs tabular-nums text-muted-foreground">
+                        {i + 1}
+                      </span>
                       <span className="truncate">{name}</span>
                     </button>
                   </li>
@@ -181,7 +210,14 @@ export function PresentationOverlay() {
             </ul>
           </PopoverContent>
         </Popover>
-        <button type="button" className={btn} aria-label="Next slide" data-testid="presentation-next" disabled={index >= total - 1} onClick={() => editor.nextFrame()}>
+        <button
+          type="button"
+          className={btn}
+          aria-label="Next slide"
+          data-testid="presentation-next"
+          disabled={index >= total - 1}
+          onClick={() => editor.nextFrame()}
+        >
           <ChevronRight className="size-5" />
         </button>
         <span className="mx-1 h-5 w-px bg-white/20" aria-hidden />
@@ -195,7 +231,13 @@ export function PresentationOverlay() {
         >
           <Pointer className="size-4" />
         </button>
-        <button type="button" className={btn} aria-label="Exit presentation (Esc)" data-testid="presentation-exit" onClick={() => editor.stopPresentation()}>
+        <button
+          type="button"
+          className={btn}
+          aria-label="Exit presentation (Esc)"
+          data-testid="presentation-exit"
+          onClick={() => editor.stopPresentation()}
+        >
           <X className="size-4" />
         </button>
       </div>

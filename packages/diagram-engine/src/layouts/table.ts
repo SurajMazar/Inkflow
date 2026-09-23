@@ -7,7 +7,9 @@ export const TABLE_MIN_WIDTH = 140;
 const NAME_TYPE_GAP = 24;
 
 /** Key badge shown in the first column: PK, FK, both, or UQ for unique non-key columns. */
-export function getColumnKeyBadge(col: Pick<TableColumn, 'primaryKey' | 'foreignKey' | 'unique'>): string {
+export function getColumnKeyBadge(
+  col: Pick<TableColumn, 'primaryKey' | 'foreignKey' | 'unique'>,
+): string {
   if (col.primaryKey && col.foreignKey) return 'PK FK';
   if (col.primaryKey) return 'PK';
   if (col.foreignKey) return 'FK';
@@ -30,17 +32,34 @@ function natural(table: Pick<TableElement, 'name' | 'columns' | 'fontFamily' | '
   const family = table.fontFamily;
   const badgeWidth = Math.max(
     textWidth('PK', { fontFamily: family, fontSize: m.badgeFontSize, bold: true }),
-    ...table.columns.map((c) => textWidth(getColumnKeyBadge(c), { fontFamily: family, fontSize: m.badgeFontSize, bold: true })),
+    ...table.columns.map((c) =>
+      textWidth(getColumnKeyBadge(c), {
+        fontFamily: family,
+        fontSize: m.badgeFontSize,
+        bold: true,
+      }),
+    ),
   );
   const keyColumnWidth = Math.ceil(TABLE_PADDING + badgeWidth + 8);
   const nameWidth = Math.max(
     0,
-    ...table.columns.map((c) => textWidth(c.name, { fontFamily: family, fontSize: table.fontSize, bold: c.primaryKey })),
+    ...table.columns.map((c) =>
+      textWidth(c.name, { fontFamily: family, fontSize: table.fontSize, bold: c.primaryKey }),
+    ),
   );
-  const typeWidth = Math.max(0, ...table.columns.map((c) => textWidth(c.dataType, { fontFamily: family, fontSize: table.fontSize })));
+  const typeWidth = Math.max(
+    0,
+    ...table.columns.map((c) =>
+      textWidth(c.dataType, { fontFamily: family, fontSize: table.fontSize }),
+    ),
+  );
   const typeColumnX = Math.ceil(keyColumnWidth + nameWidth + NAME_TYPE_GAP);
-  const headerWidth = textWidth(table.name, { fontFamily: family, fontSize: m.headerFontSize, bold: true }) + TABLE_PADDING * 2;
-  const width = Math.ceil(Math.max(TABLE_MIN_WIDTH, typeColumnX + typeWidth + TABLE_PADDING, headerWidth));
+  const headerWidth =
+    textWidth(table.name, { fontFamily: family, fontSize: m.headerFontSize, bold: true }) +
+    TABLE_PADDING * 2;
+  const width = Math.ceil(
+    Math.max(TABLE_MIN_WIDTH, typeColumnX + typeWidth + TABLE_PADDING, headerWidth),
+  );
   const height = m.headerHeight + Math.max(1, table.columns.length) * m.rowHeight;
   return { ...m, keyColumnWidth, typeColumnX, width, height };
 }

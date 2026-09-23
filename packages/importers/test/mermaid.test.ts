@@ -17,7 +17,13 @@ function expectValid(elements: SceneElement[]) {
     const r = validateElement(el);
     expect(r.success, r.success ? '' : r.error).toBe(true);
   }
-  const parsed = parseDocument({ type: 'inkflow', version: CURRENT_DOCUMENT_VERSION, elements, appState: {}, files: {} });
+  const parsed = parseDocument({
+    type: 'inkflow',
+    version: CURRENT_DOCUMENT_VERSION,
+    elements,
+    appState: {},
+    files: {},
+  });
   expect(parsed.issues).toEqual([]);
   for (const el of elements) {
     if (el.type !== 'connector') continue;
@@ -29,8 +35,10 @@ function expectValid(elements: SceneElement[]) {
 }
 
 const nodesOf = (els: SceneElement[]) => els.filter((e): e is NodeElement => e.type === 'node');
-const byLabel = (els: SceneElement[], text: string) => nodesOf(els).find((n) => n.label?.text === text)!;
-const connectors = (els: SceneElement[]) => els.filter((e): e is ConnectorElement => e.type === 'connector');
+const byLabel = (els: SceneElement[], text: string) =>
+  nodesOf(els).find((n) => n.label?.text === text)!;
+const connectors = (els: SceneElement[]) =>
+  els.filter((e): e is ConnectorElement => e.type === 'connector');
 
 describe('mermaid flowchart', () => {
   const src = `%% sample
@@ -94,7 +102,11 @@ flowchart LR
     expect(db.x).toBeGreaterThanOrEqual(frame.x);
     expect(db.x + db.width).toBeLessThanOrEqual(frame.x + frame.width);
     const outside = byLabel(elements, 'Start');
-    const inside = outside.x >= frame.x && outside.x <= frame.x + frame.width && outside.y >= frame.y && outside.y <= frame.y + frame.height;
+    const inside =
+      outside.x >= frame.x &&
+      outside.x <= frame.x + frame.width &&
+      outside.y >= frame.y &&
+      outside.y <= frame.y + frame.height;
     expect(inside).toBe(false);
   });
 
@@ -128,7 +140,11 @@ flowchart LR
 
   it('reports unparseable lines instead of throwing', () => {
     const { elements, issues } = importMermaid('flowchart TB\n  A --> \n  B[ok]');
-    expect(nodesOf(elements).map((n) => n.label?.text).sort()).toEqual(['A', 'ok']);
+    expect(
+      nodesOf(elements)
+        .map((n) => n.label?.text)
+        .sort(),
+    ).toEqual(['A', 'ok']);
     expect(issues.length).toBe(1);
   });
 });
@@ -240,7 +256,10 @@ describe('mermaid class diagram', () => {
     expect(classes.find((c) => c.name === 'Swimmer')!.stereotype).toBe('interface');
     const rels = connectors(elements);
     const id = (name: string) => classes.find((c) => c.name === name)!.id;
-    const rel = (from: string, to: string) => rels.find((r) => r.startBinding!.elementId === id(from) && r.endBinding!.elementId === id(to));
+    const rel = (from: string, to: string) =>
+      rels.find(
+        (r) => r.startBinding!.elementId === id(from) && r.endBinding!.elementId === id(to),
+      );
     expect(rel('Duck', 'Animal')!.edgeKind).toBe('inheritance');
     expect(rel('Duck', 'Animal')!.endArrowhead).toBe('triangle-outline');
     expect(rel('Pond', 'Duck') ?? rel('Pond<T>', 'Duck')).toBeDefined();
@@ -254,7 +273,9 @@ describe('mermaid class diagram', () => {
     // Supertypes are laid out above subtypes.
     const duck = classes.find((c) => c.name === 'Duck')!;
     expect(animal.y + animal.height).toBeLessThan(duck.y);
-    expect(nodesOf(elements).some((n) => n.shape === 'note' && n.label?.text === 'can fly')).toBe(true);
+    expect(nodesOf(elements).some((n) => n.shape === 'note' && n.label?.text === 'can fly')).toBe(
+      true,
+    );
   });
 
   it('formats members as UML text', () => {
@@ -278,7 +299,9 @@ describe('mermaid safety and helpers', () => {
     expect(JSON.stringify(elements)).not.toContain('onerror');
   });
   it('strips front matter, directives and comments', () => {
-    expect(mermaidLines('---\ntitle: x\n---\n%%{init: {"theme":"dark"}}%%\ngraph TD\nA-->B %% note\n')).toEqual(['graph TD', 'A-->B']);
+    expect(
+      mermaidLines('---\ntitle: x\n---\n%%{init: {"theme":"dark"}}%%\ngraph TD\nA-->B %% note\n'),
+    ).toEqual(['graph TD', 'A-->B']);
   });
   it('handles a 300-node flowchart quickly', () => {
     const lines = ['flowchart TD'];

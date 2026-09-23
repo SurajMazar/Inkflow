@@ -65,7 +65,10 @@ export function ungroupElementsPatches(elements: readonly SceneElement[]) {
 }
 
 /** Distinct outermost units in a selection: each group counts once, loose elements individually. */
-export function selectionUnits(elements: readonly SceneElement[], editingGroupId: string | null = null): SceneElement[][] {
+export function selectionUnits(
+  elements: readonly SceneElement[],
+  editingGroupId: string | null = null,
+): SceneElement[][] {
   const units = new Map<string, SceneElement[]>();
   for (const el of elements) {
     const key = selectionGroupFor(el, editingGroupId) ?? `el:${el.id}`;

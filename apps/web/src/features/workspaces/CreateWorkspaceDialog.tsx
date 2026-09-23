@@ -25,7 +25,12 @@ export interface CreateWorkspaceFormProps {
 }
 
 /** Workspace name form; navigates to the new workspace unless `onCreated` is provided. */
-export function CreateWorkspaceForm({ onCreated, secondaryAction, submitLabel = 'Create workspace', autoFocus = true }: CreateWorkspaceFormProps) {
+export function CreateWorkspaceForm({
+  onCreated,
+  secondaryAction,
+  submitLabel = 'Create workspace',
+  autoFocus = true,
+}: CreateWorkspaceFormProps) {
   const [name, setName] = React.useState('');
   const [error, setError] = React.useState<string | undefined>();
   const create = useCreateWorkspace();
@@ -35,7 +40,11 @@ export function CreateWorkspaceForm({ onCreated, secondaryAction, submitLabel = 
     event.preventDefault();
     const parsed = createWorkspaceSchema.safeParse({ name });
     if (!parsed.success) {
-      setError(parsed.error.issues[0]?.code === 'too_small' ? 'Give your workspace a name' : parsed.error.issues[0]?.message);
+      setError(
+        parsed.error.issues[0]?.code === 'too_small'
+          ? 'Give your workspace a name'
+          : parsed.error.issues[0]?.message,
+      );
       return;
     }
     setError(undefined);
@@ -52,7 +61,11 @@ export function CreateWorkspaceForm({ onCreated, secondaryAction, submitLabel = 
 
   return (
     <form className="grid gap-5" onSubmit={onSubmit} noValidate>
-      <FormField label="Workspace name" error={error} description="Usually your team or company name. You can change it later.">
+      <FormField
+        label="Workspace name"
+        error={error}
+        description="Usually your team or company name. You can change it later."
+      >
         <Input
           value={name}
           onChange={(e) => setName(e.target.value)}
@@ -74,14 +87,22 @@ export function CreateWorkspaceForm({ onCreated, secondaryAction, submitLabel = 
   );
 }
 
-export function CreateWorkspaceDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
+export function CreateWorkspaceDialog({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
   const navigate = useNavigate();
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Create a workspace</DialogTitle>
-          <DialogDescription>Workspaces hold your team's boards, projects and members.</DialogDescription>
+          <DialogDescription>
+            Workspaces hold your team's boards, projects and members.
+          </DialogDescription>
         </DialogHeader>
         <CreateWorkspaceForm
           onCreated={(workspace) => {

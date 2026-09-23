@@ -17,7 +17,10 @@ export class NotificationsController {
   @Get()
   @ApiZodQuery(listSchema)
   @ApiOperation({ summary: 'Recent notifications and the unread count' })
-  list(@CurrentUser() user: AuthInfo, @ZQuery(listSchema) query: z.output<typeof listSchema>): Promise<NotificationListDto> {
+  list(
+    @CurrentUser() user: AuthInfo,
+    @ZQuery(listSchema) query: z.output<typeof listSchema>,
+  ): Promise<NotificationListDto> {
     return this.notifications.list(user.userId, query.limit);
   }
 
@@ -32,7 +35,10 @@ export class NotificationsController {
   @Post(':id/read')
   @HttpCode(200)
   @ApiOperation({ summary: 'Mark a notification as read' })
-  async read(@CurrentUser() user: AuthInfo, @IdParam('id', 'Notification') id: string): Promise<OkResponse> {
+  async read(
+    @CurrentUser() user: AuthInfo,
+    @IdParam('id', 'Notification') id: string,
+  ): Promise<OkResponse> {
     await this.notifications.markRead(user.userId, id);
     return { ok: true };
   }

@@ -56,7 +56,10 @@ export function CanvasView() {
       role="application"
       aria-roledescription="whiteboard"
       aria-label={`Canvas. Current tool: ${tool}. Press question mark for keyboard shortcuts.`}
-      className={cn('absolute inset-0 touch-none select-none outline-none', dragOver && 'ring-4 ring-inset ring-primary/40')}
+      className={cn(
+        'absolute inset-0 touch-none select-none outline-none',
+        dragOver && 'ring-4 ring-inset ring-primary/40',
+      )}
       style={{ cursor }}
       data-testid="canvas-container"
       onDragOver={onDragOver}
@@ -65,11 +68,19 @@ export function CanvasView() {
     >
       <canvas
         ref={staticRef}
-        className={cn('absolute inset-0 h-full w-full', theme === 'dark' && '[filter:invert(93%)_hue-rotate(180deg)]')}
+        className={cn(
+          'absolute inset-0 h-full w-full',
+          theme === 'dark' && '[filter:invert(93%)_hue-rotate(180deg)]',
+        )}
         data-testid="static-canvas"
         aria-hidden="true"
       />
-      <canvas ref={interactiveRef} className="absolute inset-0 h-full w-full" data-testid="interactive-canvas" aria-hidden="true" />
+      <canvas
+        ref={interactiveRef}
+        className="absolute inset-0 h-full w-full"
+        data-testid="interactive-canvas"
+        aria-hidden="true"
+      />
     </div>
   );
 }

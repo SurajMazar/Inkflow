@@ -8,18 +8,18 @@ and subscribes to its state; it never draws on the canvas.
 
 `Editor` (`packages/canvas-engine/src/editor.ts`) owns:
 
-| Part | Purpose |
-| --- | --- |
-| `scene` (`@inkflow/scene`) | All elements (including tombstones), z-order, spatial/binding/group/frame indexes |
-| `history` | Undo/redo stacks of property-level deltas |
-| `store` (zustand vanilla) | UI-facing `EditorState`: tool, selection, viewport, style defaults, grid, snapping, text editing, collaborators, presentation… |
-| `tools` | One state machine per tool (selection, hand, shapes, linear, freedraw, eraser, text, image, comment, laser) |
-| `InteractionController` | Normalizes pointer/touch/pen/wheel/gesture/keyboard input into tool events, panning and pinch-zoom |
-| `ShortcutManager` | Layout-independent key combos → actions, user overrides, presentation keys |
-| `ActionRegistry` | Every command (≈120): edit, arrange, align, view, text, navigation, diagram, frames, export |
-| `ClipboardManager` | Copy/cut/paste via native clipboard events (no permission prompts), external content, style copy/paste |
-| `RenderLoop` | rAF-batched redraws of the static and interactive canvases, only when dirty |
-| `events` | `commit`, `transient`, `presence`, `appState`, `files`, `uiRequest`, `load` for persistence, collaboration and UI |
+| Part                       | Purpose                                                                                                                        |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `scene` (`@inkflow/scene`) | All elements (including tombstones), z-order, spatial/binding/group/frame indexes                                              |
+| `history`                  | Undo/redo stacks of property-level deltas                                                                                      |
+| `store` (zustand vanilla)  | UI-facing `EditorState`: tool, selection, viewport, style defaults, grid, snapping, text editing, collaborators, presentation… |
+| `tools`                    | One state machine per tool (selection, hand, shapes, linear, freedraw, eraser, text, image, comment, laser)                    |
+| `InteractionController`    | Normalizes pointer/touch/pen/wheel/gesture/keyboard input into tool events, panning and pinch-zoom                             |
+| `ShortcutManager`          | Layout-independent key combos → actions, user overrides, presentation keys                                                     |
+| `ActionRegistry`           | Every command (≈120): edit, arrange, align, view, text, navigation, diagram, frames, export                                    |
+| `ClipboardManager`         | Copy/cut/paste via native clipboard events (no permission prompts), external content, style copy/paste                         |
+| `RenderLoop`               | rAF-batched redraws of the static and interactive canvases, only when dirty                                                    |
+| `events`                   | `commit`, `transient`, `presence`, `appState`, `files`, `uiRequest`, `load` for persistence, collaboration and UI              |
 
 ### Coordinates
 
@@ -30,14 +30,14 @@ World coordinates are infinite; the viewport is `{ x, y, zoom, width, height }` 
 
 Input mapping:
 
-| Input | Behavior |
-| --- | --- |
-| Wheel | Pan (Shift = horizontal); zoom when "zoom with wheel" is enabled |
-| Ctrl/⌘ + wheel, trackpad pinch | Zoom around the cursor (Safari gesture events supported) |
-| Space + drag, middle mouse, Hand tool | Pan |
-| Two fingers | Pinch zoom + pan (any in-progress tool gesture is cancelled) |
-| Long press (touch) | Context menu |
-| Pen mode | Touch pans, only the stylus draws |
+| Input                                 | Behavior                                                         |
+| ------------------------------------- | ---------------------------------------------------------------- |
+| Wheel                                 | Pan (Shift = horizontal); zoom when "zoom with wheel" is enabled |
+| Ctrl/⌘ + wheel, trackpad pinch        | Zoom around the cursor (Safari gesture events supported)         |
+| Space + drag, middle mouse, Hand tool | Pan                                                              |
+| Two fingers                           | Pinch zoom + pan (any in-progress tool gesture is cancelled)     |
+| Long press (touch)                    | Context menu                                                     |
+| Pen mode                              | Touch pans, only the stylus draws                                |
 
 ### Transactions and history
 

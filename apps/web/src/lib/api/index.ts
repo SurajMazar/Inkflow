@@ -29,7 +29,13 @@ export {
   request,
   retryAfterSeconds,
 } from './client';
-export type { CallOptions, HttpMethod, QueryParams, RefreshOutcome, RequestOptions } from './client';
+export type {
+  CallOptions,
+  HttpMethod,
+  QueryParams,
+  RefreshOutcome,
+  RequestOptions,
+} from './client';
 export { uploadWithProgress } from './upload';
 export type { UploadOptions, UploadProgress } from './upload';
 export { ApiError, isApiErrorBody } from '@inkflow/shared';

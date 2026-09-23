@@ -16,7 +16,10 @@ export function sanitizeNext(next: string | null | undefined, fallback = '/'): s
 }
 
 /** Builds `/login?next=…` (or another auth route) for the given return path. */
-export function authRedirect(path: '/login' | '/register', next: string | null | undefined): string {
+export function authRedirect(
+  path: '/login' | '/register',
+  next: string | null | undefined,
+): string {
   const safe = sanitizeNext(next, '');
   return safe && safe !== '/' ? `${path}?next=${encodeURIComponent(safe)}` : path;
 }

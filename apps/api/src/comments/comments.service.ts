@@ -80,20 +80,29 @@ export class CommentsService {
   ) {}
 
   /** Signed-in VIEWER+ (anonymous share-link visitors can read but not comment). */
-  private async requireCommenter(principal: Principal, boardId: string): Promise<BoardAccess & { userId: string }> {
+  private async requireCommenter(
+    principal: Principal,
+    boardId: string,
+  ): Promise<BoardAccess & { userId: string }> {
     const access = await this.access.requireBoard(boardId, principal, 'VIEWER');
     if (!access.userId) throw Errors.unauthorized('Sign in to comment');
     return access as BoardAccess & { userId: string };
   }
 
   /** Mentioned user ids (explicit list ∪ body tokens) that can actually see the board. */
-  private async resolveMentions(boardId: string, authorId: string, body: string, explicit: string[]): Promise<string[]> {
+  private async resolveMentions(
+    boardId: string,
+    authorId: string,
+    body: string,
+    explicit: string[],
+  ): Promise<string[]> {
     const ids = [...new Set([...explicit, ...extractMentionIds(body)])]
       .filter((id) => isUuid(id) && id !== authorId)
       .slice(0, MAX_MENTIONS);
     const allowed: string[] = [];
     for (const id of ids) {
-      if (await this.access.getBoardAccess(boardId, { userId: id, shareToken: null })) allowed.push(id);
+      if (await this.access.getBoardAccess(boardId, { userId: id, shareToken: null }))
+        allowed.push(id);
     }
     return allowed;
   }
@@ -113,27 +122,33 @@ export class CommentsService {
     const link = this.boardLink(access.board.id, commentId);
     const url = this.config.webLink(link);
     await this.notifications.notify(
-      userIds.map(
-        (userId): NotifyInput => ({
-          userId,
-          type: 'MENTION',
-          actorId: actor.id,
-          title: `${actor.name} mentioned you on “${access.board.title}”`,
-          body: plainMentions(body).slice(0, 1000),
-          link,
-          data: { boardId: access.board.id, commentId },
-          email: { ...mentionEmail({ actorName: actor.name, boardTitle: access.board.title, body, url }), link: url },
-        }),
-      ),
+      userIds.map((userId): NotifyInput => ({
+        userId,
+        type: 'MENTION',
+        actorId: actor.id,
+        title: `${actor.name} mentioned you on “${access.board.title}”`,
+        body: plainMentions(body).slice(0, 1000),
+        link,
+        data: { boardId: access.board.id, commentId },
+        email: {
+          ...mentionEmail({ actorName: actor.name, boardTitle: access.board.title, body, url }),
+          link: url,
+        },
+      })),
     );
   }
 
   private async load(commentId: string): Promise<CommentRow> {
-    return this.prisma.comment.findUniqueOrThrow({ where: { id: commentId }, include: commentInclude });
+    return this.prisma.comment.findUniqueOrThrow({
+      where: { id: commentId },
+      include: commentInclude,
+    });
   }
 
   private async findComment(commentId: string) {
-    const comment = isUuid(commentId) ? await this.prisma.comment.findUnique({ where: { id: commentId } }) : null;
+    const comment = isUuid(commentId)
+      ? await this.prisma.comment.findUnique({ where: { id: commentId } })
+      : null;
     if (!comment) throw Errors.notFound('Comment');
     return comment;
   }
@@ -142,7 +157,11 @@ export class CommentsService {
     void this.realtime.emitEvent(boardId, { kind: 'comments-changed', commentId });
   }
 
-  async list(principal: Principal, boardId: string, includeResolved: boolean): Promise<CommentDto[]> {
+  async list(
+    principal: Principal,
+    boardId: string,
+    includeResolved: boolean,
+  ): Promise<CommentDto[]> {
     await this.access.requireBoard(boardId, principal, 'VIEWER');
     const rows = await this.prisma.comment.findMany({
       where: { boardId, ...(includeResolved ? {} : { resolvedAt: null }) },
@@ -185,7 +204,16 @@ export class CommentsService {
           body: plainMentions(input.body).slice(0, 1000),
           link,
           data: { boardId, commentId: comment.id },
-          email: { ...commentEmail({ actorName: actor.name, boardTitle: access.board.title, body: input.body, url, kind: 'comment' }), link: url },
+          email: {
+            ...commentEmail({
+              actorName: actor.name,
+              boardTitle: access.board.title,
+              body: input.body,
+              url,
+              kind: 'comment',
+            }),
+            link: url,
+          },
         },
       ]);
     }
@@ -193,31 +221,60 @@ export class CommentsService {
     return toCommentDto(comment);
   }
 
-  async update(principal: Principal, commentId: string, input: { body: string; mentions: string[] }): Promise<CommentDto> {
+  async update(
+    principal: Principal,
+    commentId: string,
+    input: { body: string; mentions: string[] },
+  ): Promise<CommentDto> {
     const existing = await this.findComment(commentId);
     const access = await this.requireCommenter(principal, existing.boardId);
-    if (existing.authorId !== access.userId) throw Errors.forbidden('Only the author can edit a comment');
+    if (existing.authorId !== access.userId)
+      throw Errors.forbidden('Only the author can edit a comment');
     const before = new Set(
-      (await this.prisma.commentMention.findMany({ where: { commentId, replyId: null }, select: { userId: true } })).map((m) => m.userId),
+      (
+        await this.prisma.commentMention.findMany({
+          where: { commentId, replyId: null },
+          select: { userId: true },
+        })
+      ).map((m) => m.userId),
     );
-    const mentions = await this.resolveMentions(existing.boardId, access.userId, input.body, input.mentions);
+    const mentions = await this.resolveMentions(
+      existing.boardId,
+      access.userId,
+      input.body,
+      input.mentions,
+    );
     await this.prisma.$transaction([
       this.prisma.comment.update({ where: { id: commentId }, data: { body: input.body } }),
       this.prisma.commentMention.deleteMany({ where: { commentId, replyId: null } }),
-      this.prisma.commentMention.createMany({ data: mentions.map((userId) => ({ commentId, userId })) }),
+      this.prisma.commentMention.createMany({
+        data: mentions.map((userId) => ({ commentId, userId })),
+      }),
     ]);
     const comment = await this.load(commentId);
-    await this.notifyMentions(access, comment.author, commentId, input.body, mentions.filter((id) => !before.has(id)));
+    await this.notifyMentions(
+      access,
+      comment.author,
+      commentId,
+      input.body,
+      mentions.filter((id) => !before.has(id)),
+    );
     this.changed(existing.boardId, commentId);
     return toCommentDto(comment);
   }
 
-  async setResolved(principal: Principal, commentId: string, resolved: boolean): Promise<CommentDto> {
+  async setResolved(
+    principal: Principal,
+    commentId: string,
+    resolved: boolean,
+  ): Promise<CommentDto> {
     const existing = await this.findComment(commentId);
     const access = await this.requireCommenter(principal, existing.boardId);
     await this.prisma.comment.update({
       where: { id: commentId },
-      data: resolved ? { resolvedAt: new Date(), resolvedById: access.userId } : { resolvedAt: null, resolvedById: null },
+      data: resolved
+        ? { resolvedAt: new Date(), resolvedById: access.userId }
+        : { resolvedAt: null, resolvedById: null },
     });
     const comment = await this.load(commentId);
     if (resolved && existing.authorId !== access.userId && comment.resolvedBy) {
@@ -233,7 +290,16 @@ export class CommentsService {
           body: plainMentions(existing.body).slice(0, 1000),
           link,
           data: { boardId: existing.boardId, commentId },
-          email: { ...commentEmail({ actorName: actor.name, boardTitle: access.board.title, body: existing.body, url, kind: 'resolved' }), link: url },
+          email: {
+            ...commentEmail({
+              actorName: actor.name,
+              boardTitle: access.board.title,
+              body: existing.body,
+              url,
+              kind: 'resolved',
+            }),
+            link: url,
+          },
         },
       ]);
     }
@@ -253,10 +319,19 @@ export class CommentsService {
 
   // ───────────── replies ─────────────
 
-  async reply(principal: Principal, commentId: string, input: { body: string; mentions: string[] }): Promise<CommentReplyDto> {
+  async reply(
+    principal: Principal,
+    commentId: string,
+    input: { body: string; mentions: string[] },
+  ): Promise<CommentReplyDto> {
     const comment = await this.findComment(commentId);
     const access = await this.requireCommenter(principal, comment.boardId);
-    const mentions = await this.resolveMentions(comment.boardId, access.userId, input.body, input.mentions);
+    const mentions = await this.resolveMentions(
+      comment.boardId,
+      access.userId,
+      input.body,
+      input.mentions,
+    );
     const reply = await this.prisma.commentReply.create({
       data: {
         commentId,
@@ -280,7 +355,8 @@ export class CommentsService {
     const url = this.config.webLink(link);
     const notify: NotifyInput[] = [];
     for (const userId of recipients) {
-      if (!(await this.access.getBoardAccess(comment.boardId, { userId, shareToken: null }))) continue;
+      if (!(await this.access.getBoardAccess(comment.boardId, { userId, shareToken: null })))
+        continue;
       notify.push({
         userId,
         type: 'COMMENT_REPLY',
@@ -289,7 +365,16 @@ export class CommentsService {
         body: plainMentions(input.body).slice(0, 1000),
         link,
         data: { boardId: comment.boardId, commentId, replyId: reply.id },
-        email: { ...commentEmail({ actorName: reply.author.name, boardTitle: access.board.title, body: input.body, url, kind: 'reply' }), link: url },
+        email: {
+          ...commentEmail({
+            actorName: reply.author.name,
+            boardTitle: access.board.title,
+            body: input.body,
+            url,
+            kind: 'reply',
+          }),
+          link: url,
+        },
       });
     }
     await this.notifications.notify(notify);
@@ -300,30 +385,53 @@ export class CommentsService {
 
   private async findReply(replyId: string) {
     const reply = isUuid(replyId)
-      ? await this.prisma.commentReply.findUnique({ where: { id: replyId }, include: { comment: { select: { boardId: true } } } })
+      ? await this.prisma.commentReply.findUnique({
+          where: { id: replyId },
+          include: { comment: { select: { boardId: true } } },
+        })
       : null;
     if (!reply) throw Errors.notFound('Reply');
     return reply;
   }
 
-  async updateReply(principal: Principal, replyId: string, input: { body: string; mentions: string[] }): Promise<CommentReplyDto> {
+  async updateReply(
+    principal: Principal,
+    replyId: string,
+    input: { body: string; mentions: string[] },
+  ): Promise<CommentReplyDto> {
     const existing = await this.findReply(replyId);
     const access = await this.requireCommenter(principal, existing.comment.boardId);
-    if (existing.authorId !== access.userId) throw Errors.forbidden('Only the author can edit a reply');
+    if (existing.authorId !== access.userId)
+      throw Errors.forbidden('Only the author can edit a reply');
     const before = new Set(
-      (await this.prisma.commentMention.findMany({ where: { replyId }, select: { userId: true } })).map((m) => m.userId),
+      (
+        await this.prisma.commentMention.findMany({ where: { replyId }, select: { userId: true } })
+      ).map((m) => m.userId),
     );
-    const mentions = await this.resolveMentions(existing.comment.boardId, access.userId, input.body, input.mentions);
+    const mentions = await this.resolveMentions(
+      existing.comment.boardId,
+      access.userId,
+      input.body,
+      input.mentions,
+    );
     await this.prisma.$transaction([
       this.prisma.commentReply.update({ where: { id: replyId }, data: { body: input.body } }),
       this.prisma.commentMention.deleteMany({ where: { replyId } }),
-      this.prisma.commentMention.createMany({ data: mentions.map((userId) => ({ commentId: existing.commentId, replyId, userId })) }),
+      this.prisma.commentMention.createMany({
+        data: mentions.map((userId) => ({ commentId: existing.commentId, replyId, userId })),
+      }),
     ]);
     const reply = await this.prisma.commentReply.findUniqueOrThrow({
       where: { id: replyId },
       include: { author: { select: publicUserSelect }, mentions: { select: { userId: true } } },
     });
-    await this.notifyMentions(access, reply.author, existing.commentId, input.body, mentions.filter((id) => !before.has(id)));
+    await this.notifyMentions(
+      access,
+      reply.author,
+      existing.commentId,
+      input.body,
+      mentions.filter((id) => !before.has(id)),
+    );
     this.changed(existing.comment.boardId, existing.commentId);
     return toReplyDto(reply);
   }

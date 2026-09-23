@@ -12,8 +12,7 @@ import { OAuthButtons } from '../OAuthButtons';
 import { authRedirect, sanitizeNext } from '../next-param';
 
 type FormError =
-  | { kind: 'message'; title: string; description?: string }
-  | { kind: 'unverified'; email: string };
+  { kind: 'message'; title: string; description?: string } | { kind: 'unverified'; email: string };
 
 export function LoginPage() {
   useDocumentTitle('Sign in');
@@ -77,7 +76,10 @@ export function LoginPage() {
       footer={
         <>
           New to Inkflow?{' '}
-          <Link className="font-medium text-foreground underline-offset-4 hover:underline" to={authRedirect('/register', params.get('next'))}>
+          <Link
+            className="font-medium text-foreground underline-offset-4 hover:underline"
+            to={authRedirect('/register', params.get('next'))}
+          >
             Create an account
           </Link>
         </>
@@ -85,7 +87,12 @@ export function LoginPage() {
     >
       <div className="grid gap-5">
         <OAuthButtons next={next} />
-        <form className="grid gap-4" onSubmit={onSubmit} noValidate aria-describedby={formError ? 'login-error' : undefined}>
+        <form
+          className="grid gap-4"
+          onSubmit={onSubmit}
+          noValidate
+          aria-describedby={formError ? 'login-error' : undefined}
+        >
           {formError ? (
             <div id="login-error">
               {formError.kind === 'unverified' ? (
@@ -111,7 +118,9 @@ export function LoginPage() {
               ) : (
                 <FormAlert>
                   <p className="font-medium">{formError.title}</p>
-                  {formError.description ? <p className="mt-0.5 opacity-90">{formError.description}</p> : null}
+                  {formError.description ? (
+                    <p className="mt-0.5 opacity-90">{formError.description}</p>
+                  ) : null}
                 </FormAlert>
               )}
             </div>
@@ -149,7 +158,12 @@ export function LoginPage() {
               data-testid="login-password"
             />
           </FormField>
-          <Button type="submit" className="mt-1 w-full" disabled={submitting} data-testid="login-submit">
+          <Button
+            type="submit"
+            className="mt-1 w-full"
+            disabled={submitting}
+            data-testid="login-submit"
+          >
             {submitting ? <Spinner className="text-current" label={null} /> : null}
             {submitting ? 'Signing in…' : 'Sign in'}
           </Button>

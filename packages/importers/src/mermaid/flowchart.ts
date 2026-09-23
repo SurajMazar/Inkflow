@@ -1,6 +1,25 @@
-import { getFontString, measureLineWidth, type Arrowhead, type NodeElement, type SceneElement } from '@inkflow/elements';
-import { autoLayout, createNode, DiagramBuilder, type LayoutDirection } from '@inkflow/diagram-engine';
-import { cleanLabel, IssueLog, layoutEdge, MAX_MERMAID_EDGES, MAX_MERMAID_NODES, parseStyleList, type MermaidResult } from './common';
+import {
+  getFontString,
+  measureLineWidth,
+  type Arrowhead,
+  type NodeElement,
+  type SceneElement,
+} from '@inkflow/elements';
+import {
+  autoLayout,
+  createNode,
+  DiagramBuilder,
+  type LayoutDirection,
+} from '@inkflow/diagram-engine';
+import {
+  cleanLabel,
+  IssueLog,
+  layoutEdge,
+  MAX_MERMAID_EDGES,
+  MAX_MERMAID_NODES,
+  parseStyleList,
+  type MermaidResult,
+} from './common';
 
 interface FNode {
   id: string;
@@ -34,7 +53,13 @@ interface FGroup {
 type Style = ReturnType<typeof parseStyleList>;
 
 /** Node bracket syntaxes, longest openers first. */
-const SHAPES: { open: string; close: string; shape: string; flipX?: boolean; strokeWidth?: number }[] = [
+const SHAPES: {
+  open: string;
+  close: string;
+  shape: string;
+  flipX?: boolean;
+  strokeWidth?: number;
+}[] = [
   { open: '(((', close: ')))', shape: 'circle', strokeWidth: 4 },
   { open: '([', close: '])', shape: 'terminator' },
   { open: '[[', close: ']]', shape: 'predefined-process' },
@@ -52,7 +77,8 @@ const SHAPES: { open: string; close: string; shape: string; flipX?: boolean; str
 ];
 
 const ID_RE = /[\p{L}\p{N}_]+(?:[.-][\p{L}\p{N}_]+)*/uy;
-const LINK_RE = /(<)?(-\.+->|-\.+-|={2,}>|={3,}|-{2,}>|-{2,}o(?![\p{L}\p{N}_])|-{2,}x(?![\p{L}\p{N}_])|-{3,}|~{3,})/uy;
+const LINK_RE =
+  /(<)?(-\.+->|-\.+-|={2,}>|={3,}|-{2,}>|-{2,}o(?![\p{L}\p{N}_])|-{2,}x(?![\p{L}\p{N}_])|-{3,}|~{3,})/uy;
 const INLINE_RE = /(<)?(--|==|-\.)(?=\s)/y;
 const INLINE_CLOSERS: Record<string, RegExp> = {
   '--': /\s(-{2,}>|-{3,}|-{2,}o|-{2,}x)/,
@@ -162,7 +188,8 @@ interface Link {
 
 function linkFromToken(bidirectional: boolean, token: string, label: string): Link {
   const last = token[token.length - 1]!;
-  const end: Arrowhead = last === '>' ? 'triangle' : last === 'o' ? 'circle-outline' : last === 'x' ? 'bar' : 'none';
+  const end: Arrowhead =
+    last === '>' ? 'triangle' : last === 'o' ? 'circle-outline' : last === 'x' ? 'bar' : 'none';
   return {
     start: bidirectional ? 'triangle' : 'none',
     end,
@@ -204,7 +231,11 @@ function directionOf(token: string | undefined): LayoutDirection | null {
 
 const FONT = getFontString({ fontFamily: 'sans', fontSize: 16 });
 
-function sizeFor(shape: string, label: string, base: NodeElement): { width: number; height: number } {
+function sizeFor(
+  shape: string,
+  label: string,
+  base: NodeElement,
+): { width: number; height: number } {
   const lines = label.split('\n');
   const tw = Math.max(0, ...lines.map((l) => measureLineWidth(l, FONT)));
   const th = lines.length * 20;
@@ -219,7 +250,13 @@ function sizeFor(shape: string, label: string, base: NodeElement): { width: numb
     width = d;
     height = d;
   }
-  if (shape === 'parallelogram' || shape === 'trapezoid' || shape === 'manual-operation' || shape === 'flag') width += 30;
+  if (
+    shape === 'parallelogram' ||
+    shape === 'trapezoid' ||
+    shape === 'manual-operation' ||
+    shape === 'flag'
+  )
+    width += 30;
   return { width: Math.ceil(width), height: Math.ceil(height) };
 }
 
@@ -243,7 +280,15 @@ export function importFlowchart(lines: string[]): MermaidResult {
         issues.add(`Too many nodes; only the first ${MAX_MERMAID_NODES} were imported`);
         return null;
       }
-      n = { id: ref.id, label: ref.id, shape: 'process', flipX: false, group: stack[stack.length - 1] ?? null, classes: [], explicit: false };
+      n = {
+        id: ref.id,
+        label: ref.id,
+        shape: 'process',
+        flipX: false,
+        group: stack[stack.length - 1] ?? null,
+        classes: [],
+        explicit: false,
+      };
       nodes.set(ref.id, n);
     }
     if (ref.shape) {
@@ -383,14 +428,20 @@ export function importFlowchart(lines: string[]): MermaidResult {
     }
     return [null, ...out];
   };
-  const layoutGroup = (gid: string | null, dir: LayoutDirection): { positions: Map<string, { x: number; y: number }>; width: number; height: number } => {
+  const layoutGroup = (
+    gid: string | null,
+    dir: LayoutDirection,
+  ): { positions: Map<string, { x: number; y: number }>; width: number; height: number } => {
     const members: NodeElement[] = [];
     const proxies = new Map<string, { el: NodeElement; inner: ReturnType<typeof layoutGroup> }>();
     for (const n of nodes.values()) if (n.group === gid) members.push(elements.get(n.id)!);
     for (const g of groups.values()) {
       if (g.parent !== gid) continue;
       const inner = layoutGroup(g.id, g.direction ?? dir);
-      const proxy = createNode('rectangle', { width: inner.width + PAD * 2, height: inner.height + PAD * 2 + TITLE });
+      const proxy = createNode('rectangle', {
+        width: inner.width + PAD * 2,
+        height: inner.height + PAD * 2 + TITLE,
+      });
       proxies.set(g.id, { el: proxy, inner });
       members.push(proxy);
     }
@@ -406,7 +457,11 @@ export function importFlowchart(lines: string[]): MermaidResult {
       const b = repOf(e.to);
       return a && b && a !== b ? [layoutEdge(a, b)] : [];
     });
-    const pos = autoLayout(members, layoutEdges, 'hierarchical', { direction: dir, nodeSpacing: 50, rankSpacing: 60 });
+    const pos = autoLayout(members, layoutEdges, 'hierarchical', {
+      direction: dir,
+      nodeSpacing: 50,
+      rankSpacing: 60,
+    });
     let minX = Infinity;
     let minY = Infinity;
     let maxX = -Infinity;
@@ -426,9 +481,14 @@ export function importFlowchart(lines: string[]): MermaidResult {
     for (const { el, inner } of proxies.values()) {
       const p = positions.get(el.id)!;
       positions.delete(el.id);
-      for (const [id, q] of inner.positions) positions.set(id, { x: p.x + PAD + q.x, y: p.y + TITLE + PAD + q.y });
+      for (const [id, q] of inner.positions)
+        positions.set(id, { x: p.x + PAD + q.x, y: p.y + TITLE + PAD + q.y });
     }
-    return { positions, width: members.length ? maxX - minX : 0, height: members.length ? maxY - minY : 0 };
+    return {
+      positions,
+      width: members.length ? maxX - minX : 0,
+      height: members.length ? maxY - minY : 0,
+    };
   };
   const layout = layoutGroup(null, direction);
 
@@ -454,8 +514,13 @@ export function importFlowchart(lines: string[]): MermaidResult {
     });
   }
   // Frame rectangles: direct nodes plus child frames (with their title strip), padded.
-  const rects = new Map<string, { minX: number; minY: number; maxX: number; maxY: number } | null>();
-  const frameRect = (gid: string): { minX: number; minY: number; maxX: number; maxY: number } | null => {
+  const rects = new Map<
+    string,
+    { minX: number; minY: number; maxX: number; maxY: number } | null
+  >();
+  const frameRect = (
+    gid: string,
+  ): { minX: number; minY: number; maxX: number; maxY: number } | null => {
     if (rects.has(gid)) return rects.get(gid)!;
     let minX = Infinity;
     let minY = Infinity;
@@ -477,7 +542,10 @@ export function importFlowchart(lines: string[]): MermaidResult {
       const c = frameRect(child.id);
       if (c) grow(c.minX, c.minY - TITLE, c.maxX, c.maxY);
     }
-    const out = minX <= maxX ? { minX: minX - PAD, minY: minY - PAD, maxX: maxX + PAD, maxY: maxY + PAD } : null;
+    const out =
+      minX <= maxX
+        ? { minX: minX - PAD, minY: minY - PAD, maxX: maxX + PAD, maxY: maxY + PAD }
+        : null;
     rects.set(gid, out);
     return out;
   };

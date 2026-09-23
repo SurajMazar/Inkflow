@@ -36,7 +36,13 @@ function sketchLine(x1: number, y1: number, x2: number, y2: number, rand: () => 
  * Deterministic, low-noise doodle used when a board has no thumbnail yet. The same board id always
  * produces the same drawing.
  */
-export const BoardPlaceholder = React.memo(function BoardPlaceholder({ seed, className }: { seed: string; className?: string }) {
+export const BoardPlaceholder = React.memo(function BoardPlaceholder({
+  seed,
+  className,
+}: {
+  seed: string;
+  className?: string;
+}) {
   const shapes = React.useMemo(() => {
     const rand = seededRandom(hashString(seed));
     const variant = Math.floor(rand() * 3);
@@ -68,7 +74,9 @@ export const BoardPlaceholder = React.memo(function BoardPlaceholder({ seed, cla
         const angle = (i / branches) * Math.PI * 2 + rand() * 0.6;
         const ex = cx + Math.cos(angle) * 52;
         const ey = cy + Math.sin(angle) * 30;
-        paths.push({ d: sketchLine(cx + Math.cos(angle) * 20, cy + Math.sin(angle) * 13, ex, ey, rand) });
+        paths.push({
+          d: sketchLine(cx + Math.cos(angle) * 20, cy + Math.sin(angle) * 13, ex, ey, rand),
+        });
         paths.push({ d: sketchRect(ex - 9, ey - 5, 18, 10, rand) });
       }
     }
@@ -76,7 +84,12 @@ export const BoardPlaceholder = React.memo(function BoardPlaceholder({ seed, cla
   }, [seed]);
 
   return (
-    <svg viewBox="0 0 160 100" className={cn('size-full', className)} aria-hidden preserveAspectRatio="xMidYMid meet">
+    <svg
+      viewBox="0 0 160 100"
+      className={cn('size-full', className)}
+      aria-hidden
+      preserveAspectRatio="xMidYMid meet"
+    >
       {shapes.map((shape, i) => (
         <path
           key={i}

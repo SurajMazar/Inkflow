@@ -1,6 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Prisma, type File as FileRow } from '@inkflow/database';
-import { ALLOWED_IMAGE_MIME_TYPES, isUuid, type AllowedImageMimeType, type FileDto } from '@inkflow/shared';
+import {
+  ALLOWED_IMAGE_MIME_TYPES,
+  isUuid,
+  type AllowedImageMimeType,
+  type FileDto,
+} from '@inkflow/shared';
 import { AccessService } from '../access/access.service';
 import { sha256Hex } from '../common/crypto';
 import { Errors } from '../common/errors';
@@ -46,7 +51,10 @@ export function imageError(err: unknown): never {
 export function sanitizeFileName(name: string | undefined | null): string {
   const base = (name ?? '').split(/[\\/]/).pop() ?? '';
   // eslint-disable-next-line no-control-regex
-  const cleaned = base.replace(/[\u0000-\u001f\u007f"<>|:*?]/g, '').trim().slice(0, 200);
+  const cleaned = base
+    .replace(/[\u0000-\u001f\u007f"<>|:*?]/g, '')
+    .trim()
+    .slice(0, 200);
   return cleaned || 'image';
 }
 
@@ -63,8 +71,15 @@ export class FilesService {
 
   async upload(principal: Principal, input: UploadInput): Promise<FileDto> {
     if (!isUuid(input.boardId)) throw Errors.notFound('Board');
-    if (input.fileId !== undefined && input.fileId !== null && input.fileId !== '' && !isUuid(input.fileId)) {
-      throw Errors.validation('fileId must be a UUID', [{ path: ['fileId'], message: 'Invalid UUID', code: 'invalid_format' }]);
+    if (
+      input.fileId !== undefined &&
+      input.fileId !== null &&
+      input.fileId !== '' &&
+      !isUuid(input.fileId)
+    ) {
+      throw Errors.validation('fileId must be a UUID', [
+        { path: ['fileId'], message: 'Invalid UUID', code: 'invalid_format' },
+      ]);
     }
     const requestedId = input.fileId ? input.fileId.toLowerCase() : null;
     await this.access.requireBoard(input.boardId, principal, 'EDITOR');
@@ -105,7 +120,11 @@ export class FilesService {
       });
     } catch (err) {
       // Concurrent retry of the same client-generated id.
-      if (requestedId && err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
+      if (
+        requestedId &&
+        err instanceof Prisma.PrismaClientKnownRequestError &&
+        err.code === 'P2002'
+      ) {
         const existing = await this.prisma.file.findUnique({ where: { id: requestedId } });
         if (existing) return this.idempotentResult(existing, input.boardId, sha256);
       }
@@ -124,7 +143,9 @@ export class FilesService {
   }
 
   private async findAccessible(principal: Principal, fileId: string): Promise<FileRow> {
-    const file = isUuid(fileId) ? await this.prisma.file.findUnique({ where: { id: fileId } }) : null;
+    const file = isUuid(fileId)
+      ? await this.prisma.file.findUnique({ where: { id: fileId } })
+      : null;
     if (!file) throw Errors.notFound('File');
     const access = await this.access.getBoardAccess(file.boardId, principal);
     if (!access) throw Errors.notFound('File');
@@ -135,7 +156,10 @@ export class FilesService {
     return toFileDto(await this.findAccessible(principal, fileId));
   }
 
-  async content(principal: Principal, fileId: string): Promise<{ file: FileRow; object: StoredObject }> {
+  async content(
+    principal: Principal,
+    fileId: string,
+  ): Promise<{ file: FileRow; object: StoredObject }> {
     const file = await this.findAccessible(principal, fileId);
     const object = await this.storage.get(file.storageKey);
     if (!object) {
@@ -149,7 +173,13 @@ export class FilesService {
    * Copies file records of `fromBoardId` to `toBoardId` (objects are content-addressed and shared).
    * Returns old id → new id.
    */
-  async cloneFiles(db: Db, fromBoardId: string, toBoardId: string, fileIds: string[], userId: string | null): Promise<Map<string, string>> {
+  async cloneFiles(
+    db: Db,
+    fromBoardId: string,
+    toBoardId: string,
+    fileIds: string[],
+    userId: string | null,
+  ): Promise<Map<string, string>> {
     const map = new Map<string, string>();
     const ids = [...new Set(fileIds.filter((id) => isUuid(id)).map((id) => id.toLowerCase()))];
     if (ids.length === 0) return map;

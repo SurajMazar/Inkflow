@@ -39,7 +39,10 @@ export const boundsToRect = (b: Bounds): Rect => ({
 
 export const boundsWidth = (b: Bounds) => b.maxX - b.minX;
 export const boundsHeight = (b: Bounds) => b.maxY - b.minY;
-export const boundsCenter = (b: Bounds): Point => ({ x: (b.minX + b.maxX) / 2, y: (b.minY + b.maxY) / 2 });
+export const boundsCenter = (b: Bounds): Point => ({
+  x: (b.minX + b.maxX) / 2,
+  y: (b.minY + b.maxY) / 2,
+});
 export const rectCenter = (r: Rect): Point => ({ x: r.x + r.width / 2, y: r.y + r.height / 2 });
 
 export function boundsFromPoints(points: readonly Point[]): Bounds {
@@ -71,7 +74,12 @@ export function unionBounds(...list: Bounds[]): Bounds {
 }
 
 export function expandBounds(b: Bounds, amount: number): Bounds {
-  return { minX: b.minX - amount, minY: b.minY - amount, maxX: b.maxX + amount, maxY: b.maxY + amount };
+  return {
+    minX: b.minX - amount,
+    minY: b.minY - amount,
+    maxX: b.maxX + amount,
+    maxY: b.maxY + amount,
+  };
 }
 
 export function boundsIntersect(a: Bounds, b: Bounds): boolean {
@@ -80,12 +88,20 @@ export function boundsIntersect(a: Bounds, b: Bounds): boolean {
 
 /** True when `inner` lies completely inside `outer`. */
 export function boundsContain(outer: Bounds, inner: Bounds): boolean {
-  return inner.minX >= outer.minX && inner.maxX <= outer.maxX && inner.minY >= outer.minY && inner.maxY <= outer.maxY;
+  return (
+    inner.minX >= outer.minX &&
+    inner.maxX <= outer.maxX &&
+    inner.minY >= outer.minY &&
+    inner.maxY <= outer.maxY
+  );
 }
 
 export function pointInBounds(p: Point, b: Bounds, tolerance = 0): boolean {
   return (
-    p.x >= b.minX - tolerance && p.x <= b.maxX + tolerance && p.y >= b.minY - tolerance && p.y <= b.maxY + tolerance
+    p.x >= b.minX - tolerance &&
+    p.x <= b.maxX + tolerance &&
+    p.y >= b.minY - tolerance &&
+    p.y <= b.maxY + tolerance
   );
 }
 

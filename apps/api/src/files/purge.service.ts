@@ -22,12 +22,21 @@ export class PurgeService {
     for (let i = 0; i < ids.length; i += 200) {
       const chunk = ids.slice(i, i + 200);
       const [files, boards] = await Promise.all([
-        this.prisma.file.findMany({ where: { boardId: { in: chunk } }, select: { storageKey: true }, distinct: ['storageKey'] }),
-        this.prisma.board.findMany({ where: { id: { in: chunk } }, select: { id: true, thumbnailKey: true } }),
+        this.prisma.file.findMany({
+          where: { boardId: { in: chunk } },
+          select: { storageKey: true },
+          distinct: ['storageKey'],
+        }),
+        this.prisma.board.findMany({
+          where: { id: { in: chunk } },
+          select: { id: true, thumbnailKey: true },
+        }),
       ]);
       const res = await this.prisma.board.deleteMany({ where: { id: { in: chunk } } });
       deleted += res.count;
-      await Promise.all(boards.map((b) => this.realtime.emitEvent(b.id, { kind: 'board-deleted' })));
+      await Promise.all(
+        boards.map((b) => this.realtime.emitEvent(b.id, { kind: 'board-deleted' })),
+      );
       await this.deleteOrphanedObjects(files.map((f) => f.storageKey));
       const thumbnails = boards.map((b) => b.thumbnailKey).filter((k): k is string => !!k);
       if (thumbnails.length > 0) await this.storage.deleteMany(thumbnails);
@@ -53,7 +62,10 @@ export class PurgeService {
   }
 
   async purgeWorkspace(workspaceId: string): Promise<void> {
-    const boards = await this.prisma.board.findMany({ where: { workspaceId }, select: { id: true } });
+    const boards = await this.prisma.board.findMany({
+      where: { workspaceId },
+      select: { id: true },
+    });
     await this.purgeBoards(boards.map((b) => b.id));
     await this.prisma.workspace.deleteMany({ where: { id: workspaceId } });
   }

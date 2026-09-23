@@ -6,12 +6,32 @@ import { importExcalidraw } from '../src/excalidraw';
 const be32 = (n: number) => [(n >>> 24) & 0xff, (n >>> 16) & 0xff, (n >>> 8) & 0xff, n & 0xff];
 const ascii = (s: string) => [...s].map((c) => c.charCodeAt(0));
 const PNG_BYTES = new Uint8Array([
-  0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, ...be32(13), ...ascii('IHDR'), ...be32(320), ...be32(200), 8, 6, 0, 0, 0,
+  0x89,
+  0x50,
+  0x4e,
+  0x47,
+  0x0d,
+  0x0a,
+  0x1a,
+  0x0a,
+  ...be32(13),
+  ...ascii('IHDR'),
+  ...be32(320),
+  ...be32(200),
+  8,
+  6,
+  0,
+  0,
+  0,
   ...be32(0),
 ]);
 const PNG_DATA_URL = `data:image/png;base64,${Buffer.from(PNG_BYTES).toString('base64')}`;
 
-function base(id: string, type: string, extra: Record<string, unknown> = {}): Record<string, unknown> {
+function base(
+  id: string,
+  type: string,
+  extra: Record<string, unknown> = {},
+): Record<string, unknown> {
   return {
     id,
     type,
@@ -61,7 +81,14 @@ const sample = {
   version: 2,
   source: 'https://excalidraw.com',
   elements: [
-    base('frame1', 'frame', { x: -100, y: -100, width: 1200, height: 900, name: 'Overview', roughness: 0 }),
+    base('frame1', 'frame', {
+      x: -100,
+      y: -100,
+      width: 1200,
+      height: 900,
+      name: 'Overview',
+      roughness: 0,
+    }),
     base('rect1', 'rectangle', {
       x: 0,
       y: 0,
@@ -88,8 +115,23 @@ const sample = {
       fontFamily: 2,
       fontSize: 24,
     }),
-    base('ell1', 'ellipse', { x: 400, y: 0, width: 120, height: 80, fillStyle: 'cross-hatch', strokeStyle: 'dashed' }),
-    base('dia1', 'diamond', { x: 600, y: 0, width: 90, height: 90, fillStyle: 'unknown-style', opacity: 60, groupIds: ['groupA'] }),
+    base('ell1', 'ellipse', {
+      x: 400,
+      y: 0,
+      width: 120,
+      height: 80,
+      fillStyle: 'cross-hatch',
+      strokeStyle: 'dashed',
+    }),
+    base('dia1', 'diamond', {
+      x: 600,
+      y: 0,
+      width: 90,
+      height: 90,
+      fillStyle: 'unknown-style',
+      opacity: 60,
+      groupIds: ['groupA'],
+    }),
     base('arrow1', 'arrow', {
       x: 200,
       y: 50,
@@ -150,16 +192,37 @@ const sample = {
     }),
     text('t1', 'Hand', { fontFamily: 1, x: 10, y: 500 }),
     text('t2', 'Sans', { fontFamily: 2, x: 10, y: 550 }),
-    text('t3', 'Code', { fontFamily: 3, x: 10, y: 600, textAlign: 'right', autoResize: false, text: 'Co\nde', originalText: 'Code' }),
+    text('t3', 'Code', {
+      fontFamily: 3,
+      x: 10,
+      y: 600,
+      textAlign: 'right',
+      autoResize: false,
+      text: 'Co\nde',
+      originalText: 'Code',
+    }),
     text('t4', 'Excalifont', { fontFamily: 5 }),
     text('t5', 'Unknown', { fontFamily: 42 }),
-    base('img1', 'image', { x: 700, y: 300, width: 160, height: 100, fileId: 'file1', status: 'saved', scale: [1, 1] }),
+    base('img1', 'image', {
+      x: 700,
+      y: 300,
+      width: 160,
+      height: 100,
+      fileId: 'file1',
+      status: 'saved',
+      scale: [1, 1],
+    }),
     base('deleted1', 'rectangle', { isDeleted: true }),
     text('orphanLabel', 'orphan', { containerId: 'deleted1' }),
   ],
   appState: { viewBackgroundColor: '#fafafa', gridSize: 20 },
   files: {
-    file1: { id: 'file1', mimeType: 'image/png', dataURL: PNG_DATA_URL, created: 1_690_000_000_000 },
+    file1: {
+      id: 'file1',
+      mimeType: 'image/png',
+      dataURL: PNG_DATA_URL,
+      created: 1_690_000_000_000,
+    },
   },
 };
 
@@ -199,7 +262,8 @@ describe('importExcalidraw', () => {
   it('preserves z-order with ascending fractional indices', () => {
     const sorted = [...elements].sort(compareOrder).map((e) => e.id);
     expect(sorted).toEqual(elements.map((e) => e.id));
-    for (let i = 1; i < elements.length; i++) expect(elements[i - 1]!.index < elements[i]!.index).toBe(true);
+    for (let i = 1; i < elements.length; i++)
+      expect(elements[i - 1]!.index < elements[i]!.index).toBe(true);
   });
 
   it('merges bound text into shape and arrow labels', () => {
@@ -214,7 +278,13 @@ describe('importExcalidraw', () => {
       verticalAlign: 'middle',
       color: '#e03131',
     });
-    expect(rect).toMatchObject({ backgroundColor: '#a5d8ff', roundness: 'round', frameId: 'frame1', groupIds: ['groupA'], seed: 1234 });
+    expect(rect).toMatchObject({
+      backgroundColor: '#a5d8ff',
+      roundness: 'round',
+      frameId: 'frame1',
+      groupIds: ['groupA'],
+      seed: 1234,
+    });
     expect(elements.some((e) => e.id === 'label1' || e.id === 'arrowLabel')).toBe(false);
 
     const arrow = byId(elements, 'arrow1');
@@ -246,15 +316,36 @@ describe('importExcalidraw', () => {
   });
 
   it('converts shapes and styles', () => {
-    expect(byId(elements, 'ell1')).toMatchObject({ type: 'ellipse', fillStyle: 'cross-hatch', strokeStyle: 'dashed', width: 120, height: 80 });
-    expect(byId(elements, 'dia1')).toMatchObject({ type: 'diamond', fillStyle: 'hachure', opacity: 60 });
-    expect(byId(elements, 'frame1')).toMatchObject({ type: 'frame', name: 'Overview', width: 1200 });
+    expect(byId(elements, 'ell1')).toMatchObject({
+      type: 'ellipse',
+      fillStyle: 'cross-hatch',
+      strokeStyle: 'dashed',
+      width: 120,
+      height: 80,
+    });
+    expect(byId(elements, 'dia1')).toMatchObject({
+      type: 'diamond',
+      fillStyle: 'hachure',
+      opacity: 60,
+    });
+    expect(byId(elements, 'frame1')).toMatchObject({
+      type: 'frame',
+      name: 'Overview',
+      width: 1200,
+    });
   });
 
   it('normalizes line and freedraw points', () => {
     const line = byId(elements, 'line1');
     if (line.type !== 'line') throw new Error('expected line');
-    expect(line).toMatchObject({ x: 0, y: 300, width: 60, height: 40, closed: false, pathStyle: 'sharp' });
+    expect(line).toMatchObject({
+      x: 0,
+      y: 300,
+      width: 60,
+      height: 40,
+      closed: false,
+      pathStyle: 'sharp',
+    });
     expect(line.points).toEqual([
       [10, 0],
       [0, 20],
@@ -291,7 +382,13 @@ describe('importExcalidraw', () => {
   it('converts images and the files map', () => {
     const img = byId(elements, 'img1');
     if (img.type !== 'image') throw new Error('expected image');
-    expect(img).toMatchObject({ fileId: 'file1', status: 'saved', naturalWidth: 320, naturalHeight: 200, lockAspectRatio: true });
+    expect(img).toMatchObject({
+      fileId: 'file1',
+      status: 'saved',
+      naturalWidth: 320,
+      naturalHeight: 200,
+      lockAspectRatio: true,
+    });
     expect(files.file1).toEqual({
       id: 'file1',
       mimeType: 'image/png',
@@ -305,7 +402,9 @@ describe('importExcalidraw', () => {
   });
 
   it('drops unsafe files, links and unsupported elements with issues', () => {
-    const svgPayload = Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script><rect width="1" height="1"/></svg>').toString('base64');
+    const svgPayload = Buffer.from(
+      '<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script><rect width="1" height="1"/></svg>',
+    ).toString('base64');
     const res = importExcalidraw({
       type: 'excalidraw',
       elements: [
@@ -321,7 +420,11 @@ describe('importExcalidraw', () => {
       files: {
         remote: { id: 'remote', mimeType: 'image/png', dataURL: 'https://evil.example/x.png' },
         fake: { id: 'fake', mimeType: 'image/png', dataURL: 'data:image/png;base64,aGVsbG8=' },
-        vector: { id: 'vector', mimeType: 'image/svg+xml', dataURL: `data:image/svg+xml;base64,${svgPayload}` },
+        vector: {
+          id: 'vector',
+          mimeType: 'image/svg+xml',
+          dataURL: `data:image/svg+xml;base64,${svgPayload}`,
+        },
       },
     });
     const els = res.document.elements;
@@ -334,7 +437,9 @@ describe('importExcalidraw', () => {
     expect(ids.size).toBe(7);
     expect(ids.has('<script>')).toBe(false);
     expect(Object.keys(res.document.files)).toEqual(['vector']);
-    const vector = Buffer.from(res.document.files.vector!.url.split(',')[1]!, 'base64').toString('utf8');
+    const vector = Buffer.from(res.document.files.vector!.url.split(',')[1]!, 'base64').toString(
+      'utf8',
+    );
     expect(vector).toContain('<rect');
     expect(vector).not.toContain('script');
     const messages = res.issues.map((i) => i.message).join('\n');
@@ -349,22 +454,46 @@ describe('importExcalidraw', () => {
     expect(() => importExcalidraw(null)).toThrow('Not an Excalidraw file');
     expect(() => importExcalidraw('{"type":"excalidraw"}')).toThrow('Not an Excalidraw file');
     expect(() => importExcalidraw([])).toThrow('Not an Excalidraw file');
-    expect(() => importExcalidraw({ type: 'inkflow', elements: [] })).toThrow('Not an Excalidraw file');
-    expect(() => importExcalidraw({ type: 'excalidraw', elements: {} })).toThrow('Not an Excalidraw file');
+    expect(() => importExcalidraw({ type: 'inkflow', elements: [] })).toThrow(
+      'Not an Excalidraw file',
+    );
+    expect(() => importExcalidraw({ type: 'excalidraw', elements: {} })).toThrow(
+      'Not an Excalidraw file',
+    );
   });
 
   it('tolerates garbage element properties', () => {
     const res = importExcalidraw({
       type: 'excalidraw',
       elements: [
-        base('g1', 'rectangle', { x: 'NaN', width: -40, strokeColor: '<b>', opacity: 400, strokeWidth: 9999, angle: Infinity }),
+        base('g1', 'rectangle', {
+          x: 'NaN',
+          width: -40,
+          strokeColor: '<b>',
+          opacity: 400,
+          strokeWidth: 9999,
+          angle: Infinity,
+        }),
         'not-an-object',
         base('g2', 'line', { points: 'nope' }),
-        base('g3', 'arrow', { points: [[0, 0], ['a', 1], [5, 5]] }),
+        base('g3', 'arrow', {
+          points: [
+            [0, 0],
+            ['a', 1],
+            [5, 5],
+          ],
+        }),
       ],
     });
     expect(res.document.elements.map((e) => e.id)).toEqual(['g1', 'g2', 'g3']);
-    expect(byId(res.document.elements, 'g1')).toMatchObject({ x: 0, width: 40, strokeColor: '#1e1e1e', opacity: 100, strokeWidth: 200, angle: 0 });
+    expect(byId(res.document.elements, 'g1')).toMatchObject({
+      x: 0,
+      width: 40,
+      strokeColor: '#1e1e1e',
+      opacity: 100,
+      strokeWidth: 200,
+      angle: 0,
+    });
     const g3 = byId(res.document.elements, 'g3');
     expect(g3.type === 'arrow' && g3.points.length).toBe(2);
   });

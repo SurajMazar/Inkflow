@@ -39,7 +39,10 @@ describe('TokensService', () => {
   it('signs and verifies HS256 access tokens', () => {
     const token = tokens.signAccessToken('user-1', 'session-1');
     expect(jwt.decode(token, { complete: true })?.header.alg).toBe('HS256');
-    expect(tokens.verifyAccessToken(token)).toEqual({ status: 'valid', claims: { sub: 'user-1', sid: 'session-1' } });
+    expect(tokens.verifyAccessToken(token)).toEqual({
+      status: 'valid',
+      claims: { sub: 'user-1', sid: 'session-1' },
+    });
   });
 
   it('rejects expired, foreign and tampered tokens', () => {
@@ -50,11 +53,23 @@ describe('TokensService', () => {
       expiresIn: -10,
     });
     expect(tokens.verifyAccessToken(expired).status).toBe('expired');
-    const foreign = jwt.sign({ sid: 's', typ: 'access' }, 'another-secret-another-secret-another', { subject: 'u', issuer: 'inkflow', audience: 'inkflow-api' });
+    const foreign = jwt.sign({ sid: 's', typ: 'access' }, 'another-secret-another-secret-another', {
+      subject: 'u',
+      issuer: 'inkflow',
+      audience: 'inkflow-api',
+    });
     expect(tokens.verifyAccessToken(foreign).status).toBe('invalid');
-    const none = jwt.sign({ sid: 's', typ: 'access', sub: 'u', iss: 'inkflow', aud: 'inkflow-api' }, '', { algorithm: 'none' });
+    const none = jwt.sign(
+      { sid: 's', typ: 'access', sub: 'u', iss: 'inkflow', aud: 'inkflow-api' },
+      '',
+      { algorithm: 'none' },
+    );
     expect(tokens.verifyAccessToken(none).status).toBe('invalid');
-    const wrongType = jwt.sign({ sid: 's', typ: 'refresh' }, env.JWT_SECRET, { subject: 'u', issuer: 'inkflow', audience: 'inkflow-api' });
+    const wrongType = jwt.sign({ sid: 's', typ: 'refresh' }, env.JWT_SECRET, {
+      subject: 'u',
+      issuer: 'inkflow',
+      audience: 'inkflow-api',
+    });
     expect(tokens.verifyAccessToken(wrongType).status).toBe('invalid');
   });
 

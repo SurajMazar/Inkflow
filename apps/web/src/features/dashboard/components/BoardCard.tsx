@@ -37,16 +37,27 @@ export function BoardCard({ board, workspaceId }: BoardItemProps) {
                 {board.title}
               </h3>
               <p className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
-                <UserAvatar name={board.owner.name} src={board.owner.avatarUrl} className="size-4 text-[8px]" />
+                <UserAvatar
+                  name={board.owner.name}
+                  src={board.owner.avatarUrl}
+                  className="size-4 text-[8px]"
+                />
                 <span className="truncate">
                   <span className="sr-only">Owned by {board.owner.name}. </span>
-                  Edited <time dateTime={board.updatedAt} title={formatDateTime(board.updatedAt)}>{formatRelativeTime(board.updatedAt)}</time>
+                  Edited{' '}
+                  <time dateTime={board.updatedAt} title={formatDateTime(board.updatedAt)}>
+                    {formatRelativeTime(board.updatedAt)}
+                  </time>
                 </span>
               </p>
             </div>
           </Link>
           {board.role !== 'OWNER' ? (
-            <Badge variant="secondary" className="pointer-events-none absolute top-2 left-2 bg-background/90 backdrop-blur" data-testid="board-role">
+            <Badge
+              variant="secondary"
+              className="pointer-events-none absolute top-2 left-2 bg-background/90 backdrop-blur"
+              data-testid="board-role"
+            >
               {roleLabel(board.role)}
             </Badge>
           ) : null}
@@ -55,11 +66,17 @@ export function BoardCard({ board, workspaceId }: BoardItemProps) {
               board={board}
               className={cn(
                 'absolute top-1.5 right-1.5 bg-background/80 backdrop-blur transition-opacity hover:bg-background',
-                board.isFavorite ? 'opacity-100' : 'opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 pointer-coarse:opacity-100',
+                board.isFavorite
+                  ? 'opacity-100'
+                  : 'opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 pointer-coarse:opacity-100',
               )}
             />
           </SimpleTooltip>
-          <BoardMenu board={board} workspaceId={workspaceId} className="absolute right-1.5 bottom-2" />
+          <BoardMenu
+            board={board}
+            workspaceId={workspaceId}
+            className="absolute right-1.5 bottom-2"
+          />
         </article>
       </ContextMenuTrigger>
       <BoardContextMenuContent board={board} workspaceId={workspaceId} />
@@ -93,7 +110,11 @@ export function BoardRow({ board, workspaceId }: BoardItemProps) {
             </p>
           </div>
           <div className="hidden min-w-0 items-center gap-2 text-[13px] text-muted-foreground sm:flex">
-            <UserAvatar name={board.owner.name} src={board.owner.avatarUrl} className="size-5 text-[9px]" />
+            <UserAvatar
+              name={board.owner.name}
+              src={board.owner.avatarUrl}
+              className="size-5 text-[9px]"
+            />
             <span className="truncate">{board.owner.name}</span>
           </div>
           <time
@@ -111,7 +132,10 @@ export function BoardRow({ board, workspaceId }: BoardItemProps) {
             ) : null}
             <FavoriteButton
               board={board}
-              className={cn(!board.isFavorite && 'opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 pointer-coarse:opacity-100')}
+              className={cn(
+                !board.isFavorite &&
+                  'opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 pointer-coarse:opacity-100',
+              )}
             />
             <BoardMenu board={board} workspaceId={workspaceId} />
           </div>

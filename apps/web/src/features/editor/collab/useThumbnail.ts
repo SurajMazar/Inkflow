@@ -19,7 +19,12 @@ function loadImage(file: FileMetadata): Promise<CanvasImageSource> {
 }
 
 /** Regenerates and uploads the dashboard thumbnail a few seconds after edits settle. */
-export function useThumbnail(editor: Editor, boardId: string, enabled: boolean, shareToken: string | null) {
+export function useThumbnail(
+  editor: Editor,
+  boardId: string,
+  enabled: boolean,
+  shareToken: string | null,
+) {
   React.useEffect(() => {
     if (!enabled) return;
     let timer: ReturnType<typeof setTimeout> | null = null;
@@ -37,8 +42,20 @@ export function useThumbnail(editor: Editor, boardId: string, enabled: boolean, 
         const h = Math.max(1, bounds.maxY - bounds.minY);
         const scale = Math.min(2, THUMBNAIL_WIDTH / w, THUMBNAIL_HEIGHT / h);
         const blob = await exportToPngBlob(
-          { elements, getElement: (id) => editor.getElement(id), files: editor.files, appState: editor.appState },
-          { background: true, darkMode: false, padding: 24, scale, loadImage, maxPixels: 4_000_000 },
+          {
+            elements,
+            getElement: (id) => editor.getElement(id),
+            files: editor.files,
+            appState: editor.appState,
+          },
+          {
+            background: true,
+            darkMode: false,
+            padding: 24,
+            scale,
+            loadImage,
+            maxPixels: 4_000_000,
+          },
         );
         await api.boards.uploadThumbnail(boardId, blob, { shareToken });
       } catch (error) {

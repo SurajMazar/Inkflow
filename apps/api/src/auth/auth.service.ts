@@ -40,12 +40,17 @@ export class AuthService {
     private readonly mail: MailService,
   ) {}
 
-  async register(input: RegisterRequest, meta: ClientMeta): Promise<{ result: AuthResult; requiresVerification: boolean }> {
+  async register(
+    input: RegisterRequest,
+    meta: ClientMeta,
+  ): Promise<{ result: AuthResult; requiresVerification: boolean }> {
     const email = input.email.trim().toLowerCase();
     const passwordHash = await hashPassword(input.password);
     let userId: string;
     try {
-      const user = await this.prisma.user.create({ data: { email, name: input.name.trim(), passwordHash } });
+      const user = await this.prisma.user.create({
+        data: { email, name: input.name.trim(), passwordHash },
+      });
       userId = user.id;
     } catch (err) {
       if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
@@ -67,7 +72,12 @@ export class AuthService {
       data: { usedAt: new Date() },
     });
     await this.prisma.emailVerification.create({
-      data: { userId, email, tokenHash: sha256Hex(token), expiresAt: new Date(Date.now() + VERIFICATION_TTL_MS) },
+      data: {
+        userId,
+        email,
+        tokenHash: sha256Hex(token),
+        expiresAt: new Date(Date.now() + VERIFICATION_TTL_MS),
+      },
     });
     const url = this.config.webLink(`/verify-email?token=${encodeURIComponent(token)}`);
     await this.mail.send({ ...verificationEmail({ name, url }), to: email, link: url });
@@ -75,9 +85,14 @@ export class AuthService {
 
   async verifyEmail(token: string, meta: ClientMeta): Promise<AuthResult> {
     const tokenHash = sha256Hex(token);
-    const record = await this.prisma.emailVerification.findUnique({ where: { tokenHash }, include: { user: true } });
-    if (!record || !safeEqual(record.tokenHash, tokenHash) || record.usedAt) throw Errors.tokenInvalid();
-    if (record.expiresAt <= new Date()) throw Errors.tokenExpired('This verification link has expired; request a new one');
+    const record = await this.prisma.emailVerification.findUnique({
+      where: { tokenHash },
+      include: { user: true },
+    });
+    if (!record || !safeEqual(record.tokenHash, tokenHash) || record.usedAt)
+      throw Errors.tokenInvalid();
+    if (record.expiresAt <= new Date())
+      throw Errors.tokenExpired('This verification link has expired; request a new one');
     if (record.email !== record.user.email) throw Errors.tokenInvalid();
     const claimed = await this.prisma.emailVerification.updateMany({
       where: { id: record.id, usedAt: null },
@@ -85,7 +100,10 @@ export class AuthService {
     });
     if (claimed.count === 0) throw Errors.tokenInvalid();
     if (!record.user.emailVerifiedAt) {
-      await this.prisma.user.update({ where: { id: record.userId }, data: { emailVerifiedAt: new Date() } });
+      await this.prisma.user.update({
+        where: { id: record.userId },
+        data: { emailVerifiedAt: new Date() },
+      });
       await this.onboarding.claimPendingInvitations(record.userId, record.user.email);
     }
     const session = await this.sessions.create(record.userId, meta);
@@ -106,7 +124,8 @@ export class AuthService {
       ? await verifyPassword(user.passwordHash, input.password)
       : await verifyDummyPassword(input.password);
     if (!user || !ok) throw Errors.invalidCredentials();
-    if (this.config.env.REQUIRE_EMAIL_VERIFICATION && !user.emailVerifiedAt) throw Errors.emailNotVerified();
+    if (this.config.env.REQUIRE_EMAIL_VERIFICATION && !user.emailVerifiedAt)
+      throw Errors.emailNotVerified();
     const session = await this.sessions.create(user.id, meta);
     return { user: await this.users.getDto(user.id), session };
   }
@@ -116,25 +135,47 @@ export class AuthService {
     const user = await this.prisma.user.findUnique({ where: { email } });
     if (!user) return;
     const token = randomToken(32);
-    await this.prisma.passwordReset.updateMany({ where: { userId: user.id, usedAt: null }, data: { usedAt: new Date() } });
+    await this.prisma.passwordReset.updateMany({
+      where: { userId: user.id, usedAt: null },
+      data: { usedAt: new Date() },
+    });
     await this.prisma.passwordReset.create({
-      data: { userId: user.id, tokenHash: sha256Hex(token), expiresAt: new Date(Date.now() + RESET_TTL_MS) },
+      data: {
+        userId: user.id,
+        tokenHash: sha256Hex(token),
+        expiresAt: new Date(Date.now() + RESET_TTL_MS),
+      },
     });
     const url = this.config.webLink(`/reset-password?token=${encodeURIComponent(token)}`);
-    await this.mail.send({ ...passwordResetEmail({ name: user.name, url }), to: user.email, link: url });
+    await this.mail.send({
+      ...passwordResetEmail({ name: user.name, url }),
+      to: user.email,
+      link: url,
+    });
   }
 
   async resetPassword(input: ResetPasswordRequest): Promise<void> {
     const tokenHash = sha256Hex(input.token);
-    const record = await this.prisma.passwordReset.findUnique({ where: { tokenHash }, include: { user: true } });
-    if (!record || !safeEqual(record.tokenHash, tokenHash) || record.usedAt) throw Errors.tokenInvalid();
-    if (record.expiresAt <= new Date()) throw Errors.tokenExpired('This password reset link has expired');
+    const record = await this.prisma.passwordReset.findUnique({
+      where: { tokenHash },
+      include: { user: true },
+    });
+    if (!record || !safeEqual(record.tokenHash, tokenHash) || record.usedAt)
+      throw Errors.tokenInvalid();
+    if (record.expiresAt <= new Date())
+      throw Errors.tokenExpired('This password reset link has expired');
     const passwordHash = await hashPassword(input.password);
     const wasVerified = record.user.emailVerifiedAt !== null;
     const claimed = await this.prisma.$transaction(async (tx) => {
-      const res = await tx.passwordReset.updateMany({ where: { id: record.id, usedAt: null }, data: { usedAt: new Date() } });
+      const res = await tx.passwordReset.updateMany({
+        where: { id: record.id, usedAt: null },
+        data: { usedAt: new Date() },
+      });
       if (res.count === 0) return false;
-      await tx.passwordReset.updateMany({ where: { userId: record.userId, usedAt: null }, data: { usedAt: new Date() } });
+      await tx.passwordReset.updateMany({
+        where: { userId: record.userId, usedAt: null },
+        data: { usedAt: new Date() },
+      });
       await tx.user.update({
         where: { id: record.userId },
         // Receiving the reset email proves ownership of the address.
@@ -144,10 +185,15 @@ export class AuthService {
     });
     if (!claimed) throw Errors.tokenInvalid();
     await this.sessions.revokeAllForUser(record.userId, 'password-reset');
-    if (!wasVerified) await this.onboarding.claimPendingInvitations(record.userId, record.user.email);
+    if (!wasVerified)
+      await this.onboarding.claimPendingInvitations(record.userId, record.user.email);
   }
 
-  async changePassword(userId: string, sessionId: string, input: ChangePasswordRequest): Promise<void> {
+  async changePassword(
+    userId: string,
+    sessionId: string,
+    input: ChangePasswordRequest,
+  ): Promise<void> {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw Errors.unauthorized();
     if (!user.passwordHash) {
@@ -158,7 +204,10 @@ export class AuthService {
         { path: ['currentPassword'], message: 'Current password is incorrect', code: 'custom' },
       ]);
     }
-    await this.prisma.user.update({ where: { id: userId }, data: { passwordHash: await hashPassword(input.newPassword) } });
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { passwordHash: await hashPassword(input.newPassword) },
+    });
     await this.sessions.revokeAllForUser(userId, 'password-changed', sessionId);
     this.logger.log(`Password changed for user ${userId}`);
   }

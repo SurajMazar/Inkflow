@@ -17,7 +17,11 @@ export class ImageTool extends BaseTool {
     if (this.picking) return;
     const host = this.editor.host;
     if (!host.pickImages) {
-      this.editor.requestUi({ type: 'toast', level: 'error', message: 'Image upload is not available here.' });
+      this.editor.requestUi({
+        type: 'toast',
+        level: 'error',
+        message: 'Image upload is not available here.',
+      });
       this.editor.setTool('selection');
       return;
     }
@@ -47,7 +51,10 @@ export class CommentTool extends BaseTool {
   }
 
   override onPointerDown(e: CanvasPointerEvent): void {
-    const hit = hitTestTop(this.editor.scene, e.world, { tolerance: hitTolerancePx(e.pointerType) / this.zoom, includeLocked: true });
+    const hit = hitTestTop(this.editor.scene, e.world, {
+      tolerance: hitTolerancePx(e.pointerType) / this.zoom,
+      includeLocked: true,
+    });
     this.editor.requestUi({ type: 'comment', world: e.world, elementId: hit?.id ?? null });
   }
 }

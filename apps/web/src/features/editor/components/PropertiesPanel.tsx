@@ -1,10 +1,26 @@
 import type { ElementType } from '@inkflow/elements';
-import { ScrollArea, Separator, Sheet, SheetContent, SheetHeader, SheetTitle, cn } from '@inkflow/ui';
+import {
+  ScrollArea,
+  Separator,
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  cn,
+} from '@inkflow/ui';
 import * as React from 'react';
 import { useBoardSession, useEditorState, useSelectedElements } from '../hooks/editor-context';
 import { useEditorUi } from '../hooks/ui-store';
-import { ArrangeSection, ArrowSection, ElementSpecificSection, OpacitySection, StyleSection, TextSection } from './properties/sections';
+import {
+  ArrangeSection,
+  ArrowSection,
+  ElementSpecificSection,
+  OpacitySection,
+  StyleSection,
+  TextSection,
+} from './properties/sections';
 import { TOOL_ELEMENT, capabilitiesFor } from './properties/values';
+import { ScrollFade } from './ScrollFade';
 
 function PropertiesBody() {
   const { editor } = useBoardSession();
@@ -19,7 +35,7 @@ function PropertiesBody() {
   const caps = capabilitiesFor(types, elements);
   const props = { editor, elements, style, caps };
   return (
-    <div className="flex flex-col gap-3.5 p-3" data-testid="properties-panel">
+    <div className="flex flex-col gap-3 px-3.5 pb-3.5 pt-3" data-testid="properties-panel">
       <StyleSection {...props} />
       {caps.arrowheads && <ArrowSection {...props} />}
       {caps.text && <TextSection {...props} />}
@@ -27,7 +43,7 @@ function PropertiesBody() {
       {caps.opacity && <OpacitySection {...props} />}
       {elements.length > 0 && (
         <>
-          <Separator />
+          <Separator className="-mx-3.5 w-auto" />
           <ArrangeSection {...props} />
         </>
       )}
@@ -68,14 +84,14 @@ export function PropertiesPanel({ compact }: { compact: boolean }) {
       aria-label="Properties"
       data-inkflow-ui
       className={cn(
-        'pointer-events-auto absolute top-16 z-20 w-60 overflow-hidden rounded-xl border bg-popover/95 shadow-sm backdrop-blur',
+        'pointer-events-auto absolute top-[4.25rem] z-20 flex w-[15.5rem] flex-col overflow-hidden rounded-xl border bg-popover/95 shadow-[0_1px_2px_rgb(0_0_0/0.04),0_4px_16px_rgb(0_0_0/0.06)] backdrop-blur',
         panel ? 'right-[21rem]' : 'right-3',
       )}
-      style={{ maxHeight: 'calc(100dvh - 8.5rem)' }}
+      style={{ maxHeight: 'calc(100dvh - 9rem)' }}
     >
-      <ScrollArea className="h-full max-h-[calc(100dvh-8.5rem)]">
+      <ScrollFade>
         <PropertiesBody />
-      </ScrollArea>
+      </ScrollFade>
     </aside>
   );
 }

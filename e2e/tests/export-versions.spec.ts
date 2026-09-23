@@ -18,7 +18,12 @@ test('exports SVG and JSON, saves and restores versions, trash and restore', asy
   const workspaceId = await createWorkspace(page, 'Exports');
   const boardId = await createBoard(page, 'Export me');
   const c = await canvasCenter(page);
-  await drawWithTool(page, 'rectangle', { x: c.x - 100, y: c.y - 60 }, { x: c.x + 100, y: c.y + 60 });
+  await drawWithTool(
+    page,
+    'rectangle',
+    { x: c.x - 100, y: c.y - 60 },
+    { x: c.x + 100, y: c.y + 60 },
+  );
   await drawWithTool(page, 'arrow', { x: c.x + 150, y: c.y }, { x: c.x + 300, y: c.y });
   await waitSaved(page);
 
@@ -53,7 +58,10 @@ test('exports SVG and JSON, saves and restores versions, trash and restore', asy
   await waitSaved(page);
   await page.getByTestId('version-row').first().hover();
   await page.getByTestId('version-restore').first().click();
-  await page.getByRole('button', { name: /restore/i }).last().click();
+  await page
+    .getByRole('button', { name: /restore/i })
+    .last()
+    .click();
   await expect.poll(async () => (await sceneElements(page)).length, { timeout: 20_000 }).toBe(2);
 
   // Trash and restore from the dashboard.

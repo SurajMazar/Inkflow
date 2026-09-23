@@ -3,12 +3,26 @@ import { detectImportKind } from '../src/detect';
 
 describe('detectImportKind', () => {
   it('detects JSON formats by content', () => {
-    expect(detectImportKind('scene.json', 'application/json', '{\n  "type": "excalidraw",\n  "version": 2,')).toBe('excalidraw');
-    expect(detectImportKind('clip.txt', '', '{"type":"excalidraw/clipboard","elements":[]}')).toBe('excalidraw');
-    expect(detectImportKind('board.json', 'application/json', '{"type": "inkflow", "version": 2}')).toBe('inkflow');
-    expect(detectImportKind('board.json', '', '{"version":2,"elements":[],"appState":{}}')).toBe('inkflow');
+    expect(
+      detectImportKind(
+        'scene.json',
+        'application/json',
+        '{\n  "type": "excalidraw",\n  "version": 2,',
+      ),
+    ).toBe('excalidraw');
+    expect(detectImportKind('clip.txt', '', '{"type":"excalidraw/clipboard","elements":[]}')).toBe(
+      'excalidraw',
+    );
+    expect(
+      detectImportKind('board.json', 'application/json', '{"type": "inkflow", "version": 2}'),
+    ).toBe('inkflow');
+    expect(detectImportKind('board.json', '', '{"version":2,"elements":[],"appState":{}}')).toBe(
+      'inkflow',
+    );
     // Content wins over a misleading extension.
-    expect(detectImportKind('drawing.svg', 'image/svg+xml', '{"type":"excalidraw","elements":[]}')).toBe('excalidraw');
+    expect(
+      detectImportKind('drawing.svg', 'image/svg+xml', '{"type":"excalidraw","elements":[]}'),
+    ).toBe('excalidraw');
   });
 
   it('detects SVG markup after prolog, comments and doctype', () => {
@@ -28,11 +42,15 @@ describe('detectImportKind', () => {
     expect(detectImportKind('a.txt', 'text/plain', 'flowchart LR\n  A --> B')).toBe('mermaid');
     expect(detectImportKind('a.txt', '', '%% comment\n\ngraph TD\nA-->B')).toBe('mermaid');
     expect(detectImportKind('a.txt', '', 'sequenceDiagram\n  Alice->>Bob: Hi')).toBe('mermaid');
-    expect(detectImportKind('a.txt', '', 'erDiagram\n CUSTOMER ||--o{ ORDER : places')).toBe('mermaid');
+    expect(detectImportKind('a.txt', '', 'erDiagram\n CUSTOMER ||--o{ ORDER : places')).toBe(
+      'mermaid',
+    );
     expect(detectImportKind('a.txt', '', 'classDiagram\n class A')).toBe('mermaid');
     expect(detectImportKind('a.txt', '', 'stateDiagram-v2\n [*] --> A')).toBe('mermaid');
     expect(detectImportKind('a.txt', '', '---\ntitle: Demo\n---\nflowchart TB\nA')).toBe('mermaid');
-    expect(detectImportKind('a.txt', '', '%%{init: {"theme": "dark"}}%%\nflowchart TB\nA')).toBe('mermaid');
+    expect(detectImportKind('a.txt', '', '%%{init: {"theme": "dark"}}%%\nflowchart TB\nA')).toBe(
+      'mermaid',
+    );
     expect(detectImportKind('a.txt', 'text/plain', 'graphics are fun')).toBe('unknown');
   });
 
@@ -56,7 +74,8 @@ describe('detectImportKind', () => {
     expect(detectImportKind('board.INKFLOW', '', '')).toBe('inkflow');
     expect(detectImportKind('scene.excalidraw', '', '')).toBe('excalidraw');
     expect(detectImportKind('icon.svg', '', '')).toBe('svg');
-    for (const ext of ['png', 'jpg', 'jpeg', 'webp', 'gif']) expect(detectImportKind(`photo.${ext}`, '', '')).toBe('image');
+    for (const ext of ['png', 'jpg', 'jpeg', 'webp', 'gif'])
+      expect(detectImportKind(`photo.${ext}`, '', '')).toBe('image');
     expect(detectImportKind('diagram.mmd', '', '')).toBe('mermaid');
     expect(detectImportKind('diagram.mermaid', '', '')).toBe('mermaid');
     expect(detectImportKind('data.json', 'application/json', '{"foo": 1}')).toBe('unknown');

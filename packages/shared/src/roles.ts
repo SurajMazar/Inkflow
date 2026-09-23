@@ -36,8 +36,11 @@ export function highestBoardRole(...roles: (BoardRole | null | undefined)[]): Bo
   return best;
 }
 
-export const canEditBoard = (role: BoardRole | null | undefined) => boardRoleAtLeast(role, 'EDITOR');
-export const canManageBoard = (role: BoardRole | null | undefined) => boardRoleAtLeast(role, 'OWNER');
-export const canViewBoard = (role: BoardRole | null | undefined) => boardRoleAtLeast(role, 'VIEWER');
+export const canEditBoard = (role: BoardRole | null | undefined) =>
+  boardRoleAtLeast(role, 'EDITOR');
+export const canManageBoard = (role: BoardRole | null | undefined) =>
+  boardRoleAtLeast(role, 'OWNER');
+export const canViewBoard = (role: BoardRole | null | undefined) =>
+  boardRoleAtLeast(role, 'VIEWER');
 /** Every role that can view a board can comment on it. */
 export const canCommentOnBoard = canViewBoard;

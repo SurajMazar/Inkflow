@@ -12,7 +12,11 @@ let counter = 0;
 export function uniqueUser(prefix = 'user'): TestUser {
   counter += 1;
   const id = `${Date.now().toString(36)}${counter}`;
-  return { name: `${prefix} ${id}`, email: `${prefix}.${id}@example.test`, password: `Sketch-${id}-pass9` };
+  return {
+    name: `${prefix} ${id}`,
+    email: `${prefix}.${id}@example.test`,
+    password: `Sketch-${id}-pass9`,
+  };
 }
 
 // ───────────────────────────── email (Mailpit) ─────────────────────────────
@@ -25,15 +29,23 @@ interface MailpitSummary {
 }
 
 /** Polls Mailpit for the newest email to `to` whose subject matches, and returns its text body. */
-export async function waitForEmail(to: string, subject: RegExp, timeoutMs = 20_000): Promise<string> {
+export async function waitForEmail(
+  to: string,
+  subject: RegExp,
+  timeoutMs = 20_000,
+): Promise<string> {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
-    const res = await fetch(`${E2E.mailpitUrl}/api/v1/search?query=${encodeURIComponent(`to:${to}`)}&limit=20`);
+    const res = await fetch(
+      `${E2E.mailpitUrl}/api/v1/search?query=${encodeURIComponent(`to:${to}`)}&limit=20`,
+    );
     if (res.ok) {
       const data = (await res.json()) as { messages: MailpitSummary[] };
       const match = data.messages.find((m) => subject.test(m.Subject));
       if (match) {
-        const msg = (await (await fetch(`${E2E.mailpitUrl}/api/v1/message/${match.ID}`)).json()) as { Text: string; HTML: string };
+        const msg = (await (
+          await fetch(`${E2E.mailpitUrl}/api/v1/message/${match.ID}`)
+        ).json()) as { Text: string; HTML: string };
         return `${msg.Text}\n${msg.HTML}`;
       }
     }
@@ -53,7 +65,10 @@ export function extractLink(body: string, path: string): string {
 
 // ───────────────────────────── database ─────────────────────────────
 
-export async function query<T extends pg.QueryResultRow>(sql: string, params: unknown[] = []): Promise<T[]> {
+export async function query<T extends pg.QueryResultRow>(
+  sql: string,
+  params: unknown[] = [],
+): Promise<T[]> {
   const client = new pg.Client({ connectionString: E2E.databaseUrl });
   await client.connect();
   try {
@@ -64,7 +79,12 @@ export async function query<T extends pg.QueryResultRow>(sql: string, params: un
 }
 
 export async function boardElementsInDb(boardId: string) {
-  return query<{ element_id: string; type: string; data: Record<string, unknown>; is_deleted: boolean }>(
+  return query<{
+    element_id: string;
+    type: string;
+    data: Record<string, unknown>;
+    is_deleted: boolean;
+  }>(
     `SELECT element_id, type, data, is_deleted FROM board_elements WHERE board_id = $1 AND is_deleted = false ORDER BY z_index COLLATE "C"`,
     [boardId],
   );
@@ -98,10 +118,20 @@ export async function logout(page: Page): Promise<void> {
   await page.waitForURL(/\/login/);
 }
 
+/** Creates a workspace (onboarding form, or the workspace switcher when one already exists). */
 export async function createWorkspace(page: Page, name: string): Promise<string> {
+  const onboarding = page.getByTestId('create-workspace-name');
+  const switcher = page.getByTestId('workspace-switcher');
+  await expect(onboarding.or(switcher).first()).toBeVisible({ timeout: 20_000 });
+  if (!(await onboarding.isVisible())) {
+    await switcher.click();
+    await page.getByTestId('workspace-create').click();
+  }
+  const before = page.url();
   await page.getByTestId('create-workspace-name').fill(name);
   await page.getByTestId('create-workspace-submit').click();
-  await page.waitForURL(/\/w\/[^/]+/);
+  await page.waitForURL((url) => /\/w\/[^/]+/.test(url.pathname) && url.href !== before);
+  await expect(page.getByTestId('workspace-switcher')).toContainText(name);
   return new URL(page.url()).pathname.split('/')[2]!;
 }
 
@@ -132,24 +162,39 @@ export interface ElementSnapshot {
 
 export async function waitForEditor(page: Page): Promise<void> {
   await expect(page.getByTestId('interactive-canvas')).toBeVisible();
-  await page.waitForFunction(() => Boolean((window as unknown as { __inkflow?: unknown }).__inkflow));
+  await page.waitForFunction(() =>
+    Boolean((window as unknown as { __inkflow?: unknown }).__inkflow),
+  );
 }
 
 export async function sceneElements(page: Page): Promise<ElementSnapshot[]> {
+  await page.waitForFunction(() =>
+    Boolean((window as unknown as { __inkflow?: unknown }).__inkflow),
+  );
   return page.evaluate(() => {
-    const w = window as unknown as { __inkflow: { editor: { getElements(): ElementSnapshotLike[] } } };
+    const w = window as unknown as {
+      __inkflow: { editor: { getElements(): ElementSnapshotLike[] } };
+    };
     type ElementSnapshotLike = Record<string, unknown>;
     return JSON.parse(JSON.stringify(w.__inkflow.editor.getElements())) as never;
   });
 }
 
 /** Converts world coordinates into page coordinates for pointer input. */
-export async function worldToPage(page: Page, x: number, y: number): Promise<{ x: number; y: number }> {
+export async function worldToPage(
+  page: Page,
+  x: number,
+  y: number,
+): Promise<{ x: number; y: number }> {
   return page.evaluate(
     ([wx, wy]) => {
-      const w = window as unknown as { __inkflow: { editor: { state: { viewport: { x: number; y: number; zoom: number } } } } };
+      const w = window as unknown as {
+        __inkflow: { editor: { state: { viewport: { x: number; y: number; zoom: number } } } };
+      };
       const vp = w.__inkflow.editor.state.viewport;
-      const canvas = document.querySelector('[data-testid="interactive-canvas"]')!.getBoundingClientRect();
+      const canvas = document
+        .querySelector('[data-testid="interactive-canvas"]')!
+        .getBoundingClientRect();
       return { x: canvas.left + (wx - vp.x) * vp.zoom, y: canvas.top + (wy - vp.y) * vp.zoom };
     },
     [x, y] as const,
@@ -162,26 +207,41 @@ export async function canvasCenter(page: Page): Promise<{ x: number; y: number }
 }
 
 /** Selects a tool and drags on the canvas between two page points. */
-export async function drawWithTool(page: Page, tool: string, from: { x: number; y: number }, to: { x: number; y: number }): Promise<void> {
+export async function drawWithTool(
+  page: Page,
+  tool: string,
+  from: { x: number; y: number },
+  to: { x: number; y: number },
+): Promise<void> {
   await page.getByTestId(`tool-${tool}`).click();
   await page.mouse.move(from.x, from.y);
   await page.mouse.down();
   const steps = 8;
   for (let i = 1; i <= steps; i++) {
-    await page.mouse.move(from.x + ((to.x - from.x) * i) / steps, from.y + ((to.y - from.y) * i) / steps);
+    await page.mouse.move(
+      from.x + ((to.x - from.x) * i) / steps,
+      from.y + ((to.y - from.y) * i) / steps,
+    );
   }
   await page.mouse.up();
 }
 
-export async function dragOnCanvas(page: Page, from: { x: number; y: number }, to: { x: number; y: number }): Promise<void> {
+export async function dragOnCanvas(
+  page: Page,
+  from: { x: number; y: number },
+  to: { x: number; y: number },
+): Promise<void> {
   await page.mouse.move(from.x, from.y);
   await page.mouse.down();
-  for (let i = 1; i <= 8; i++) await page.mouse.move(from.x + ((to.x - from.x) * i) / 8, from.y + ((to.y - from.y) * i) / 8);
+  for (let i = 1; i <= 8; i++)
+    await page.mouse.move(from.x + ((to.x - from.x) * i) / 8, from.y + ((to.y - from.y) * i) / 8);
   await page.mouse.up();
 }
 
 export async function waitSaved(page: Page): Promise<void> {
-  await expect(page.getByTestId('save-status')).toHaveAttribute('data-state', 'saved', { timeout: 20_000 });
+  await expect(page.getByTestId('save-status')).toHaveAttribute('data-state', 'saved', {
+    timeout: 20_000,
+  });
 }
 
 export const modKey = process.platform === 'darwin' ? 'Meta' : 'Control';

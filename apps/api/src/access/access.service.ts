@@ -32,7 +32,10 @@ export class AccessService {
   constructor(private readonly prisma: PrismaService) {}
 
   /** A share link that is currently valid (not revoked, not expired, board not deleted). */
-  async resolveShareLink(token: string | null | undefined, boardId?: string): Promise<ShareLink | null> {
+  async resolveShareLink(
+    token: string | null | undefined,
+    boardId?: string,
+  ): Promise<ShareLink | null> {
     if (!token || token.length < 16 || token.length > 512) return null;
     const tokenHash = sha256Hex(token);
     const link = await this.prisma.shareLink.findUnique({ where: { tokenHash } });
@@ -49,7 +52,11 @@ export class AccessService {
   }
 
   /** Resolves the principal's effective role on a board; null when the board is invisible to them. */
-  async getBoardAccess(boardId: string, principal: Principal, options: AccessOptions = {}): Promise<BoardAccess | null> {
+  async getBoardAccess(
+    boardId: string,
+    principal: Principal,
+    options: AccessOptions = {},
+  ): Promise<BoardAccess | null> {
     if (!isUuid(boardId)) return null;
     const userId = principal.userId && isUuid(principal.userId) ? principal.userId : null;
     const uid = userId ?? NIL_UUID;
@@ -62,7 +69,9 @@ export class AccessService {
     });
     if (!board) return null;
     const workspaceRole = board.workspace.members[0]?.role ?? null;
-    const link = board.deletedAt ? null : await this.resolveShareLink(principal.shareToken, board.id);
+    const link = board.deletedAt
+      ? null
+      : await this.resolveShareLink(principal.shareToken, board.id);
     const { role, ownRole, viaShareLink } = computeEffectiveRole({
       isOwner: userId !== null && board.ownerId === userId,
       memberRole: board.members[0]?.role ?? null,
@@ -108,7 +117,11 @@ export class AccessService {
   }
 
   /** Throws 404 when the user is not a member, 403 when the role is too low. */
-  async requireWorkspace(workspaceId: string, userId: string, minRole: WorkspaceRole = 'MEMBER'): Promise<WorkspaceRole> {
+  async requireWorkspace(
+    workspaceId: string,
+    userId: string,
+    minRole: WorkspaceRole = 'MEMBER',
+  ): Promise<WorkspaceRole> {
     const role = await this.workspaceRole(workspaceId, userId);
     if (!role) throw Errors.notFound('Workspace');
     if (!workspaceRoleAtLeast(role, minRole)) throw Errors.forbidden();

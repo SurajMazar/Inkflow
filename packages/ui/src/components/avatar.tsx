@@ -12,7 +12,10 @@ export function Avatar({ className, ...props }: React.ComponentProps<typeof Avat
   );
 }
 
-export function AvatarImage({ className, ...props }: React.ComponentProps<typeof AvatarPrimitive.Image>) {
+export function AvatarImage({
+  className,
+  ...props
+}: React.ComponentProps<typeof AvatarPrimitive.Image>) {
   return (
     <AvatarPrimitive.Image
       data-slot="avatar-image"
@@ -22,7 +25,10 @@ export function AvatarImage({ className, ...props }: React.ComponentProps<typeof
   );
 }
 
-export function AvatarFallback({ className, ...props }: React.ComponentProps<typeof AvatarPrimitive.Fallback>) {
+export function AvatarFallback({
+  className,
+  ...props
+}: React.ComponentProps<typeof AvatarPrimitive.Fallback>) {
   return (
     <AvatarPrimitive.Fallback
       data-slot="avatar-fallback"
@@ -42,7 +48,10 @@ function initialsOf(name: string): string {
   return (parts[0]![0]! + parts[parts.length - 1]![0]!).toUpperCase();
 }
 
-export interface UserAvatarProps extends Omit<React.ComponentProps<typeof AvatarPrimitive.Root>, 'children'> {
+export interface UserAvatarProps extends Omit<
+  React.ComponentProps<typeof AvatarPrimitive.Root>,
+  'children'
+> {
   name: string;
   src?: string | null;
   /** Background color of the initials fallback (e.g. a collaborator color). */

@@ -191,7 +191,10 @@ function inheritStyle(parent: InheritedStyle, props: Map<string, string>): Inher
     strokeDasharray: pick('stroke-dasharray', parent.strokeDasharray),
     fillOpacity: parseOpacity(props.get('fill-opacity'), parent.fillOpacity),
     strokeOpacity: parseOpacity(props.get('stroke-opacity'), parent.strokeOpacity),
-    fontSize: fontSize && fontSize !== 'inherit' ? parseFontSize(fontSize, parent.fontSize) : parent.fontSize,
+    fontSize:
+      fontSize && fontSize !== 'inherit'
+        ? parseFontSize(fontSize, parent.fontSize)
+        : parent.fontSize,
     fontFamily: pick('font-family', parent.fontFamily),
     fontWeight: pick('font-weight', parent.fontWeight),
     fontStyle: pick('font-style', parent.fontStyle),
@@ -205,7 +208,9 @@ function inheritStyle(parent: InheritedStyle, props: Map<string, string>): Inher
 export function parseSvgTransform(value: string | undefined): Matrix {
   if (!value) return IDENTITY;
   let m: Matrix = IDENTITY;
-  for (const match of value.matchAll(/(matrix|translate|scale|rotate|skewX|skewY)\s*\(([^)]*)\)/gi)) {
+  for (const match of value.matchAll(
+    /(matrix|translate|scale|rotate|skewX|skewY)\s*\(([^)]*)\)/gi,
+  )) {
     const a = parseNumberList(match[2]!);
     let t: Matrix | null = null;
     switch (match[1]!.toLowerCase()) {
@@ -241,8 +246,16 @@ export function parseSvgTransform(value: string | undefined): Matrix {
 }
 
 /** Maps a viewBox onto a viewport of the given size honoring `preserveAspectRatio`. */
-function viewBoxMatrix(vb: ViewBox, width: number, height: number, preserveAspectRatio: string | undefined): Matrix {
-  const tokens = (preserveAspectRatio ?? '').trim().split(/\s+/).filter((t) => t !== '' && t !== 'defer');
+function viewBoxMatrix(
+  vb: ViewBox,
+  width: number,
+  height: number,
+  preserveAspectRatio: string | undefined,
+): Matrix {
+  const tokens = (preserveAspectRatio ?? '')
+    .trim()
+    .split(/\s+/)
+    .filter((t) => t !== '' && t !== 'defer');
   const align = tokens[0] ?? 'xMidYMid';
   const slice = tokens[1] === 'slice';
   let sx = width / vb.width;
@@ -260,7 +273,10 @@ function viewBoxMatrix(vb: ViewBox, width: number, height: number, preserveAspec
 }
 
 /** Viewport transform of an `<svg>` element (root or nested). */
-function svgViewportMatrix(el: XmlElement, fallbackSize: { width: number; height: number } | null): Matrix {
+function svgViewportMatrix(
+  el: XmlElement,
+  fallbackSize: { width: number; height: number } | null,
+): Matrix {
   const vb = parseViewBox(getAttribute(el, 'viewBox'));
   if (!vb) return IDENTITY;
   const w = parseSvgLength(getAttribute(el, 'width'));
@@ -285,8 +301,13 @@ function stopColor(stop: XmlElement): string | null {
   return COLOR_RE.test(value) ? value : null;
 }
 
-function gradientColor(el: XmlElement | undefined, ids: Map<string, XmlElement>, depth: number): string | null {
-  if (!el || depth > 8 || (el.name !== 'linearGradient' && el.name !== 'radialGradient')) return null;
+function gradientColor(
+  el: XmlElement | undefined,
+  ids: Map<string, XmlElement>,
+  depth: number,
+): string | null {
+  if (!el || depth > 8 || (el.name !== 'linearGradient' && el.name !== 'radialGradient'))
+    return null;
   const stop = elementChildren(el).find((c) => c.name === 'stop');
   if (stop) return stopColor(stop);
   const href = getAttribute(el, 'href') ?? getAttribute(el, 'xlink:href');
@@ -310,7 +331,8 @@ function resolvePaint(value: string, ids: Map<string, XmlElement>): string | nul
   return COLOR_RE.test(v) ? v : CURRENT_COLOR;
 }
 
-type MatrixKind = { kind: 'axis' } | { kind: 'similar'; scale: number; angle: number } | { kind: 'general' };
+type MatrixKind =
+  { kind: 'axis' } | { kind: 'similar'; scale: number; angle: number } | { kind: 'general' };
 
 function classifyMatrix(m: Matrix): MatrixKind {
   const eps = 1e-9 * Math.max(1, Math.abs(m[0]), Math.abs(m[1]), Math.abs(m[2]), Math.abs(m[3]));
@@ -333,7 +355,12 @@ interface Paint {
   opacity: number;
 }
 
-function resolveShapePaint(style: InheritedStyle, opacity: number, matrix: Matrix, ids: Map<string, XmlElement>): Paint {
+function resolveShapePaint(
+  style: InheritedStyle,
+  opacity: number,
+  matrix: Matrix,
+  ids: Map<string, XmlElement>,
+): Paint {
   const fill = resolvePaint(style.fill, ids);
   const stroke = resolvePaint(style.stroke, ids);
   const width = parseSvgLength(style.strokeWidth, style.fontSize);
@@ -342,7 +369,9 @@ function resolveShapePaint(style: InheritedStyle, opacity: number, matrix: Matri
   return {
     fill,
     stroke,
-    strokeWidth: round3(clamp((width !== null && width >= 0 ? width : 1) * matrixScale(matrix), 0, 200)),
+    strokeWidth: round3(
+      clamp((width !== null && width >= 0 ? width : 1) * matrixScale(matrix), 0, 200),
+    ),
     strokeStyle: dashes.some((d) => d > 0) ? 'dashed' : 'solid',
     opacity: round3(clamp(opacity * channel * 100, 0, 100)),
   };
@@ -364,14 +393,22 @@ function emit(state: ImportState, el: SceneElement): void {
   if (state.stopped) return;
   if (state.elements.length >= state.maxElements) {
     state.stopped = true;
-    addIssue(state, `The SVG has more than ${state.maxElements} shapes; only the first ${state.maxElements} were imported`);
+    addIssue(
+      state,
+      `The SVG has more than ${state.maxElements} shapes; only the first ${state.maxElements} were imported`,
+    );
     return;
   }
   state.elements.push(el);
 }
 
 /** Creates a line element from world-space points. */
-function emitPolyline(state: ImportState, worldPoints: readonly Point[], closed: boolean, paint: Paint): void {
+function emitPolyline(
+  state: ImportState,
+  worldPoints: readonly Point[],
+  closed: boolean,
+  paint: Paint,
+): void {
   const pts: Point[] = [];
   for (const p of worldPoints) {
     const q = { x: round3(p.x), y: round3(p.y) };
@@ -421,7 +458,10 @@ function emitBox(
   paint: Paint,
 ): void {
   const kind = classifyMatrix(matrix);
-  const props = { ...baseProps(paint), roundness: type === 'rectangle' && radius > 0 ? ('round' as const) : ('sharp' as const) };
+  const props = {
+    ...baseProps(paint),
+    roundness: type === 'rectangle' && radius > 0 ? ('round' as const) : ('sharp' as const),
+  };
   if (kind.kind === 'axis') {
     const p1 = applyMatrix(matrix, { x: box.x, y: box.y });
     const p2 = applyMatrix(matrix, { x: box.x + box.width, y: box.y + box.height });
@@ -478,7 +518,12 @@ function pointList(value: string | undefined): Point[] {
   return out;
 }
 
-function importShape(state: ImportState, el: XmlElement, props: Map<string, string>, ctx: WalkContext): void {
+function importShape(
+  state: ImportState,
+  el: XmlElement,
+  props: Map<string, string>,
+  ctx: WalkContext,
+): void {
   const { style, matrix } = ctx;
   if (style.visibility === 'hidden' || style.visibility === 'collapse') return;
   const paint = resolveShapePaint(style, ctx.opacity, matrix, state.ids);
@@ -511,21 +556,32 @@ function importShape(state: ImportState, el: XmlElement, props: Map<string, stri
         ry ??= rx;
       }
       if (rx === null || ry === null || !(rx > 0) || !(ry > 0) || !hasPaint) return;
-      emitBox(state, 'ellipse', { x: cx - rx, y: cy - ry, width: 2 * rx, height: 2 * ry }, 0, matrix, paint);
+      emitBox(
+        state,
+        'ellipse',
+        { x: cx - rx, y: cy - ry, width: 2 * rx, height: 2 * ry },
+        0,
+        matrix,
+        paint,
+      );
       return;
     }
     case 'line': {
       if (!paint.stroke) return;
       const a = { x: len(props, 'x1', fs) ?? 0, y: len(props, 'y1', fs) ?? 0 };
       const b = { x: len(props, 'x2', fs) ?? 0, y: len(props, 'y2', fs) ?? 0 };
-      emitPolyline(state, [applyMatrix(matrix, a), applyMatrix(matrix, b)], false, { ...paint, fill: null });
+      emitPolyline(state, [applyMatrix(matrix, a), applyMatrix(matrix, b)], false, {
+        ...paint,
+        fill: null,
+      });
       return;
     }
     case 'polyline':
     case 'polygon': {
       if (!hasPaint) return;
       const pts = pointList(props.get('points'));
-      const closed = el.name === 'polygon' || (paint.fill !== null && paint.stroke === null && pts.length > 2);
+      const closed =
+        el.name === 'polygon' || (paint.fill !== null && paint.stroke === null && pts.length > 2);
       emitPolyline(
         state,
         pts.map((p) => applyMatrix(matrix, p)),
@@ -547,7 +603,8 @@ function importShape(state: ImportState, el: XmlElement, props: Map<string, stri
       for (const sub of subpaths) {
         if (state.stopped) return;
         // SVG fills open subpaths as if they were closed.
-        const closed = sub.closed || (paint.fill !== null && paint.stroke === null && sub.points.length > 2);
+        const closed =
+          sub.closed || (paint.fill !== null && paint.stroke === null && sub.points.length > 2);
         emitPolyline(
           state,
           sub.points.map((p) => applyMatrix(matrix, p)),
@@ -562,18 +619,24 @@ function importShape(state: ImportState, el: XmlElement, props: Map<string, stri
 
 function mapFontFamily(value: string): FontFamily {
   for (const raw of value.split(',')) {
-    const f = raw.trim().replace(/^['"]|['"]$/g, '').toLowerCase();
+    const f = raw
+      .trim()
+      .replace(/^['"]|['"]$/g, '')
+      .toLowerCase();
     if (/mono|courier|consolas|menlo|monaco|cascadia/.test(f)) return 'mono';
     if (/cursive|comic|virgil|kalam|excalifont|hand|script|fantasy/.test(f)) return 'hand';
-    if (/sans|arial|helvetica|inter|verdana|segoe|roboto|system-ui|tahoma|nunito/.test(f)) return 'sans';
+    if (/sans|arial|helvetica|inter|verdana|segoe|roboto|system-ui|tahoma|nunito/.test(f))
+      return 'sans';
     if (/serif|times|georgia|garamond|lora|cambria|palatino/.test(f)) return 'serif';
   }
   return 'sans';
 }
 
-const mapFontWeight = (v: string): FontWeight => (/^(bold|bolder)$/i.test(v) || Number(v) >= 600 ? 'bold' : 'normal');
+const mapFontWeight = (v: string): FontWeight =>
+  /^(bold|bolder)$/i.test(v) || Number(v) >= 600 ? 'bold' : 'normal';
 const mapFontStyle = (v: string): FontStyle => (/^(italic|oblique)/i.test(v) ? 'italic' : 'normal');
-const mapTextAnchor = (v: string): TextAlign => (v === 'middle' ? 'center' : v === 'end' ? 'right' : 'left');
+const mapTextAnchor = (v: string): TextAlign =>
+  v === 'middle' ? 'center' : v === 'end' ? 'right' : 'left';
 
 interface TextRun {
   x: number;
@@ -604,11 +667,19 @@ function measureRun(text: string, style: InheritedStyle): number {
 }
 
 /** Splits a `<text>` element into positioned runs; unpositioned `<tspan>`s continue the current run. */
-function collectTextRuns(textEl: XmlElement, props: Map<string, string>, style: InheritedStyle): TextRun[] {
+function collectTextRuns(
+  textEl: XmlElement,
+  props: Map<string, string>,
+  style: InheritedStyle,
+): TextRun[] {
   const runs: TextRun[] = [];
   let pen = {
-    x: (firstLength(props, 'x', style.fontSize) ?? 0) + (firstLength(props, 'dx', style.fontSize) ?? 0),
-    y: (firstLength(props, 'y', style.fontSize) ?? 0) + (firstLength(props, 'dy', style.fontSize) ?? 0),
+    x:
+      (firstLength(props, 'x', style.fontSize) ?? 0) +
+      (firstLength(props, 'dx', style.fontSize) ?? 0),
+    y:
+      (firstLength(props, 'y', style.fontSize) ?? 0) +
+      (firstLength(props, 'dy', style.fontSize) ?? 0),
   };
   let current: TextRun | null = null;
   const visit = (node: XmlElement, nodeStyle: InheritedStyle, depth: number) => {
@@ -644,12 +715,25 @@ function collectTextRuns(textEl: XmlElement, props: Map<string, string>, style: 
 }
 
 function collapseWhitespace(text: string): string {
-  return text.replace(/[\r\n\t]+/g, ' ').replace(/ {2,}/g, ' ').trim();
+  return text
+    .replace(/[\r\n\t]+/g, ' ')
+    .replace(/ {2,}/g, ' ')
+    .trim();
 }
 
-function importText(state: ImportState, el: XmlElement, props: Map<string, string>, ctx: WalkContext): void {
+function importText(
+  state: ImportState,
+  el: XmlElement,
+  props: Map<string, string>,
+  ctx: WalkContext,
+): void {
   const kind = classifyMatrix(ctx.matrix);
-  const angle = kind.kind === 'similar' ? kind.angle : kind.kind === 'general' ? Math.atan2(ctx.matrix[1], ctx.matrix[0]) : 0;
+  const angle =
+    kind.kind === 'similar'
+      ? kind.angle
+      : kind.kind === 'general'
+        ? Math.atan2(ctx.matrix[1], ctx.matrix[0])
+        : 0;
   const scale = matrixScale(ctx.matrix);
   for (const run of collectTextRuns(el, props, ctx.style)) {
     if (state.stopped) return;
@@ -677,7 +761,8 @@ function importText(state: ImportState, el: XmlElement, props: Map<string, strin
     };
     const size = measureTextElement({ ...textStyle, text, autoResize: true, width: 0 });
     const anchor = applyMatrix(ctx.matrix, { x: run.x, y: run.y });
-    const alignFactor = textStyle.textAlign === 'center' ? 0.5 : textStyle.textAlign === 'right' ? 1 : 0;
+    const alignFactor =
+      textStyle.textAlign === 'center' ? 0.5 : textStyle.textAlign === 'right' ? 1 : 0;
     const halfLeading = ((TEXT_LINE_HEIGHT - 1) / 2) * fontSize;
     const baseline = style.dominantBaseline;
     const top =
@@ -790,7 +875,12 @@ function walk(state: ImportState, el: XmlElement, parent: WalkContext): void {
   }
 }
 
-function expandUse(state: ImportState, el: XmlElement, props: Map<string, string>, ctx: WalkContext): void {
+function expandUse(
+  state: ImportState,
+  el: XmlElement,
+  props: Map<string, string>,
+  ctx: WalkContext,
+): void {
   const href = getAttribute(el, 'href') ?? getAttribute(el, 'xlink:href') ?? '';
   const id = href.startsWith('#') ? href.slice(1) : '';
   const target = id ? state.ids.get(id) : undefined;
@@ -847,7 +937,10 @@ function collectIds(root: XmlElement): Map<string, XmlElement> {
  * Converts SVG markup into native elements (all grouped together when there is more than one).
  * Unsupported content is skipped and reported in `issues`.
  */
-export function importSvgAsElements(svgText: string, options: SvgImportOptions = {}): SvgImportResult {
+export function importSvgAsElements(
+  svgText: string,
+  options: SvgImportOptions = {},
+): SvgImportResult {
   const root = parseSanitizedSvg(svgText);
   const maxElements = Math.max(0, Math.floor(options.maxElements ?? DEFAULT_SVG_MAX_ELEMENTS));
   const state: ImportState = {
@@ -861,7 +954,10 @@ export function importSvgAsElements(svgText: string, options: SvgImportOptions =
   const rootProps = readProps(root);
   const rootStyle = inheritStyle(INITIAL_STYLE, rootProps);
   const rootCtx: WalkContext = {
-    matrix: multiply(parseSvgTransform(getAttribute(root, 'transform')), svgViewportMatrix(root, null)),
+    matrix: multiply(
+      parseSvgTransform(getAttribute(root, 'transform')),
+      svgViewportMatrix(root, null),
+    ),
     style: rootStyle,
     opacity: parseOpacity(rootProps.get('opacity'), 1),
     refStack: [],
@@ -878,8 +974,14 @@ export function importSvgAsElements(svgText: string, options: SvgImportOptions =
   }
   const keys = generateNKeysBetween(null, null, valid.length);
   const groupId = valid.length > 1 ? generateId() : null;
-  const elements = valid.map((el, i) => ({ ...el, index: keys[i]!, groupIds: groupId ? [groupId] : [] }));
-  for (const [message, count] of state.issues) issues.push(count > 1 ? `${message} (${count} times)` : message);
-  if (elements.length === 0 && issues.length === 0) issues.push('The SVG contains no shapes that can be imported');
+  const elements = valid.map((el, i) => ({
+    ...el,
+    index: keys[i]!,
+    groupIds: groupId ? [groupId] : [],
+  }));
+  for (const [message, count] of state.issues)
+    issues.push(count > 1 ? `${message} (${count} times)` : message);
+  if (elements.length === 0 && issues.length === 0)
+    issues.push('The SVG contains no shapes that can be imported');
   return { elements, issues };
 }

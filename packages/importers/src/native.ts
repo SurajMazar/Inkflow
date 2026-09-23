@@ -8,7 +8,9 @@ import { MAX_NATIVE_JSON_CHARS } from './limits';
 export function importNativeJson(text: string): ParsedDocument {
   if (typeof text !== 'string') throw new Error('Expected the file contents as text');
   if (text.length > MAX_NATIVE_JSON_CHARS) {
-    throw new Error(`This file is too large to import (max ${MAX_NATIVE_JSON_CHARS / (1024 * 1024)} MB)`);
+    throw new Error(
+      `This file is too large to import (max ${MAX_NATIVE_JSON_CHARS / (1024 * 1024)} MB)`,
+    );
   }
   let data: unknown;
   try {
@@ -21,7 +23,8 @@ export function importNativeJson(text: string): ParsedDocument {
   }
   const type = (data as { type?: unknown }).type;
   if (type !== undefined && type !== 'inkflow') {
-    if (type === 'excalidraw') throw new Error('This is an Excalidraw file; import it as Excalidraw instead');
+    if (type === 'excalidraw')
+      throw new Error('This is an Excalidraw file; import it as Excalidraw instead');
     throw new Error('This file does not contain an Inkflow board');
   }
   const elements = (data as { elements?: unknown }).elements;

@@ -20,7 +20,9 @@ async function signedInPage(browser: Browser, user: TestUser): Promise<Page> {
   return page;
 }
 
-test('two signed-in collaborators: invite, presence, live edits, offline sync', async ({ browser }) => {
+test('two signed-in collaborators: invite, presence, live edits, offline sync', async ({
+  browser,
+}) => {
   test.setTimeout(240_000);
   const alice = uniqueUser('alice');
   const bob = uniqueUser('bob');
@@ -54,11 +56,23 @@ test('two signed-in collaborators: invite, presence, live edits, offline sync', 
   await drawWithTool(b, 'diamond', { x: cb.x + 60, y: cb.y - 100 }, { x: cb.x + 200, y: cb.y });
   await expect.poll(async () => (await sceneElements(a)).length, { timeout: 20_000 }).toBe(2);
 
+  await waitSaved(b);
+  await expect
+    .poll(async () => (await boardElementsInDb(boardId)).length, { timeout: 20_000 })
+    .toBe(2);
+
   // Bob goes offline, keeps editing; changes are queued locally.
   await b.context().setOffline(true);
   await b.evaluate(() => window.dispatchEvent(new Event('offline')));
-  await drawWithTool(b, 'ellipse', { x: cb.x - 100, y: cb.y + 120 }, { x: cb.x + 20, y: cb.y + 220 });
-  await expect(b.getByTestId('save-status')).toHaveAttribute('data-state', 'offline', { timeout: 20_000 });
+  await drawWithTool(
+    b,
+    'ellipse',
+    { x: cb.x - 100, y: cb.y + 120 },
+    { x: cb.x + 20, y: cb.y + 220 },
+  );
+  await expect(b.getByTestId('save-status')).toHaveAttribute('data-state', 'offline', {
+    timeout: 20_000,
+  });
   expect((await boardElementsInDb(boardId)).length).toBe(2);
 
   // Back online: the queued operation syncs, Alice receives it, PostgreSQL has it.
@@ -66,7 +80,9 @@ test('two signed-in collaborators: invite, presence, live edits, offline sync', 
   await b.evaluate(() => window.dispatchEvent(new Event('online')));
   await waitSaved(b);
   await expect.poll(async () => (await sceneElements(a)).length, { timeout: 30_000 }).toBe(3);
-  await expect.poll(async () => (await boardElementsInDb(boardId)).length, { timeout: 20_000 }).toBe(3);
+  await expect
+    .poll(async () => (await boardElementsInDb(boardId)).length, { timeout: 20_000 })
+    .toBe(3);
 
   await a.context().close();
   await b.context().close();

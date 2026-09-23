@@ -19,7 +19,10 @@ export const ContextMenuPortal = ContextMenuPrimitive.Portal;
 export const ContextMenuSub = ContextMenuPrimitive.Sub;
 export const ContextMenuRadioGroup = ContextMenuPrimitive.RadioGroup;
 
-export function ContextMenuContent({ className, ...props }: React.ComponentProps<typeof ContextMenuPrimitive.Content>) {
+export function ContextMenuContent({
+  className,
+  ...props
+}: React.ComponentProps<typeof ContextMenuPrimitive.Content>) {
   return (
     <ContextMenuPrimitive.Portal>
       <ContextMenuPrimitive.Content
@@ -40,7 +43,10 @@ export function ContextMenuItem({
   inset,
   variant = 'default',
   ...props
-}: React.ComponentProps<typeof ContextMenuPrimitive.Item> & { inset?: boolean; variant?: 'default' | 'destructive' }) {
+}: React.ComponentProps<typeof ContextMenuPrimitive.Item> & {
+  inset?: boolean;
+  variant?: 'default' | 'destructive';
+}) {
   return (
     <ContextMenuPrimitive.Item
       data-slot="context-menu-item"
@@ -59,7 +65,11 @@ export function ContextMenuCheckboxItem({
   ...props
 }: React.ComponentProps<typeof ContextMenuPrimitive.CheckboxItem>) {
   return (
-    <ContextMenuPrimitive.CheckboxItem className={cn(menuCheckItemClass, className)} checked={checked} {...props}>
+    <ContextMenuPrimitive.CheckboxItem
+      className={cn(menuCheckItemClass, className)}
+      checked={checked}
+      {...props}
+    >
       <span className="pointer-events-none absolute left-2 flex size-3.5 items-center justify-center">
         <ContextMenuPrimitive.ItemIndicator>
           <Check className="size-4" aria-hidden />
@@ -70,7 +80,11 @@ export function ContextMenuCheckboxItem({
   );
 }
 
-export function ContextMenuRadioItem({ className, children, ...props }: React.ComponentProps<typeof ContextMenuPrimitive.RadioItem>) {
+export function ContextMenuRadioItem({
+  className,
+  children,
+  ...props
+}: React.ComponentProps<typeof ContextMenuPrimitive.RadioItem>) {
   return (
     <ContextMenuPrimitive.RadioItem className={cn(menuCheckItemClass, className)} {...props}>
       <span className="pointer-events-none absolute left-2 flex size-3.5 items-center justify-center">
@@ -89,12 +103,21 @@ export function ContextMenuLabel({
   ...props
 }: React.ComponentProps<typeof ContextMenuPrimitive.Label> & { inset?: boolean }) {
   return (
-    <ContextMenuPrimitive.Label data-inset={inset ? '' : undefined} className={cn(menuLabelClass, className)} {...props} />
+    <ContextMenuPrimitive.Label
+      data-inset={inset ? '' : undefined}
+      className={cn(menuLabelClass, className)}
+      {...props}
+    />
   );
 }
 
-export function ContextMenuSeparator({ className, ...props }: React.ComponentProps<typeof ContextMenuPrimitive.Separator>) {
-  return <ContextMenuPrimitive.Separator className={cn(menuSeparatorClass, className)} {...props} />;
+export function ContextMenuSeparator({
+  className,
+  ...props
+}: React.ComponentProps<typeof ContextMenuPrimitive.Separator>) {
+  return (
+    <ContextMenuPrimitive.Separator className={cn(menuSeparatorClass, className)} {...props} />
+  );
 }
 
 export function ContextMenuShortcut({ className, ...props }: React.ComponentProps<'span'>) {
@@ -108,18 +131,29 @@ export function ContextMenuSubTrigger({
   ...props
 }: React.ComponentProps<typeof ContextMenuPrimitive.SubTrigger> & { inset?: boolean }) {
   return (
-    <ContextMenuPrimitive.SubTrigger data-inset={inset ? '' : undefined} className={cn(menuSubTriggerClass, className)} {...props}>
+    <ContextMenuPrimitive.SubTrigger
+      data-inset={inset ? '' : undefined}
+      className={cn(menuSubTriggerClass, className)}
+      {...props}
+    >
       {children}
       <ChevronRight className="ml-auto size-4" aria-hidden />
     </ContextMenuPrimitive.SubTrigger>
   );
 }
 
-export function ContextMenuSubContent({ className, ...props }: React.ComponentProps<typeof ContextMenuPrimitive.SubContent>) {
+export function ContextMenuSubContent({
+  className,
+  ...props
+}: React.ComponentProps<typeof ContextMenuPrimitive.SubContent>) {
   return (
     <ContextMenuPrimitive.Portal>
       <ContextMenuPrimitive.SubContent
-        className={cn(menuContentClass, 'origin-(--radix-context-menu-content-transform-origin)', className)}
+        className={cn(
+          menuContentClass,
+          'origin-(--radix-context-menu-content-transform-origin)',
+          className,
+        )}
         {...props}
       />
     </ContextMenuPrimitive.Portal>

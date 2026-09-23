@@ -39,7 +39,10 @@ export function ScenePreview({
   label,
 }: ScenePreviewProps) {
   const ref = React.useRef<HTMLCanvasElement>(null);
-  const visible = React.useMemo(() => elements.filter((e) => !e.isDeleted && !e.hidden), [elements]);
+  const visible = React.useMemo(
+    () => elements.filter((e) => !e.isDeleted && !e.hidden),
+    [elements],
+  );
   const bounds = React.useMemo(() => getCommonBounds(visible), [visible]);
   const empty = !bounds;
 
@@ -89,7 +92,10 @@ export function ScenePreview({
       {empty ? (
         <span className="text-xs text-muted-foreground">Empty</span>
       ) : (
-        <canvas ref={ref} className={cn('max-h-full max-w-full', dark && '[filter:invert(93%)_hue-rotate(180deg)]')} />
+        <canvas
+          ref={ref}
+          className={cn('max-h-full max-w-full', dark && '[filter:invert(93%)_hue-rotate(180deg)]')}
+        />
       )}
     </div>
   );

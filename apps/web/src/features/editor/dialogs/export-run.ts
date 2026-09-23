@@ -69,13 +69,16 @@ export const EXPORT_FONT_SOURCES: ExportFontSource[] = [
 ];
 
 /** Decodes an image file for raster exports (reuses the editor's decoded images when possible). */
-export function makeImageLoader(editor: Editor): (file: FileMetadata) => Promise<CanvasImageSource> {
+export function makeImageLoader(
+  editor: Editor,
+): (file: FileMetadata) => Promise<CanvasImageSource> {
   return (file) => {
     const cached = editor.images.get(file.id);
     if (cached) return Promise.resolve(cached);
     return new Promise((resolve, reject) => {
       const img = new Image();
-      if (!file.url.startsWith('data:') && !file.url.startsWith('blob:')) img.crossOrigin = 'use-credentials';
+      if (!file.url.startsWith('data:') && !file.url.startsWith('blob:'))
+        img.crossOrigin = 'use-credentials';
       img.onload = () => resolve(img);
       img.onerror = () => reject(new Error(`Could not load image ${file.id}`));
       img.src = file.url;
@@ -108,10 +111,19 @@ function withFrameChildren(editor: Editor, selected: readonly SceneElement[]): S
 }
 
 /** Elements, files and board settings exported for the chosen scope. */
-export function buildExportSource(editor: Editor, settings: Pick<ExportSettings, 'scope'>): ExportSource {
+export function buildExportSource(
+  editor: Editor,
+  settings: Pick<ExportSettings, 'scope'>,
+): ExportSource {
   const all = editor.getElements();
-  const elements = settings.scope === 'selection' ? withFrameChildren(editor, editor.getSelectedElements()) : all;
-  return { elements, getElement: (id) => editor.getElement(id), files: editor.files, appState: editor.appState };
+  const elements =
+    settings.scope === 'selection' ? withFrameChildren(editor, editor.getSelectedElements()) : all;
+  return {
+    elements,
+    getElement: (id) => editor.getElement(id),
+    files: editor.files,
+    appState: editor.appState,
+  };
 }
 
 /** Rectangle of the viewport scope, or null for the other scopes. */
@@ -158,7 +170,13 @@ export async function runExport(editor: Editor, settings: ExportSettings): Promi
     }
     case 'pdf': {
       const pages = settings.scope === 'board' ? settings.pdfPages : 'single';
-      const blob = await exportToPdfBlob(source, { ...raster, embedScene: false, mode: settings.pdfMode, pages, frameOrder: editor.getOrderedFrames().map((f) => f.id) });
+      const blob = await exportToPdfBlob(source, {
+        ...raster,
+        embedScene: false,
+        mode: settings.pdfMode,
+        pages,
+        frameOrder: editor.getOrderedFrames().map((f) => f.id),
+      });
       return { blob, ext: 'pdf' };
     }
     case 'json': {
@@ -169,7 +187,9 @@ export async function runExport(editor: Editor, settings: ExportSettings): Promi
         const box = { minX: b.x, minY: b.y, maxX: b.x + b.width, maxY: b.y + b.height };
         elements = elements.filter((e) => elementIntersectsBounds(e, box));
       }
-      const used = new Set(elements.flatMap((e) => (e.type === 'image' && e.fileId ? [e.fileId] : [])));
+      const used = new Set(
+        elements.flatMap((e) => (e.type === 'image' && e.fileId ? [e.fileId] : [])),
+      );
       const files = Object.fromEntries(Object.entries(source.files).filter(([id]) => used.has(id)));
       const text = exportToJson({ ...source, elements, files });
       return { blob: new Blob([text], { type: 'application/vnd.inkflow+json' }), ext: 'inkflow' };
@@ -178,10 +198,26 @@ export async function runExport(editor: Editor, settings: ExportSettings): Promi
 }
 
 /** World rectangle and element count that an export would cover (for the dialog summary). */
-export function describeExport(editor: Editor, settings: ExportSettings): { bounds: Rect; count: number } {
+export function describeExport(
+  editor: Editor,
+  settings: ExportSettings,
+): { bounds: Rect; count: number } {
   const source = buildExportSource(editor, settings);
   const raster = rasterOptions(editor, settings);
-  const bounds = getExportBounds(source, { padding: raster.padding, frameId: raster.frameId, bounds: raster.bounds });
-  const elements = elementsForExport(source, raster.frameId).filter((e) => !raster.bounds || elementIntersectsBounds(e, { minX: bounds.x, minY: bounds.y, maxX: bounds.x + bounds.width, maxY: bounds.y + bounds.height }));
+  const bounds = getExportBounds(source, {
+    padding: raster.padding,
+    frameId: raster.frameId,
+    bounds: raster.bounds,
+  });
+  const elements = elementsForExport(source, raster.frameId).filter(
+    (e) =>
+      !raster.bounds ||
+      elementIntersectsBounds(e, {
+        minX: bounds.x,
+        minY: bounds.y,
+        maxX: bounds.x + bounds.width,
+        maxY: bounds.y + bounds.height,
+      }),
+  );
   return { bounds, count: elements.length };
 }

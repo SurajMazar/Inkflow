@@ -30,9 +30,13 @@ export function FullPageMessage({ icon, title, description, actions }: FullPageM
         {icon ?? <LogoMark className="size-10" />}
         <div className="flex flex-col gap-2">
           <h1 className="text-xl font-semibold tracking-tight text-balance">{title}</h1>
-          {description ? <div className="text-sm text-balance text-muted-foreground">{description}</div> : null}
+          {description ? (
+            <div className="text-sm text-balance text-muted-foreground">{description}</div>
+          ) : null}
         </div>
-        {actions ? <div className="mt-2 flex flex-wrap items-center justify-center gap-2">{actions}</div> : null}
+        {actions ? (
+          <div className="mt-2 flex flex-wrap items-center justify-center gap-2">{actions}</div>
+        ) : null}
       </div>
     </main>
   );

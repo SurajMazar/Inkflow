@@ -13,7 +13,9 @@ export function ForgotPasswordPage() {
   const [params] = useSearchParams();
   const [email, setEmail] = React.useState(params.get('email') ?? '');
   const [error, setError] = React.useState<string | undefined>();
-  const [formError, setFormError] = React.useState<{ title: string; description?: string } | null>(null);
+  const [formError, setFormError] = React.useState<{ title: string; description?: string } | null>(
+    null,
+  );
   const [submitting, setSubmitting] = React.useState(false);
   const [sentTo, setSentTo] = React.useState<string | null>(null);
 
@@ -51,8 +53,8 @@ export function ForgotPasswordPage() {
             <MailCheck className="size-5" aria-hidden />
           </div>
           <p className="text-sm text-muted-foreground">
-            If an account exists for <span className="font-medium text-foreground">{sentTo}</span>, you'll receive a
-            link to choose a new password shortly.
+            If an account exists for <span className="font-medium text-foreground">{sentTo}</span>,
+            you'll receive a link to choose a new password shortly.
           </p>
         </div>
       </AuthLayout>
@@ -69,7 +71,9 @@ export function ForgotPasswordPage() {
         {formError ? (
           <FormAlert>
             <p className="font-medium">{formError.title}</p>
-            {formError.description ? <p className="mt-0.5 opacity-90">{formError.description}</p> : null}
+            {formError.description ? (
+              <p className="mt-0.5 opacity-90">{formError.description}</p>
+            ) : null}
           </FormAlert>
         ) : null}
         <FormField label="Email" error={error}>

@@ -121,31 +121,55 @@ async function markActive<T extends { user: UserDto }>(promise: Promise<T>): Pro
 
 export const api = {
   auth: {
-    csrf: (opts?: CallOptions) => request<CsrfResponse>('GET', '/auth/csrf', { ...opts, skipAuthRefresh: true }),
+    csrf: (opts?: CallOptions) =>
+      request<CsrfResponse>('GET', '/auth/csrf', { ...opts, skipAuthRefresh: true }),
     providers: (opts?: CallOptions) =>
       request<AuthProvidersResponse>('GET', '/auth/providers', { ...opts, skipAuthRefresh: true }),
     register: async (body: RegisterRequest, opts?: CallOptions) => {
-      const res = await request<RegisterResponse>('POST', '/auth/register', { ...opts, body, skipAuthRefresh: true });
+      const res = await request<RegisterResponse>('POST', '/auth/register', {
+        ...opts,
+        body,
+        skipAuthRefresh: true,
+      });
       if (!res.requiresVerification) markSessionActive();
       return res;
     },
     verifyEmail: (body: TokenRequest, opts?: CallOptions) =>
-      markActive(request<AuthResponse>('POST', '/auth/verify-email', { ...opts, body, skipAuthRefresh: true })),
+      markActive(
+        request<AuthResponse>('POST', '/auth/verify-email', {
+          ...opts,
+          body,
+          skipAuthRefresh: true,
+        }),
+      ),
     resendVerification: (body: EmailOnlyRequest, opts?: CallOptions) =>
-      request<OkResponse>('POST', '/auth/resend-verification', { ...opts, body, skipAuthRefresh: true }),
+      request<OkResponse>('POST', '/auth/resend-verification', {
+        ...opts,
+        body,
+        skipAuthRefresh: true,
+      }),
     login: (body: LoginRequest, opts?: CallOptions) =>
-      markActive(request<AuthResponse>('POST', '/auth/login', { ...opts, body, skipAuthRefresh: true })),
+      markActive(
+        request<AuthResponse>('POST', '/auth/login', { ...opts, body, skipAuthRefresh: true }),
+      ),
     /** Single-flight session refresh (shared with the automatic 401 handling). */
     refresh: () => refreshSession(),
     logout: async (opts?: CallOptions) => {
       try {
-        return await request<OkResponse>('POST', '/auth/logout', { ...opts, skipAuthRefresh: true });
+        return await request<OkResponse>('POST', '/auth/logout', {
+          ...opts,
+          skipAuthRefresh: true,
+        });
       } finally {
         markSessionEnded();
       }
     },
     forgotPassword: (body: EmailOnlyRequest, opts?: CallOptions) =>
-      request<OkResponse>('POST', '/auth/forgot-password', { ...opts, body, skipAuthRefresh: true }),
+      request<OkResponse>('POST', '/auth/forgot-password', {
+        ...opts,
+        body,
+        skipAuthRefresh: true,
+      }),
     resetPassword: (body: ResetPasswordRequest, opts?: CallOptions) =>
       request<OkResponse>('POST', '/auth/reset-password', { ...opts, body, skipAuthRefresh: true }),
     changePassword: (body: ChangePasswordRequest, opts?: CallOptions) =>
@@ -161,7 +185,8 @@ export const api = {
 
   users: {
     me: (opts?: CallOptions) => request<UserDto>('GET', '/users/me', opts),
-    updateMe: (body: UpdateMeRequest, opts?: CallOptions) => request<UserDto>('PATCH', '/users/me', { ...opts, body }),
+    updateMe: (body: UpdateMeRequest, opts?: CallOptions) =>
+      request<UserDto>('PATCH', '/users/me', { ...opts, body }),
     search: (query: UserSearchQuery, opts?: CallOptions) =>
       request<PublicUserDto[]>('GET', '/users/search', { ...opts, query: toQuery(query) }),
   },
@@ -178,22 +203,41 @@ export const api = {
       request<OkResponse>('DELETE', `/workspaces/${enc(workspaceId)}`, opts),
     members: (workspaceId: string, opts?: CallOptions) =>
       request<WorkspaceMemberDto[]>('GET', `/workspaces/${enc(workspaceId)}/members`, opts),
-    updateMember: (workspaceId: string, userId: string, body: UpdateMemberRoleRequest, opts?: CallOptions) =>
-      request<WorkspaceMemberDto>('PATCH', `/workspaces/${enc(workspaceId)}/members/${enc(userId)}`, { ...opts, body }),
+    updateMember: (
+      workspaceId: string,
+      userId: string,
+      body: UpdateMemberRoleRequest,
+      opts?: CallOptions,
+    ) =>
+      request<WorkspaceMemberDto>(
+        'PATCH',
+        `/workspaces/${enc(workspaceId)}/members/${enc(userId)}`,
+        { ...opts, body },
+      ),
     /** Removes a member (ADMIN+), or leaves the workspace when `userId` is the current user. */
     removeMember: (workspaceId: string, userId: string, opts?: CallOptions) =>
       request<OkResponse>('DELETE', `/workspaces/${enc(workspaceId)}/members/${enc(userId)}`, opts),
     invitations: (workspaceId: string, opts?: CallOptions) =>
       request<WorkspaceInvitationDto[]>('GET', `/workspaces/${enc(workspaceId)}/invitations`, opts),
     invite: (workspaceId: string, body: InviteMemberRequest, opts?: CallOptions) =>
-      request<InviteMemberResponse>('POST', `/workspaces/${enc(workspaceId)}/invitations`, { ...opts, body }),
+      request<InviteMemberResponse>('POST', `/workspaces/${enc(workspaceId)}/invitations`, {
+        ...opts,
+        body,
+      }),
     revokeInvitation: (workspaceId: string, invitationId: string, opts?: CallOptions) =>
-      request<OkResponse>('DELETE', `/workspaces/${enc(workspaceId)}/invitations/${enc(invitationId)}`, opts),
+      request<OkResponse>(
+        'DELETE',
+        `/workspaces/${enc(workspaceId)}/invitations/${enc(invitationId)}`,
+        opts,
+      ),
   },
 
   invitations: {
     preview: (token: string, opts?: CallOptions) =>
-      request<InvitationPreviewDto>('GET', `/invitations/${enc(token)}`, { ...opts, skipAuthRefresh: true }),
+      request<InvitationPreviewDto>('GET', `/invitations/${enc(token)}`, {
+        ...opts,
+        skipAuthRefresh: true,
+      }),
     accept: (token: string, opts?: CallOptions) =>
       request<WorkspaceDto>('POST', `/invitations/${enc(token)}/accept`, opts),
   },
@@ -206,7 +250,8 @@ export const api = {
     update: (projectId: string, body: UpdateProjectRequest, opts?: CallOptions) =>
       request<ProjectDto>('PATCH', `/projects/${enc(projectId)}`, { ...opts, body }),
     /** Deletes the project; its boards move to the trash. */
-    remove: (projectId: string, opts?: CallOptions) => request<OkResponse>('DELETE', `/projects/${enc(projectId)}`, opts),
+    remove: (projectId: string, opts?: CallOptions) =>
+      request<OkResponse>('DELETE', `/projects/${enc(projectId)}`, opts),
   },
 
   folders: {
@@ -217,7 +262,8 @@ export const api = {
     update: (folderId: string, body: UpdateFolderRequest, opts?: CallOptions) =>
       request<FolderDto>('PATCH', `/folders/${enc(folderId)}`, { ...opts, body }),
     /** Deletes the folder; its boards move to the parent folder (or project root). */
-    remove: (folderId: string, opts?: CallOptions) => request<OkResponse>('DELETE', `/folders/${enc(folderId)}`, opts),
+    remove: (folderId: string, opts?: CallOptions) =>
+      request<OkResponse>('DELETE', `/folders/${enc(folderId)}`, opts),
   },
 
   boards: {
@@ -226,18 +272,23 @@ export const api = {
     create: (body: CreateBoardRequest, opts?: CallOptions) =>
       request<BoardSummaryDto>('POST', '/boards', { ...opts, body }),
     /** Full board with document (records a "recently viewed" entry). */
-    get: (boardId: string, opts?: CallOptions) => request<BoardDetailDto>('GET', `/boards/${enc(boardId)}`, opts),
+    get: (boardId: string, opts?: CallOptions) =>
+      request<BoardDetailDto>('GET', `/boards/${enc(boardId)}`, opts),
     update: (boardId: string, body: UpdateBoardRequest, opts?: CallOptions) =>
       request<BoardSummaryDto>('PATCH', `/boards/${enc(boardId)}`, { ...opts, body }),
     /** Soft delete (moves to the trash). */
-    remove: (boardId: string, opts?: CallOptions) => request<OkResponse>('DELETE', `/boards/${enc(boardId)}`, opts),
+    remove: (boardId: string, opts?: CallOptions) =>
+      request<OkResponse>('DELETE', `/boards/${enc(boardId)}`, opts),
     restore: (boardId: string, opts?: CallOptions) =>
       request<BoardSummaryDto>('POST', `/boards/${enc(boardId)}/restore`, opts),
     /** Permanently deletes a board that is already in the trash. */
     removePermanently: (boardId: string, opts?: CallOptions) =>
       request<OkResponse>('DELETE', `/boards/${enc(boardId)}/permanent`, opts),
     emptyTrash: (workspaceId: string, opts?: CallOptions) =>
-      request<{ deleted: number }>('POST', '/boards/trash/empty', { ...opts, body: { workspaceId } }),
+      request<{ deleted: number }>('POST', '/boards/trash/empty', {
+        ...opts,
+        body: { workspaceId },
+      }),
     duplicate: (boardId: string, opts?: CallOptions) =>
       request<BoardSummaryDto>('POST', `/boards/${enc(boardId)}/duplicate`, opts),
     favorite: (boardId: string, opts?: CallOptions) =>
@@ -251,24 +302,42 @@ export const api = {
       const form = new FormData();
       const type = image.type === 'image/webp' ? 'webp' : 'png';
       form.append('file', image, `thumbnail.${type}`);
-      return request<OkResponse>('PUT', `/boards/${enc(boardId)}/thumbnail`, { ...opts, formData: form });
+      return request<OkResponse>('PUT', `/boards/${enc(boardId)}/thumbnail`, {
+        ...opts,
+        formData: form,
+      });
     },
     thumbnailUrl: (boardId: string, shareToken?: string | null) =>
       withShareToken(`/boards/${enc(boardId)}/thumbnail`, shareToken),
     /** HTTP fallback for the collaboration socket (EDITOR+). */
     submitOperations: (boardId: string, body: SubmitOperationsRequest, opts?: CallOptions) =>
-      request<SubmitOperationsResponse>('POST', `/boards/${enc(boardId)}/operations`, { ...opts, body }),
+      request<SubmitOperationsResponse>('POST', `/boards/${enc(boardId)}/operations`, {
+        ...opts,
+        body,
+      }),
     changes: (boardId: string, since: number, opts?: CallOptions) =>
-      request<BoardChangesResponse>('GET', `/boards/${enc(boardId)}/changes`, { ...opts, query: { since } }),
+      request<BoardChangesResponse>('GET', `/boards/${enc(boardId)}/changes`, {
+        ...opts,
+        query: { since },
+      }),
   },
 
   sharing: {
-    get: (boardId: string, opts?: CallOptions) => request<BoardSharingDto>('GET', `/boards/${enc(boardId)}/sharing`, opts),
+    get: (boardId: string, opts?: CallOptions) =>
+      request<BoardSharingDto>('GET', `/boards/${enc(boardId)}/sharing`, opts),
     /** Invites a person by email (existing users are added directly). */
     addShare: (boardId: string, body: AddBoardShareRequest, opts?: CallOptions) =>
       request<BoardSharingDto>('POST', `/boards/${enc(boardId)}/shares`, { ...opts, body }),
-    updateMember: (boardId: string, userId: string, body: UpdateBoardMemberRequest, opts?: CallOptions) =>
-      request<BoardSharingDto>('PATCH', `/boards/${enc(boardId)}/members/${enc(userId)}`, { ...opts, body }),
+    updateMember: (
+      boardId: string,
+      userId: string,
+      body: UpdateBoardMemberRequest,
+      opts?: CallOptions,
+    ) =>
+      request<BoardSharingDto>('PATCH', `/boards/${enc(boardId)}/members/${enc(userId)}`, {
+        ...opts,
+        body,
+      }),
     removeMember: (boardId: string, userId: string, opts?: CallOptions) =>
       request<BoardSharingDto>('DELETE', `/boards/${enc(boardId)}/members/${enc(userId)}`, opts),
     revokeShare: (boardId: string, shareId: string, opts?: CallOptions) =>
@@ -279,7 +348,10 @@ export const api = {
       request<OkResponse>('DELETE', `/boards/${enc(boardId)}/share-links/${enc(linkId)}`, opts),
     /** Public: resolves a share-link token (404 when revoked or expired). */
     resolveLink: (token: string, opts?: CallOptions) =>
-      request<ResolvedShareLinkDto>('GET', `/share-links/${enc(token)}`, { ...opts, skipAuthRefresh: true }),
+      request<ResolvedShareLinkDto>('GET', `/share-links/${enc(token)}`, {
+        ...opts,
+        skipAuthRefresh: true,
+      }),
   },
 
   versions: {
@@ -288,15 +360,32 @@ export const api = {
     create: (boardId: string, body: CreateVersionRequest = {}, opts?: CallOptions) =>
       request<BoardVersionDto>('POST', `/boards/${enc(boardId)}/versions`, { ...opts, body }),
     get: (boardId: string, versionId: string, opts?: CallOptions) =>
-      request<BoardVersionDetailDto>('GET', `/boards/${enc(boardId)}/versions/${enc(versionId)}`, opts),
+      request<BoardVersionDetailDto>(
+        'GET',
+        `/boards/${enc(boardId)}/versions/${enc(versionId)}`,
+        opts,
+      ),
     /** Restores a version; resolves with the automatic backup of the pre-restore state. */
     restore: (boardId: string, versionId: string, opts?: CallOptions) =>
-      request<BoardVersionDto>('POST', `/boards/${enc(boardId)}/versions/${enc(versionId)}/restore`, opts),
-    compare: (boardId: string, versionId: string, to: VersionCompareTarget = 'current', opts?: CallOptions) =>
-      request<VersionComparisonDto>('GET', `/boards/${enc(boardId)}/versions/${enc(versionId)}/compare`, {
-        ...opts,
-        query: { to },
-      }),
+      request<BoardVersionDto>(
+        'POST',
+        `/boards/${enc(boardId)}/versions/${enc(versionId)}/restore`,
+        opts,
+      ),
+    compare: (
+      boardId: string,
+      versionId: string,
+      to: VersionCompareTarget = 'current',
+      opts?: CallOptions,
+    ) =>
+      request<VersionComparisonDto>(
+        'GET',
+        `/boards/${enc(boardId)}/versions/${enc(versionId)}/compare`,
+        {
+          ...opts,
+          query: { to },
+        },
+      ),
   },
 
   comments: {
@@ -313,7 +402,8 @@ export const api = {
       request<CommentDto>('POST', `/comments/${enc(commentId)}/resolve`, opts),
     reopen: (commentId: string, opts?: CallOptions) =>
       request<CommentDto>('POST', `/comments/${enc(commentId)}/reopen`, opts),
-    remove: (commentId: string, opts?: CallOptions) => request<OkResponse>('DELETE', `/comments/${enc(commentId)}`, opts),
+    remove: (commentId: string, opts?: CallOptions) =>
+      request<OkResponse>('DELETE', `/comments/${enc(commentId)}`, opts),
     reply: (commentId: string, body: CreateReplyRequest, opts?: CallOptions) =>
       request<CommentReplyDto>('POST', `/comments/${enc(commentId)}/replies`, { ...opts, body }),
     updateReply: (replyId: string, body: CreateReplyRequest, opts?: CallOptions) =>
@@ -331,9 +421,11 @@ export const api = {
       form.append('file', file, name);
       return uploadWithProgress<FileDto>('/files', form, opts);
     },
-    get: (fileId: string, opts?: CallOptions) => request<FileDto>('GET', `/files/${enc(fileId)}`, opts),
+    get: (fileId: string, opts?: CallOptions) =>
+      request<FileDto>('GET', `/files/${enc(fileId)}`, opts),
     /** URL of the file bytes, usable in `<img src>` (share token appended as `?st=`). */
-    contentUrl: (fileId: string, shareToken?: string | null) => withShareToken(`/files/${enc(fileId)}/content`, shareToken),
+    contentUrl: (fileId: string, shareToken?: string | null) =>
+      withShareToken(`/files/${enc(fileId)}/content`, shareToken),
   },
 
   templates: {
@@ -352,13 +444,15 @@ export const api = {
       request<NotificationListDto>('GET', '/notifications', { ...opts, query: toQuery(params) }),
     markRead: (notificationId: string, opts?: CallOptions) =>
       request<OkResponse>('POST', `/notifications/${enc(notificationId)}/read`, opts),
-    markAllRead: (opts?: CallOptions) => request<OkResponse>('POST', '/notifications/read-all', opts),
+    markAllRead: (opts?: CallOptions) =>
+      request<OkResponse>('POST', '/notifications/read-all', opts),
   },
 
   search: (query: SearchQuery, opts?: CallOptions) =>
     request<SearchResultDto[]>('GET', '/search', { ...opts, query: toQuery(query) }),
 
-  health: (opts?: CallOptions) => request<HealthCheckDto>('GET', '/health', { ...opts, skipAuthRefresh: true }),
+  health: (opts?: CallOptions) =>
+    request<HealthCheckDto>('GET', '/health', { ...opts, skipAuthRefresh: true }),
   healthReady: (opts?: CallOptions) =>
     request<HealthCheckDto>('GET', '/health/ready', { ...opts, skipAuthRefresh: true }),
 };

@@ -2,16 +2,14 @@ import * as React from 'react';
 import { Link } from 'react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { CheckCircle2, CircleAlert, Laptop, Smartphone } from 'lucide-react';
+import { Badge, Button, FormField, Input, Skeleton, Spinner, UserAvatar } from '@inkflow/ui';
 import {
-  Badge,
-  Button,
-  FormField,
-  Input,
-  Skeleton,
-  Spinner,
-  UserAvatar,
-} from '@inkflow/ui';
-import { ApiError, OAUTH_PROVIDERS, changePasswordSchema, type OAuthProvider, type SessionDto } from '@inkflow/shared';
+  ApiError,
+  OAUTH_PROVIDERS,
+  changePasswordSchema,
+  type OAuthProvider,
+  type SessionDto,
+} from '@inkflow/shared';
 import { z } from 'zod';
 import { api } from '@/lib/api';
 import { queryKeys } from '@/lib/query-keys';
@@ -89,7 +87,11 @@ function ProfileSection() {
     <SettingsSection title="Profile" description="How you appear to collaborators.">
       <form className="grid gap-5 p-4" onSubmit={submit} noValidate>
         <div className="flex items-center gap-4">
-          <UserAvatar name={name || user.name} src={avatarUrl || null} className="size-14 text-base" />
+          <UserAvatar
+            name={name || user.name}
+            src={avatarUrl || null}
+            className="size-14 text-base"
+          />
           <div className="min-w-0 text-sm">
             <p className="truncate font-medium">{name || user.name}</p>
             <p className="text-muted-foreground">Member since {formatDate(user.createdAt)}</p>
@@ -97,9 +99,19 @@ function ProfileSection() {
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <FormField label="Name" error={errors.name}>
-            <Input value={name} onChange={(e) => setName(e.target.value)} maxLength={80} autoComplete="name" data-testid="account-name" />
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              maxLength={80}
+              autoComplete="name"
+              data-testid="account-name"
+            />
           </FormField>
-          <FormField label="Avatar URL" error={errors.avatarUrl} description="Link to a square image. Leave empty to use your initials.">
+          <FormField
+            label="Avatar URL"
+            error={errors.avatarUrl}
+            description="Link to a square image. Leave empty to use your initials."
+          >
             <Input
               type="url"
               value={avatarUrl}
@@ -120,7 +132,12 @@ function ProfileSection() {
             ) : (
               <span className="inline-flex flex-wrap items-center gap-1">
                 <CircleAlert className="size-3.5 text-warning" aria-hidden /> Not verified.
-                <button type="button" onClick={() => void resend()} disabled={resending} className="font-medium text-foreground underline underline-offset-4">
+                <button
+                  type="button"
+                  onClick={() => void resend()}
+                  disabled={resending}
+                  className="font-medium text-foreground underline underline-offset-4"
+                >
                   {resending ? 'Sending…' : 'Resend verification email'}
                 </button>
               </span>
@@ -157,7 +174,10 @@ function PasswordSection() {
       notify.success('Password changed', { description: 'Other sessions were signed out.' });
     },
     onError: (error) => {
-      if (error instanceof ApiError && (error.code === 'INVALID_CREDENTIALS' || error.status === 401 || error.status === 403)) {
+      if (
+        error instanceof ApiError &&
+        (error.code === 'INVALID_CREDENTIALS' || error.status === 401 || error.status === 403)
+      ) {
         setErrors({ currentPassword: 'Current password is incorrect' });
       } else {
         const { title, description } = describeApiError(error, "Couldn't change your password");
@@ -170,8 +190,13 @@ function PasswordSection() {
     return (
       <SettingsSection title="Password">
         <p className="p-4 text-sm text-muted-foreground">
-          You sign in with {user?.oauthProviders.map(providerLabel).join(' or ') || 'a connected account'}. To add a password, use{' '}
-          <Link to={`/forgot-password?email=${encodeURIComponent(user?.email ?? '')}`} className="font-medium text-foreground underline underline-offset-4">
+          You sign in with{' '}
+          {user?.oauthProviders.map(providerLabel).join(' or ') || 'a connected account'}. To add a
+          password, use{' '}
+          <Link
+            to={`/forgot-password?email=${encodeURIComponent(user?.email ?? '')}`}
+            className="font-medium text-foreground underline underline-offset-4"
+          >
             reset password
           </Link>{' '}
           with your email.
@@ -191,26 +216,53 @@ function PasswordSection() {
   };
 
   return (
-    <SettingsSection title="Password" description="Changing your password signs you out everywhere else.">
+    <SettingsSection
+      title="Password"
+      description="Changing your password signs you out everywhere else."
+    >
       <form className="grid gap-4 p-4" onSubmit={submit} noValidate>
         <FormField label="Current password" error={errors.currentPassword}>
-          <Input type="password" autoComplete="current-password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} data-testid="password-current" />
+          <Input
+            type="password"
+            autoComplete="current-password"
+            value={currentPassword}
+            onChange={(e) => setCurrentPassword(e.target.value)}
+            data-testid="password-current"
+          />
         </FormField>
         <div className="grid gap-4 sm:grid-cols-2">
           <FormField label="New password" error={errors.newPassword}>
             {(props) => (
               <>
-                <Input {...props} type="password" autoComplete="new-password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} data-testid="password-new" />
+                <Input
+                  {...props}
+                  type="password"
+                  autoComplete="new-password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  data-testid="password-new"
+                />
                 {newPassword ? <PasswordStrength password={newPassword} /> : null}
               </>
             )}
           </FormField>
           <FormField label="Confirm new password" error={errors.confirm}>
-            <Input type="password" autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} data-testid="password-confirm" />
+            <Input
+              type="password"
+              autoComplete="new-password"
+              value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
+              data-testid="password-confirm"
+            />
           </FormField>
         </div>
         <div className="flex justify-end">
-          <Button type="submit" size="sm" disabled={change.isPending || !currentPassword || !newPassword} data-testid="password-submit">
+          <Button
+            type="submit"
+            size="sm"
+            disabled={change.isPending || !currentPassword || !newPassword}
+            data-testid="password-submit"
+          >
             {change.isPending ? <Spinner className="text-current" label={null} /> : null}
             Change password
           </Button>
@@ -232,10 +284,15 @@ function ProvidersSection() {
     staleTime: 10 * 60_000,
   });
   if (!user) return null;
-  const available = OAUTH_PROVIDERS.filter((p) => providers.data?.[p] || user.oauthProviders.includes(p));
+  const available = OAUTH_PROVIDERS.filter(
+    (p) => providers.data?.[p] || user.oauthProviders.includes(p),
+  );
   if (providers.isSuccess && available.length === 0) return null;
   return (
-    <SettingsSection title="Connected accounts" description="Sign in faster with an external provider.">
+    <SettingsSection
+      title="Connected accounts"
+      description="Sign in faster with an external provider."
+    >
       {providers.isPending ? (
         <div className="p-4">
           <Skeleton className="h-10 w-full" />
@@ -245,10 +302,16 @@ function ProvidersSection() {
           {available.map((provider) => {
             const connected = user.oauthProviders.includes(provider);
             return (
-              <li key={provider} className="flex items-center justify-between gap-3 px-4 py-3" data-testid={`provider-${provider}`}>
+              <li
+                key={provider}
+                className="flex items-center justify-between gap-3 px-4 py-3"
+                data-testid={`provider-${provider}`}
+              >
                 <div>
                   <p className="text-sm font-medium">{providerLabel(provider)}</p>
-                  <p className="text-[13px] text-muted-foreground">{connected ? 'Connected' : 'Not connected'}</p>
+                  <p className="text-[13px] text-muted-foreground">
+                    {connected ? 'Connected' : 'Not connected'}
+                  </p>
                 </div>
                 {connected ? (
                   <Badge variant="subtle">Connected</Badge>
@@ -288,7 +351,10 @@ function describeDevice(userAgent: string | null): { label: string; mobile: bool
           : /Linux/.test(userAgent)
             ? 'Linux'
             : '';
-  return { label: os ? `${browser} on ${os}` : browser, mobile: /Mobile|iPhone|Android/.test(userAgent) };
+  return {
+    label: os ? `${browser} on ${os}` : browser,
+    mobile: /Mobile|iPhone|Android/.test(userAgent),
+  };
 }
 
 function SessionsSection() {
@@ -300,13 +366,16 @@ function SessionsSection() {
   const revoke = useMutation({
     mutationFn: (session: SessionDto) => api.auth.revokeSession(session.id),
     onSuccess: (_ok, session) => {
-      queryClient.setQueryData<SessionDto[]>(queryKeys.auth.sessions, (list) => list?.filter((s) => s.id !== session.id));
+      queryClient.setQueryData<SessionDto[]>(queryKeys.auth.sessions, (list) =>
+        list?.filter((s) => s.id !== session.id),
+      );
       notify.success('Session signed out');
     },
     onError: (error) => toastApiError(error, "Couldn't revoke the session"),
   });
   const list = [...(sessions.data ?? [])].sort(
-    (a, b) => Number(b.current) - Number(a.current) || Date.parse(b.lastUsedAt) - Date.parse(a.lastUsedAt),
+    (a, b) =>
+      Number(b.current) - Number(a.current) || Date.parse(b.lastUsedAt) - Date.parse(a.lastUsedAt),
   );
   return (
     <SettingsSection title="Active sessions" description="Devices where you're signed in.">
@@ -323,7 +392,11 @@ function SessionsSection() {
             const device = describeDevice(session.userAgent);
             const Icon = device.mobile ? Smartphone : Laptop;
             return (
-              <li key={session.id} className="flex items-center gap-3 px-4 py-3" data-testid="session-item">
+              <li
+                key={session.id}
+                className="flex items-center gap-3 px-4 py-3"
+                data-testid="session-item"
+              >
                 <Icon className="size-5 shrink-0 text-muted-foreground" aria-hidden />
                 <div className="min-w-0 flex-1">
                   <p className="flex items-center gap-2 text-sm font-medium">
@@ -331,7 +404,8 @@ function SessionsSection() {
                     {session.current ? <Badge variant="subtle">This device</Badge> : null}
                   </p>
                   <p className="truncate text-[13px] text-muted-foreground">
-                    {session.ip ? `${session.ip} · ` : ''}Last active {formatRelativeTime(session.lastUsedAt)}
+                    {session.ip ? `${session.ip} · ` : ''}Last active{' '}
+                    {formatRelativeTime(session.lastUsedAt)}
                   </p>
                 </div>
                 {!session.current ? (

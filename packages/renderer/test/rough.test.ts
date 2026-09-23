@@ -1,6 +1,22 @@
 import { describe, expect, it } from 'vitest';
-import { ellipsePath, polygonPath, roundedRectPath, starPoints, type Path, type PathCommand, type Point } from '@inkflow/geometry';
-import { hachureLines, pointInPolygons, roughEllipse, roughLine, roughPath, zigzagLines, type RoughOptions } from '../src';
+import {
+  ellipsePath,
+  polygonPath,
+  roundedRectPath,
+  starPoints,
+  type Path,
+  type PathCommand,
+  type Point,
+} from '@inkflow/geometry';
+import {
+  hachureLines,
+  pointInPolygons,
+  roughEllipse,
+  roughLine,
+  roughPath,
+  zigzagLines,
+  type RoughOptions,
+} from '../src';
 
 const base = (o: Partial<RoughOptions> = {}): RoughOptions => ({
   seed: 42,
@@ -27,7 +43,9 @@ function distToSegment(p: Point, a: Point, b: Point): number {
 
 function distToRings(p: Point, rings: Point[][]): number {
   let d = Infinity;
-  for (const r of rings) for (let i = 0; i < r.length; i++) d = Math.min(d, distToSegment(p, r[i]!, r[(i + 1) % r.length]!));
+  for (const r of rings)
+    for (let i = 0; i < r.length; i++)
+      d = Math.min(d, distToSegment(p, r[i]!, r[(i + 1) % r.length]!));
   return d;
 }
 
@@ -49,7 +67,9 @@ describe('rough generator determinism', () => {
     const a = roughPath(path, base(), true);
     const b = roughPath(path, base(), true);
     expect(a).toEqual(b);
-    expect(roughEllipse(50, 40, 100, 80, base(), true)).toEqual(roughEllipse(50, 40, 100, 80, base(), true));
+    expect(roughEllipse(50, 40, 100, 80, base(), true)).toEqual(
+      roughEllipse(50, 40, 100, 80, base(), true),
+    );
     expect(roughLine(0, 0, 100, 30, base())).toEqual(roughLine(0, 0, 100, 30, base()));
   });
 
@@ -57,7 +77,9 @@ describe('rough generator determinism', () => {
     const a = roughPath(path, base({ seed: 1 }), true);
     const b = roughPath(path, base({ seed: 2 }), true);
     expect(a).not.toEqual(b);
-    expect(roughEllipse(50, 40, 100, 80, base({ seed: 1 }), false)).not.toEqual(roughEllipse(50, 40, 100, 80, base({ seed: 2 }), false));
+    expect(roughEllipse(50, 40, 100, 80, base({ seed: 1 }), false)).not.toEqual(
+      roughEllipse(50, 40, 100, 80, base({ seed: 2 }), false),
+    );
   });
 
   it('keeps the outline stable when a fill is added', () => {
@@ -118,7 +140,8 @@ describe('sketchy strokes', () => {
   it('keeps jitter bounded by roughness', () => {
     const line = roughLine(0, 0, 300, 0, base({ roughness: 1 }));
     const wild = roughLine(0, 0, 300, 0, base({ roughness: 2 }));
-    const maxDev = (s: { path: PathCommand[] }) => Math.max(...endpoints(s.path).map((p) => Math.abs(p.y)));
+    const maxDev = (s: { path: PathCommand[] }) =>
+      Math.max(...endpoints(s.path).map((p) => Math.abs(p.y)));
     expect(maxDev(line)).toBeLessThan(6);
     expect(maxDev(line)).toBeGreaterThan(0);
     expect(maxDev(wild)).toBeLessThan(12);
@@ -135,12 +158,16 @@ describe('sketchy strokes', () => {
 describe('hachure fills', () => {
   it('uses a gap of about 4 × strokeWidth', () => {
     const lines = hachureLines([rect], 8, 0);
-    const ys = [...new Set(lines.map(([a]) => Math.round(a.y * 1000) / 1000))].sort((a, b) => a - b);
+    const ys = [...new Set(lines.map(([a]) => Math.round(a.y * 1000) / 1000))].sort(
+      (a, b) => a - b,
+    );
     for (let i = 1; i < ys.length; i++) expect(ys[i]! - ys[i - 1]!).toBeCloseTo(8, 6);
     // Default gap from strokeWidth 2 → 8
     const [fill] = roughPath(polygonPath(rect), base({ roughness: 0, hachureAngle: 0 }), true);
     const moves = fill!.path.filter((c) => c.type === 'M').map((c) => (c as { y: number }).y);
-    const sorted = [...new Set(moves.map((y) => Math.round(y * 1000) / 1000))].sort((a, b) => a - b);
+    const sorted = [...new Set(moves.map((y) => Math.round(y * 1000) / 1000))].sort(
+      (a, b) => a - b,
+    );
     expect(sorted[1]! - sorted[0]!).toBeCloseTo(8, 6);
   });
 
@@ -161,7 +188,8 @@ describe('hachure fills', () => {
     const sketch = sets.find((s) => s.type === 'fillSketch')!;
     expect(sketch.path.length).toBeGreaterThan(10);
     for (const c of sketch.path) {
-      if (c.type === 'M' || c.type === 'C') expect(insideOrOn({ x: c.x, y: c.y }, [star], 1e-6)).toBe(true);
+      if (c.type === 'M' || c.type === 'C')
+        expect(insideOrOn({ x: c.x, y: c.y }, [star], 1e-6)).toBe(true);
       if (c.type === 'C') {
         expect(insideOrOn({ x: c.x1, y: c.y1 }, [star], 4)).toBe(true);
         expect(insideOrOn({ x: c.x2, y: c.y2 }, [star], 4)).toBe(true);
@@ -197,7 +225,11 @@ describe('hachure fills', () => {
   });
 
   it('cross-hatch draws two line families and zigzag stays inside', () => {
-    const cross = roughPath(polygonPath(rect), base({ roughness: 0, fillStyle: 'cross-hatch', hachureAngle: 0 }), true)[0]!;
+    const cross = roughPath(
+      polygonPath(rect),
+      base({ roughness: 0, fillStyle: 'cross-hatch', hachureAngle: 0 }),
+      true,
+    )[0]!;
     const segs: [Point, Point][] = [];
     for (let i = 0; i + 1 < cross.path.length; i += 2) {
       const a = cross.path[i] as Point;

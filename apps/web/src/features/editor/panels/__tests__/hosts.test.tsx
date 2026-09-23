@@ -92,7 +92,9 @@ describe('LayersPanel', () => {
 
     await user.click(within(rows[1]!).getByTestId('layer-visibility'));
     expect(editor.getElement('a')!.hidden).toBe(true);
-    await user.click(within(screen.getAllByTestId('layer-row')[1]!).getByTestId('layer-visibility'));
+    await user.click(
+      within(screen.getAllByTestId('layer-row')[1]!).getByTestId('layer-visibility'),
+    );
     expect(editor.getElement('a')!.hidden).toBe(false);
 
     await user.click(within(screen.getAllByTestId('layer-row')[1]!).getByTestId('layer-lock'));
@@ -114,7 +116,10 @@ describe('LibraryPanel', () => {
 
     const before = editor.getElements().length;
     const item = LIBRARY_ITEMS.find((i) => i.id === 'database')!;
-    const data = { types: [LIBRARY_DRAG_MIME], getData: (k: string) => (k === LIBRARY_DRAG_MIME ? item.id : '') } as unknown as DataTransfer;
+    const data = {
+      types: [LIBRARY_DRAG_MIME],
+      getData: (k: string) => (k === LIBRARY_DRAG_MIME ? item.id : ''),
+    } as unknown as DataTransfer;
     expect(handleLibraryDrop(editor, data, { x: 300, y: 200 })).toBe(true);
     expect(editor.getElements().length).toBe(before + item.create({ x: 0, y: 0 }).length);
     const files = { types: ['Files'], getData: () => '' } as unknown as DataTransfer;
@@ -141,7 +146,9 @@ describe('LibraryPanel', () => {
 
 describe('CommentPins', () => {
   it('positions element-anchored pins with the viewport and opens the thread', async () => {
-    const editor = createTestEditor([createElement('rectangle', { id: 'r1', x: 100, y: 50, width: 80, height: 40 })]);
+    const editor = createTestEditor([
+      createElement('rectangle', { id: 'r1', x: 100, y: 50, width: 80, height: 40 }),
+    ]);
     editor.setViewport({ x: 50, y: 0, zoom: 2, width: 1000, height: 800 });
     const user = userEvent.setup();
     renderInSession(<CommentPins />, editor);
@@ -201,7 +208,9 @@ describe('DialogHost', () => {
   });
 
   it('runs actions from the command palette', async () => {
-    const editor = createTestEditor([createElement('rectangle', { id: 'a', x: 0, y: 0, width: 10, height: 10 })]);
+    const editor = createTestEditor([
+      createElement('rectangle', { id: 'a', x: 0, y: 0, width: 10, height: 10 }),
+    ]);
     const user = userEvent.setup();
     renderInSession(<DialogHost />, editor);
     act(() => useEditorUi.getState().openDialog('command'));
@@ -230,7 +239,9 @@ describe('DialogHost', () => {
   });
 
   it('validates links before saving them', async () => {
-    const editor = createTestEditor([createElement('rectangle', { id: 'a', x: 0, y: 0, width: 50, height: 50 })]);
+    const editor = createTestEditor([
+      createElement('rectangle', { id: 'a', x: 0, y: 0, width: 50, height: 50 }),
+    ]);
     const user = userEvent.setup();
     renderInSession(<DialogHost />, editor);
     act(() => useEditorUi.getState().openLink('a'));

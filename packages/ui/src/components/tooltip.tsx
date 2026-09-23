@@ -7,7 +7,13 @@ export function TooltipProvider({
   skipDelayDuration = 200,
   ...props
 }: React.ComponentProps<typeof TooltipPrimitive.Provider>) {
-  return <TooltipPrimitive.Provider delayDuration={delayDuration} skipDelayDuration={skipDelayDuration} {...props} />;
+  return (
+    <TooltipPrimitive.Provider
+      delayDuration={delayDuration}
+      skipDelayDuration={skipDelayDuration}
+      {...props}
+    />
+  );
 }
 
 export const Tooltip = TooltipPrimitive.Root;
@@ -46,7 +52,13 @@ export interface SimpleTooltipProps {
 }
 
 /** Convenience wrapper: `<SimpleTooltip content="Rename"><Button …/></SimpleTooltip>`. */
-export function SimpleTooltip({ content, children, side = 'top', align, disabled }: SimpleTooltipProps) {
+export function SimpleTooltip({
+  content,
+  children,
+  side = 'top',
+  align,
+  disabled,
+}: SimpleTooltipProps) {
   if (disabled || content == null || content === '') return children;
   return (
     <Tooltip>

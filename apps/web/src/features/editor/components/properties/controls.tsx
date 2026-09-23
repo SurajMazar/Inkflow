@@ -1,12 +1,29 @@
-import { Label, Slider, ToggleGroup, ToggleGroupItem, Tooltip, TooltipContent, TooltipTrigger, cn } from '@inkflow/ui';
+import {
+  Label,
+  Slider,
+  ToggleGroup,
+  ToggleGroupItem,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+  cn,
+} from '@inkflow/ui';
 import * as React from 'react';
 import { MIXED, type Maybe } from './values';
 
-export function Section({ title, children, className }: { title: string; children: React.ReactNode; className?: string }) {
+export function Section({
+  title,
+  children,
+  className,
+}: {
+  title: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
   const id = React.useId();
   return (
     <section aria-labelledby={id} className={cn('flex flex-col gap-1.5', className)}>
-      <h3 id={id} className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+      <h3 id={id} className="text-[11px] font-medium text-muted-foreground">
         {title}
       </h3>
       {children}
@@ -20,7 +37,10 @@ export interface SegmentOption<T extends string> {
   icon?: React.ReactNode;
 }
 
-/** Single-choice segmented control (icons with tooltips). */
+/**
+ * Single-choice segmented control (icons with tooltips). The active state is styled from
+ * `aria-checked`: the tooltip trigger shares the element and owns `data-state`.
+ */
 export function Segmented<T extends string>({
   label,
   value,
@@ -40,7 +60,7 @@ export function Segmented<T extends string>({
       aria-label={label}
       value={value === MIXED ? '' : value}
       onValueChange={(v) => v && onChange(v as T)}
-      className="flex w-full flex-wrap justify-start gap-1"
+      className="grid w-full auto-cols-fr grid-flow-col gap-0.5 rounded-lg bg-muted/60 p-0.5"
       data-testid={testId}
     >
       {options.map((o) => (
@@ -50,7 +70,12 @@ export function Segmented<T extends string>({
               value={o.value}
               aria-label={o.label}
               data-testid={testId ? `${testId}-${o.value}` : undefined}
-              className="h-8 min-w-8 rounded-md border border-transparent px-1.5 text-xs data-[state=on]:border-primary/40 data-[state=on]:bg-primary/10 data-[state=on]:text-primary"
+              className={cn(
+                'h-7 min-w-0 rounded-md px-1 text-xs text-muted-foreground transition-colors',
+                'hover:bg-background/70 hover:text-foreground',
+                'aria-checked:bg-background aria-checked:text-foreground aria-checked:shadow-sm aria-checked:ring-1 aria-checked:ring-border',
+                'dark:aria-checked:bg-accent',
+              )}
             >
               {o.icon ?? o.label}
             </ToggleGroupItem>
@@ -119,7 +144,10 @@ export function NumberInput({
   className?: string;
 }) {
   const [draft, setDraft] = React.useState(value === MIXED ? '' : String(value));
-  React.useEffect(() => setDraft(value === MIXED ? '' : String(Math.round(value * 100) / 100)), [value]);
+  React.useEffect(
+    () => setDraft(value === MIXED ? '' : String(Math.round(value * 100) / 100)),
+    [value],
+  );
   const commit = () => {
     const n = Number(draft);
     if (draft !== '' && Number.isFinite(n)) onCommit(Math.min(max, Math.max(min, n)));
@@ -144,7 +172,12 @@ export function NumberInput({
           if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
             e.preventDefault();
             const base = value === MIXED ? min : value;
-            onCommit(Math.min(max, Math.max(min, base + (e.key === 'ArrowUp' ? step : -step) * (e.shiftKey ? 10 : 1))));
+            onCommit(
+              Math.min(
+                max,
+                Math.max(min, base + (e.key === 'ArrowUp' ? step : -step) * (e.shiftKey ? 10 : 1)),
+              ),
+            );
           }
         }}
         className="h-8 w-full rounded-md border bg-background px-2 text-xs tabular-nums outline-none focus-visible:ring-2 focus-visible:ring-ring"

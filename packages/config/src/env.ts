@@ -22,7 +22,9 @@ export const apiEnvSchema = z
     NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
     PORT: z.coerce.number().int().min(1).max(65535).default(4310),
     HOST: z.string().default('0.0.0.0'),
-    LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
+    LOG_LEVEL: z
+      .enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent'])
+      .default('info'),
     TRUST_PROXY: bool(false),
 
     /** Public origin of the web app (used for CORS, links in emails and OAuth redirects). */

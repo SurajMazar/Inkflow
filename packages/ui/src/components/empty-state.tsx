@@ -10,7 +10,15 @@ export interface EmptyStateProps extends Omit<React.ComponentProps<'div'>, 'titl
   size?: 'default' | 'sm';
 }
 
-export function EmptyState({ icon, title, description, action, size = 'default', className, ...props }: EmptyStateProps) {
+export function EmptyState({
+  icon,
+  title,
+  description,
+  action,
+  size = 'default',
+  className,
+  ...props
+}: EmptyStateProps) {
   return (
     <div
       data-slot="empty-state"
@@ -34,9 +42,13 @@ export function EmptyState({ icon, title, description, action, size = 'default',
       ) : null}
       <div className="flex max-w-sm flex-col gap-1">
         <h3 className={cn('font-medium', size === 'default' ? 'text-base' : 'text-sm')}>{title}</h3>
-        {description ? <p className="text-sm text-balance text-muted-foreground">{description}</p> : null}
+        {description ? (
+          <p className="text-sm text-balance text-muted-foreground">{description}</p>
+        ) : null}
       </div>
-      {action ? <div className="mt-1 flex flex-wrap items-center justify-center gap-2">{action}</div> : null}
+      {action ? (
+        <div className="mt-1 flex flex-wrap items-center justify-center gap-2">{action}</div>
+      ) : null}
     </div>
   );
 }

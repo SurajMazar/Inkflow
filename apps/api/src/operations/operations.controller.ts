@@ -28,7 +28,9 @@ export class OperationsController {
   @Post('operations')
   @HttpCode(200)
   @ApiZodBody(operationsBatchSchema)
-  @ApiOperation({ summary: 'Apply a batch of operations (HTTP fallback for the WebSocket; EDITOR+)' })
+  @ApiOperation({
+    summary: 'Apply a batch of operations (HTTP fallback for the WebSocket; EDITOR+)',
+  })
   async apply(
     @CurrentPrincipal() principal: Principal,
     @IdParam('id', 'Board') boardId: string,

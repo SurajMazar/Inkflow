@@ -8,7 +8,11 @@ function slugCandidate(name: string): string {
 }
 
 /** Creates a workspace owned by `userId` (slug collisions are retried). */
-export async function createWorkspaceRecord(db: Db, userId: string, name: string): Promise<Workspace> {
+export async function createWorkspaceRecord(
+  db: Db,
+  userId: string,
+  name: string,
+): Promise<Workspace> {
   for (let attempt = 0; ; attempt++) {
     try {
       return await db.workspace.create({

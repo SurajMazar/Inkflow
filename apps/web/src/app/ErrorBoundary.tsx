@@ -47,7 +47,10 @@ interface ErrorBoundaryState {
 }
 
 /** Top-level boundary for errors thrown outside the router (providers, layout). */
-export class AppErrorBoundary extends React.Component<{ children: React.ReactNode }, ErrorBoundaryState> {
+export class AppErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  ErrorBoundaryState
+> {
   override state: ErrorBoundaryState = { error: null };
 
   static getDerivedStateFromError(error: unknown): ErrorBoundaryState {
@@ -59,7 +62,10 @@ export class AppErrorBoundary extends React.Component<{ children: React.ReactNod
   }
 
   override render() {
-    if (this.state.error) return <ErrorFallback error={this.state.error} onReset={() => this.setState({ error: null })} />;
+    if (this.state.error)
+      return (
+        <ErrorFallback error={this.state.error} onReset={() => this.setState({ error: null })} />
+      );
     return this.props.children;
   }
 }

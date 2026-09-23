@@ -24,10 +24,16 @@ export function parseOps(raw: unknown[], clientId: string): ParsedOp[] {
     const result = operationSchema.safeParse(value);
     if (!result.success) {
       const issue = result.error.issues[0];
-      return { index, op: null, opId, invalid: `Invalid operation: ${issue ? `${issue.path.join('.')} ${issue.message}` : 'malformed'}` };
+      return {
+        index,
+        op: null,
+        opId,
+        invalid: `Invalid operation: ${issue ? `${issue.path.join('.')} ${issue.message}` : 'malformed'}`,
+      };
     }
     const op = result.data as Operation;
-    if (op.clientId !== clientId) return { index, op: null, opId, invalid: 'Operation clientId does not match the connection' };
+    if (op.clientId !== clientId)
+      return { index, op: null, opId, invalid: 'Operation clientId does not match the connection' };
     return { index, op, opId: op.opId, invalid: null };
   });
 }
@@ -85,7 +91,12 @@ export function planBatch(input: PlanInput): PlannedBatch {
 
   for (const parsed of input.ops) {
     if (!parsed.op) {
-      results.push({ opId: parsed.opId, status: 'rejected', seq: null, reason: parsed.invalid ?? 'Invalid operation' });
+      results.push({
+        opId: parsed.opId,
+        status: 'rejected',
+        seq: null,
+        reason: parsed.invalid ?? 'Invalid operation',
+      });
       continue;
     }
     const op = parsed.op;
@@ -117,7 +128,12 @@ export function planBatch(input: PlanInput): PlannedBatch {
       if (wasLive !== !el.isDeleted) nextLive += el.isDeleted ? -1 : 1;
     }
     if (nextLive > MAX_BOARD_ELEMENTS && nextLive > live) {
-      results.push({ opId: op.opId, status: 'rejected', seq: null, reason: `Boards are limited to ${MAX_BOARD_ELEMENTS} elements` });
+      results.push({
+        opId: op.opId,
+        status: 'rejected',
+        seq: null,
+        reason: `Boards are limited to ${MAX_BOARD_ELEMENTS} elements`,
+      });
       continue;
     }
     live = nextLive;
@@ -129,7 +145,8 @@ export function planBatch(input: PlanInput): PlannedBatch {
   }
 
   const finalStates = new Map<string, SceneElement>();
-  for (const { elements } of applied) for (const el of elements) finalStates.set(el.id, state.get(el.id)!);
+  for (const { elements } of applied)
+    for (const el of elements) finalStates.set(el.id, state.get(el.id)!);
   let liveDelta = 0;
   for (const [id, el] of finalStates) {
     const was = initialLive.get(id) ?? false;
@@ -166,7 +183,8 @@ export function candidateFileIds(ops: Operation[]): string[] {
   const visit = (value: unknown) => {
     if (typeof value === 'string') {
       const lower = value.toLowerCase();
-      if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(lower)) ids.add(lower);
+      if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(lower))
+        ids.add(lower);
     }
   };
   for (const op of ops) {

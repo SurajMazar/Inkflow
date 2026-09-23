@@ -44,7 +44,10 @@ export function rotation(angle: number): Matrix {
 }
 
 export function rotationAround(angle: number, center: Point): Matrix {
-  return multiply(translation(center.x, center.y), multiply(rotation(angle), translation(-center.x, -center.y)));
+  return multiply(
+    translation(center.x, center.y),
+    multiply(rotation(angle), translation(-center.x, -center.y)),
+  );
 }
 
 export function compose(...matrices: Matrix[]): Matrix {

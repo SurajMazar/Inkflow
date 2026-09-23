@@ -3,7 +3,11 @@ import { cn } from '@inkflow/ui';
 import { MessageSquarePlus } from 'lucide-react';
 import { useBoardSession, useEditorState } from '../hooks/editor-context';
 import { useEditorUi } from '../hooks/ui-store';
-import { anchorWorldPosition, revealComment, useBoardComments } from '../panels/comments/use-comments';
+import {
+  anchorWorldPosition,
+  revealComment,
+  useBoardComments,
+} from '../panels/comments/use-comments';
 
 function initials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -24,8 +28,12 @@ export function CommentPins() {
   const setActive = useEditorUi((s) => s.setActiveComment);
   const { data } = useBoardComments();
 
-  const toScreen = (p: { x: number; y: number }) => ({ x: (p.x - viewport.x) * viewport.zoom, y: (p.y - viewport.y) * viewport.zoom });
-  const onScreen = (p: { x: number; y: number }) => p.x > -40 && p.y > -40 && p.x < viewport.width + 40 && p.y < viewport.height + 40;
+  const toScreen = (p: { x: number; y: number }) => ({
+    x: (p.x - viewport.x) * viewport.zoom,
+    y: (p.y - viewport.y) * viewport.zoom,
+  });
+  const onScreen = (p: { x: number; y: number }) =>
+    p.x > -40 && p.y > -40 && p.x < viewport.width + 40 && p.y < viewport.height + 40;
 
   const pins: { comment: CommentDto; x: number; y: number }[] = [];
   for (const comment of data ?? []) {
@@ -44,7 +52,12 @@ export function CommentPins() {
   };
 
   return (
-    <div className="pointer-events-none absolute inset-0 overflow-hidden" data-inkflow-ui aria-label="Comments on canvas" role="group">
+    <div
+      className="pointer-events-none absolute inset-0 overflow-hidden"
+      data-inkflow-ui
+      aria-label="Comments on canvas"
+      role="group"
+    >
       {pins.map(({ comment, x, y }) => {
         const count = 1 + comment.replies.length;
         const name = comment.author.name || comment.author.email;
@@ -67,7 +80,11 @@ export function CommentPins() {
             )}
           >
             {comment.author.avatarUrl ? (
-              <img src={comment.author.avatarUrl} alt="" className="size-6 rounded-full object-cover" />
+              <img
+                src={comment.author.avatarUrl}
+                alt=""
+                className="size-6 rounded-full object-cover"
+              />
             ) : (
               <span className="flex size-6 items-center justify-center rounded-full bg-primary text-[10px] font-semibold text-primary-foreground">
                 {initials(name)}
@@ -81,7 +98,9 @@ export function CommentPins() {
         <div
           data-testid="comment-draft-pin"
           aria-hidden="true"
-          style={{ transform: `translate(${Math.round(draftScreen.x)}px, ${Math.round(draftScreen.y) - 32}px)` }}
+          style={{
+            transform: `translate(${Math.round(draftScreen.x)}px, ${Math.round(draftScreen.y) - 32}px)`,
+          }}
           className="absolute top-0 left-0 flex size-8 items-center justify-center rounded-full rounded-bl-none border-2 border-primary bg-primary text-primary-foreground shadow-md"
         >
           <MessageSquarePlus className="size-4" />

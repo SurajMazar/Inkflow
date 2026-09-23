@@ -60,7 +60,12 @@ function labelBox(el: SceneElement): Rect {
     const box = getNodeGeometry(el).labelBox;
     if (box) return { x: el.x + box.x, y: el.y + box.y, width: box.width, height: box.height };
   }
-  const inset = el.type === 'diamond' ? Math.min(el.width, el.height) * 0.18 : el.type === 'ellipse' ? Math.min(el.width, el.height) * 0.12 : 0;
+  const inset =
+    el.type === 'diamond'
+      ? Math.min(el.width, el.height) * 0.18
+      : el.type === 'ellipse'
+        ? Math.min(el.width, el.height) * 0.12
+        : 0;
   return {
     x: el.x + LABEL_PADDING + inset,
     y: el.y + LABEL_PADDING + inset,
@@ -70,7 +75,11 @@ function labelBox(el: SceneElement): Rect {
 }
 
 /** Computes where and how to place the DOM text editor for an element being edited. */
-export function computeTextEditorLayout(el: SceneElement, kind: TextEditKind, viewport: ViewportState): TextEditorLayout | null {
+export function computeTextEditorLayout(
+  el: SceneElement,
+  kind: TextEditKind,
+  viewport: ViewportState,
+): TextEditorLayout | null {
   const zoom = viewport.zoom;
   if (kind === 'text' && el.type === 'text') {
     const tl = worldToScreen(viewport, { x: el.x, y: el.y });
@@ -159,7 +168,10 @@ export function computeTextEditorLayout(el: SceneElement, kind: TextEditKind, vi
     };
     const box = labelBox(el);
     const layout = layoutText(label?.text || 'M', style, box.width);
-    const contentH = Math.min(Math.max(layout.height, style.fontSize * style.lineHeight), Math.max(box.height, layout.height));
+    const contentH = Math.min(
+      Math.max(layout.height, style.fontSize * style.lineHeight),
+      Math.max(box.height, layout.height),
+    );
     let top = box.y;
     if (style.verticalAlign === 'middle') top = box.y + (box.height - contentH) / 2;
     else if (style.verticalAlign === 'bottom') top = box.y + box.height - contentH;

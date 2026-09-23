@@ -77,14 +77,20 @@ export function drawDocumentPreview(
     background: null,
     theme,
     images,
-    showFrameNames: true,
+    showFrameNames: false,
     getElement: (id) => byId.get(id),
   });
   return true;
 }
 
 /** Live preview of a template, rendered with the canvas renderer once scrolled into view. */
-export function TemplatePreview({ templateId, className }: { templateId: string; className?: string }) {
+export function TemplatePreview({
+  templateId,
+  className,
+}: {
+  templateId: string;
+  className?: string;
+}) {
   const containerRef = React.useRef<HTMLDivElement>(null);
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const inView = useInView(containerRef);
@@ -123,10 +129,16 @@ export function TemplatePreview({ templateId, className }: { templateId: string;
   }, [document, resolvedTheme]);
 
   return (
-    <div ref={containerRef} className={cn('relative size-full overflow-hidden bg-muted/30', className)}>
+    <div
+      ref={containerRef}
+      className={cn('relative size-full overflow-hidden bg-muted/30', className)}
+    >
       <canvas
         ref={canvasRef}
-        className={cn('absolute inset-0 size-full transition-opacity', state === 'drawn' ? 'opacity-100' : 'opacity-0')}
+        className={cn(
+          'absolute inset-0 size-full transition-opacity',
+          state === 'drawn' ? 'opacity-100' : 'opacity-0',
+        )}
         aria-hidden
       />
       {state !== 'drawn' ? (

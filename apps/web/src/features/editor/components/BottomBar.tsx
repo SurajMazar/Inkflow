@@ -23,10 +23,20 @@ export function BottomBar({ compact }: { compact: boolean }) {
   const setMobileProps = useEditorUi((s) => s.setMobilePropertiesOpen);
   return (
     <div className="flex items-end justify-between gap-2">
-      <div className="pointer-events-auto flex items-center gap-0.5 rounded-xl border bg-popover/95 p-1 shadow-sm backdrop-blur" data-inkflow-ui>
+      <div
+        className="pointer-events-auto flex items-center gap-0.5 rounded-xl border bg-popover/95 p-1 shadow-sm backdrop-blur"
+        data-inkflow-ui
+      >
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="ghost" size="icon" className="size-8" aria-label="Zoom out" data-testid="zoom-out" onClick={() => editor.zoomOut()}>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-8"
+              aria-label="Zoom out"
+              data-testid="zoom-out"
+              onClick={() => editor.zoomOut()}
+            >
               <Minus className="size-4" />
             </Button>
           </TooltipTrigger>
@@ -34,7 +44,13 @@ export function BottomBar({ compact }: { compact: boolean }) {
         </Tooltip>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="h-8 min-w-14 px-2 text-xs tabular-nums" aria-label="Zoom options" data-testid="zoom-level">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 min-w-14 px-2 text-xs tabular-nums"
+              aria-label="Zoom options"
+              data-testid="zoom-level"
+            >
               {Math.round(zoom * 100)}%
             </Button>
           </DropdownMenuTrigger>
@@ -55,7 +71,14 @@ export function BottomBar({ compact }: { compact: boolean }) {
         </DropdownMenu>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="ghost" size="icon" className="size-8" aria-label="Zoom in" data-testid="zoom-in" onClick={() => editor.zoomIn()}>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-8"
+              aria-label="Zoom in"
+              data-testid="zoom-in"
+              onClick={() => editor.zoomIn()}
+            >
               <Plus className="size-4" />
             </Button>
           </TooltipTrigger>
@@ -64,15 +87,33 @@ export function BottomBar({ compact }: { compact: boolean }) {
       </div>
 
       {canEdit && (
-        <div className="pointer-events-auto flex items-center gap-0.5 rounded-xl border bg-popover/95 p-1 shadow-sm backdrop-blur" data-inkflow-ui>
+        <div
+          className="pointer-events-auto flex items-center gap-0.5 rounded-xl border bg-popover/95 p-1 shadow-sm backdrop-blur"
+          data-inkflow-ui
+        >
           {compact && (
-            <Button variant="ghost" size="icon" className="size-8" aria-label="Style" onClick={() => setMobileProps(true)} data-testid="mobile-style">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-8"
+              aria-label="Style"
+              onClick={() => setMobileProps(true)}
+              data-testid="mobile-style"
+            >
               <Palette className="size-4" />
             </Button>
           )}
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" className="size-8" aria-label="Undo" data-testid="undo" disabled={!canUndo} onClick={() => editor.undo()}>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-8"
+                aria-label="Undo"
+                data-testid="undo"
+                disabled={!canUndo}
+                onClick={() => editor.undo()}
+              >
                 <Undo2 className="size-4" />
               </Button>
             </TooltipTrigger>
@@ -80,7 +121,15 @@ export function BottomBar({ compact }: { compact: boolean }) {
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" className="size-8" aria-label="Redo" data-testid="redo" disabled={!canRedo} onClick={() => editor.redo()}>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-8"
+                aria-label="Redo"
+                data-testid="redo"
+                disabled={!canRedo}
+                onClick={() => editor.redo()}
+              >
                 <Redo2 className="size-4" />
               </Button>
             </TooltipTrigger>

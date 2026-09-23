@@ -13,13 +13,25 @@ import {
   type LocalPoint,
   type SceneElement,
 } from '@inkflow/elements';
-import { boundsIntersect, expandBounds, unionBounds, type Bounds, type Point } from '@inkflow/geometry';
+import {
+  boundsIntersect,
+  expandBounds,
+  unionBounds,
+  type Bounds,
+  type Point,
+} from '@inkflow/geometry';
 import type { Scene } from '@inkflow/scene';
 import { getElementPorts, resolveBindingPoint, sideForDirection } from '../ports';
 import { CONTAINER_SHAPE_KEYS } from '../shapes/catalog';
 import { dirIndex, dirVector, findOrthogonalPath, simplifyOrthogonal } from './orthogonal';
 
-export type RouteResult = { x: number; y: number; width: number; height: number; points: LocalPoint[] };
+export type RouteResult = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  points: LocalPoint[];
+};
 
 /** Clearance kept between orthogonal routes and obstacles. */
 export const ROUTING_MARGIN = 16;
@@ -52,14 +64,20 @@ function hasFixedAttachment(binding: Binding, target: SceneElement): boolean {
 }
 
 /** Side port facing `toward`, judged in the target's own frame relative to its aspect ratio. */
-function facingSideAttachment(target: SceneElement, toward: Point, gap: number): { point: Point; normal: Point } {
+function facingSideAttachment(
+  target: SceneElement,
+  toward: Point,
+  gap: number,
+): { point: Point; normal: Point } {
   const c = getElementCenter(target);
   const local = toElementSpace(target, toward);
   const dx = (local.x - c.x) / Math.max(target.width, 1);
   const dy = (local.y - c.y) / Math.max(target.height, 1);
   let side = sideForDirection({ x: dx, y: dy });
-  if (target.flipX && (side === 'left' || side === 'right')) side = side === 'left' ? 'right' : 'left';
-  if (target.flipY && (side === 'top' || side === 'bottom')) side = side === 'top' ? 'bottom' : 'top';
+  if (target.flipX && (side === 'left' || side === 'right'))
+    side = side === 'left' ? 'right' : 'left';
+  if (target.flipY && (side === 'top' || side === 'bottom'))
+    side = side === 'top' ? 'bottom' : 'top';
   const ports = getElementPorts(target);
   let port = ports.find((p) => p.id === side);
   if (!port) {
@@ -73,8 +91,16 @@ function facingSideAttachment(target: SceneElement, toward: Point, gap: number):
       }
     }
   }
-  if (!port) return resolveBindingPoint(target, { elementId: target.id, portId: null, anchor: null, gap }, toward);
-  return { point: { x: port.point.x + port.normal.x * gap, y: port.point.y + port.normal.y * gap }, normal: port.normal };
+  if (!port)
+    return resolveBindingPoint(
+      target,
+      { elementId: target.id, portId: null, anchor: null, gap },
+      toward,
+    );
+  return {
+    point: { x: port.point.x + port.normal.x * gap, y: port.point.y + port.normal.y * gap },
+    normal: port.normal,
+  };
 }
 
 /**
@@ -92,12 +118,16 @@ function resolveEndpoints(
   const rawStart = world[0] ?? { x: linear.x, y: linear.y };
   const rawEnd = world[world.length - 1] ?? rawStart;
   const bindings = [linear.startBinding, linear.endBinding] as const;
-  const targets = [liveTarget(bindings[0], getElement), liveTarget(bindings[1], getElement)] as const;
+  const targets = [
+    liveTarget(bindings[0], getElement),
+    liveTarget(bindings[1], getElement),
+  ] as const;
   const out: (Endpoint | null)[] = [null, null];
   for (let k = 0; k < 2; k++) {
     const b = bindings[k];
     const t = targets[k];
-    if (!b || !t) out[k] = { point: k === 0 ? rawStart : rawEnd, normal: null, target: null, floating: false };
+    if (!b || !t)
+      out[k] = { point: k === 0 ? rawStart : rawEnd, normal: null, target: null, floating: false };
     else if (hasFixedAttachment(b, t)) {
       const r = resolveBindingPoint(t, b, getElementCenter(t));
       out[k] = { point: r.point, normal: r.normal, target: t, floating: false };
@@ -111,8 +141,16 @@ function resolveEndpoints(
     const otherTarget = targets[1 - k];
     const toward =
       (k === 0 ? waypoints[0] : waypoints[waypoints.length - 1]) ??
-      (other && !other.floating ? other.point : otherTarget ? getElementCenter(otherTarget) : k === 0 ? rawEnd : rawStart);
-    const r = sideAttach ? facingSideAttachment(t, toward, b.gap) : resolveBindingPoint(t, b, toward);
+      (other && !other.floating
+        ? other.point
+        : otherTarget
+          ? getElementCenter(otherTarget)
+          : k === 0
+            ? rawEnd
+            : rawStart);
+    const r = sideAttach
+      ? facingSideAttachment(t, toward, b.gap)
+      : resolveBindingPoint(t, b, toward);
     out[k] = { point: r.point, normal: r.normal, target: t, floating: true };
   }
   return [out[0]!, out[1]!];
@@ -131,7 +169,13 @@ function toResult(points: readonly Point[]): RouteResult {
     0,
     clean.map((p) => [p.x, p.y] as LocalPoint),
   );
-  return { x: round(n.x), y: round(n.y), width: round(n.width), height: round(n.height), points: n.points.map(([x, y]) => [round(x), round(y)]) };
+  return {
+    x: round(n.x),
+    y: round(n.y),
+    width: round(n.width),
+    height: round(n.height),
+    points: n.points.map(([x, y]) => [round(x), round(y)]),
+  };
 }
 
 const axisOf = (n: Point | null, from: Point, to: Point): Point => {
@@ -143,7 +187,13 @@ const axisOf = (n: Point | null, from: Point, to: Point): Point => {
  * Orthogonal path with one or two bends between `a` (leaving along `da`) and `b` (entered against
  * `db`, i.e. `db` is b's outward normal). No obstacle avoidance.
  */
-export function elbowPath(a: Point, da: Point | null, b: Point, db: Point | null, stub = 20): Point[] {
+export function elbowPath(
+  a: Point,
+  da: Point | null,
+  b: Point,
+  db: Point | null,
+  stub = 20,
+): Point[] {
   const sa = axisOf(da, a, b);
   const sb = axisOf(db, b, a);
   const hA = sa.x !== 0;
@@ -190,7 +240,8 @@ function isObstacleCandidate(el: SceneElement, exclude: ReadonlySet<string>): bo
   );
 }
 
-const strictlyInside = (p: Point, b: Bounds) => p.x > b.minX + 1e-6 && p.x < b.maxX - 1e-6 && p.y > b.minY + 1e-6 && p.y < b.maxY - 1e-6;
+const strictlyInside = (p: Point, b: Bounds) =>
+  p.x > b.minX + 1e-6 && p.x < b.maxX - 1e-6 && p.y > b.minY + 1e-6 && p.y < b.maxY - 1e-6;
 
 /** Point where leaving `p` along axis `d` exits bounds `b` (at least `min` away from `p`). */
 function stubExit(p: Point, d: Point, b: Bounds | null, min: number): Point {
@@ -220,7 +271,13 @@ interface Obstacle {
  * region around the path) are added and the search repeats, so the result is always checked
  * against every obstacle while typical routes only look at a handful of them.
  */
-function orthogonalRoute(start: Endpoint, end: Endpoint, waypoints: readonly Point[], obstacleElements: readonly SceneElement[], selfId: string): Point[] {
+function orthogonalRoute(
+  start: Endpoint,
+  end: Endpoint,
+  waypoints: readonly Point[],
+  obstacleElements: readonly SceneElement[],
+  selfId: string,
+): Point[] {
   const margin = ROUTING_MARGIN;
   const inflate = (el: SceneElement) => expandBounds(getElementBounds(el), margin);
   const startBox = start.target ? inflate(start.target) : null;
@@ -256,23 +313,37 @@ function orthogonalRoute(start: Endpoint, end: Endpoint, waypoints: readonly Poi
   );
   const selected = new Map<string, Bounds>();
   const addInRegion = () => {
-    for (const o of all) if (!selected.has(o.id) && boundsIntersect(o.bounds, region)) selected.set(o.id, o.bounds);
+    for (const o of all)
+      if (!selected.has(o.id) && boundsIntersect(o.bounds, region)) selected.set(o.id, o.bounds);
   };
   addInRegion();
 
   for (let attempt = 0; attempt < 5; attempt++) {
     const obstacles = [...selected.values()];
-    const path = routeLegs(stops, sDir ? dirIndex(sDir) : null, eDir ? dirIndex({ x: -eDir.x, y: -eDir.y }) : null, obstacles);
+    const path = routeLegs(
+      stops,
+      sDir ? dirIndex(sDir) : null,
+      eDir ? dirIndex({ x: -eDir.x, y: -eDir.y }) : null,
+      obstacles,
+    );
     if (!path) break;
     const violators = all.filter(
-      (o) => !selected.has(o.id) && path.some((p, i) => i > 0 && segmentCrossesInterior(path[i - 1]!, p, o.bounds)),
+      (o) =>
+        !selected.has(o.id) &&
+        path.some((p, i) => i > 0 && segmentCrossesInterior(path[i - 1]!, p, o.bounds)),
     );
     if (violators.length === 0) {
       const own = new Set([start.target?.id, end.target?.id]);
       const obstacleBoxes = all.filter((o) => !own.has(o.id)).map((o) => o.bounds);
       const lead = (p: Point, stub: Point, dir: Point | null): Lead | null =>
         dir ? { dir, length: Math.hypot(stub.x - p.x, stub.y - p.y) } : null;
-      return centerChannels([start.point, ...path, end.point], waypoints, obstacleBoxes, lead(start.point, sStub, sDir), lead(end.point, eStub, eDir));
+      return centerChannels(
+        [start.point, ...path, end.point],
+        waypoints,
+        obstacleBoxes,
+        lead(start.point, sStub, sDir),
+        lead(end.point, eStub, eDir),
+      );
     }
     for (const v of violators) selected.set(v.id, v.bounds);
     const pb = unionBounds(...path.map((p) => ({ minX: p.x, minY: p.y, maxX: p.x, maxY: p.y })));
@@ -296,13 +367,22 @@ interface Lead {
  * targets. A* alone picks an arbitrary position among equal-cost jogs; centring makes routes
  * symmetric and stable. Endpoints and waypoints never move.
  */
-function centerChannels(path: readonly Point[], fixedPoints: readonly Point[], obstacles: readonly Bounds[], startLead: Lead | null, endLead: Lead | null): Point[] {
+function centerChannels(
+  path: readonly Point[],
+  fixedPoints: readonly Point[],
+  obstacles: readonly Bounds[],
+  startLead: Lead | null,
+  endLead: Lead | null,
+): Point[] {
   const pts = simplifyOrthogonal(path);
   const last = pts.length - 1;
   const fixed = (i: number) =>
-    i === 0 || i === last || fixedPoints.some((s) => Math.abs(s.x - pts[i]!.x) < 1e-6 && Math.abs(s.y - pts[i]!.y) < 1e-6);
+    i === 0 ||
+    i === last ||
+    fixedPoints.some((s) => Math.abs(s.x - pts[i]!.x) < 1e-6 && Math.abs(s.y - pts[i]!.y) < 1e-6);
   const clear = (a: Point, b: Point) => !obstacles.some((o) => segmentCrossesInterior(a, b, o));
-  const leadOk = (p: Point, origin: Point, lead: Lead | null) => !lead || (p.x - origin.x) * lead.dir.x + (p.y - origin.y) * lead.dir.y >= lead.length - 1e-6;
+  const leadOk = (p: Point, origin: Point, lead: Lead | null) =>
+    !lead || (p.x - origin.x) * lead.dir.x + (p.y - origin.y) * lead.dir.y >= lead.length - 1e-6;
   for (let k = 1; k + 2 <= last; k++) {
     const a = pts[k - 1]!;
     const p = pts[k]!;
@@ -328,7 +408,12 @@ function centerChannels(path: readonly Point[], fixedPoints: readonly Point[], o
   return simplifyOrthogonal(pts);
 }
 
-function routeLegs(stops: readonly Point[], startDir: number | null, endDir: number | null, obstacles: readonly Bounds[]): Point[] | null {
+function routeLegs(
+  stops: readonly Point[],
+  startDir: number | null,
+  endDir: number | null,
+  obstacles: readonly Bounds[],
+): Point[] | null {
   const out: Point[] = [stops[0]!];
   let dir = startDir;
   for (let i = 0; i < stops.length - 1; i++) {
@@ -366,7 +451,11 @@ function fallbackNormal(n: Point | null, from: Point, to: Point): Point {
  * - `orthogonal`: A* over a sparse orthogonal visibility grid around `obstacles`.
  * The result is normalized (min point at 0,0) and relative to (x, y).
  */
-export function computeConnectorRoute(connector: ConnectorElement, getElement: GetElement, obstacles: readonly SceneElement[]): RouteResult {
+export function computeConnectorRoute(
+  connector: ConnectorElement,
+  getElement: GetElement,
+  obstacles: readonly SceneElement[],
+): RouteResult {
   const waypoints = connector.waypoints.map(([x, y]) => ({ x, y }));
   const orthogonal = connector.routing === 'orthogonal' || connector.routing === 'elbow';
   const [start, end] = resolveEndpoints(connector, getElement, waypoints, orthogonal);
@@ -382,7 +471,10 @@ export function computeConnectorRoute(connector: ConnectorElement, getElement: G
       const a = { x: start.point.x + ns.x * k, y: start.point.y + ns.y * k };
       const b = { x: end.point.x + ne.x * k, y: end.point.y + ne.y * k };
       const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
-      const chordMid = { x: (start.point.x + end.point.x) / 2, y: (start.point.y + end.point.y) / 2 };
+      const chordMid = {
+        x: (start.point.x + end.point.x) / 2,
+        y: (start.point.y + end.point.y) / 2,
+      };
       const offset = Math.hypot(mid.x - chordMid.x, mid.y - chordMid.y);
       return toResult(offset < 1 ? [start.point, end.point] : [start.point, mid, end.point]);
     }
@@ -402,11 +494,20 @@ export function computeConnectorRoute(connector: ConnectorElement, getElement: G
 
 /** Bezier result that always keeps 4 points, even for degenerate (coincident) controls. */
 function bezierExact(s: Point, ns: Point, e: Point, ne: Point, k: number): RouteResult {
-  const pts = [s, { x: s.x + ns.x * k, y: s.y + ns.y * k }, { x: e.x + ne.x * k, y: e.y + ne.y * k }, e].map(
-    (p) => [round(p.x), round(p.y)] as LocalPoint,
-  );
+  const pts = [
+    s,
+    { x: s.x + ns.x * k, y: s.y + ns.y * k },
+    { x: e.x + ne.x * k, y: e.y + ne.y * k },
+    e,
+  ].map((p) => [round(p.x), round(p.y)] as LocalPoint);
   const n = normalizeLinearPoints(0, 0, pts);
-  return { x: round(n.x), y: round(n.y), width: round(n.width), height: round(n.height), points: n.points };
+  return {
+    x: round(n.x),
+    y: round(n.y),
+    width: round(n.width),
+    height: round(n.height),
+    points: n.points,
+  };
 }
 
 /**
@@ -415,7 +516,10 @@ function bezierExact(s: Point, ns: Point, e: Point, ne: Point, k: number): Route
  * intermediate points are kept. Elbow arrows are re-routed with one or two bends. Connectors are
  * delegated to `computeConnectorRoute` without obstacles. Returns null when nothing is bound.
  */
-export function computeArrowEndpoints(arrow: ArrowElement | ConnectorElement, getElement: GetElement): RouteResult | null {
+export function computeArrowEndpoints(
+  arrow: ArrowElement | ConnectorElement,
+  getElement: GetElement,
+): RouteResult | null {
   if (arrow.type === 'connector') {
     if (!arrow.startBinding && !arrow.endBinding) return null;
     return computeConnectorRoute(arrow, getElement, []);
@@ -427,7 +531,8 @@ export function computeArrowEndpoints(arrow: ArrowElement | ConnectorElement, ge
   if (world.length === 0) return null;
   const n = world.length;
   const pts = world.map((p) => ({ ...p }));
-  const fixed = (b: Binding | null, t: SceneElement | null) => (b && t && hasFixedAttachment(b, t) ? resolveBindingPoint(t, b, getElementCenter(t)) : null);
+  const fixed = (b: Binding | null, t: SceneElement | null) =>
+    b && t && hasFixedAttachment(b, t) ? resolveBindingPoint(t, b, getElementCenter(t)) : null;
   let s = fixed(arrow.startBinding, startT);
   let e = fixed(arrow.endBinding, endT);
   if (startT && !s) {
@@ -455,8 +560,15 @@ export interface BoundLinearUpdateOptions {
 }
 
 function sameGeometry(el: LinearElement, r: RouteResult): boolean {
-  if (Math.abs(el.x - r.x) > 1e-6 || Math.abs(el.y - r.y) > 1e-6 || el.points.length !== r.points.length) return false;
-  return el.points.every((p, i) => Math.abs(p[0] - r.points[i]![0]) < 1e-6 && Math.abs(p[1] - r.points[i]![1]) < 1e-6);
+  if (
+    Math.abs(el.x - r.x) > 1e-6 ||
+    Math.abs(el.y - r.y) > 1e-6 ||
+    el.points.length !== r.points.length
+  )
+    return false;
+  return el.points.every(
+    (p, i) => Math.abs(p[0] - r.points[i]![0]) < 1e-6 && Math.abs(p[1] - r.points[i]![1]) < 1e-6,
+  );
 }
 
 /**
@@ -474,7 +586,8 @@ export function computeBoundLinearUpdates(
   for (const id of changed) {
     const el = scene.getElement(id);
     if (!el) continue;
-    if (isLinearElement(el) && !el.isDeleted && (el.startBinding || el.endBinding)) affected.add(id);
+    if (isLinearElement(el) && !el.isDeleted && (el.startBinding || el.endBinding))
+      affected.add(id);
     for (const l of scene.getBoundLinears(id)) affected.add(l.id);
   }
   const getLive = (id: string) => scene.getLiveElement(id);
@@ -489,7 +602,8 @@ export function computeBoundLinearUpdates(
     if (startBinding !== el.startBinding) patch.startBinding = null;
     if (endBinding !== el.endBinding) patch.endBinding = null;
     const unbound = patch.startBinding === null || patch.endBinding === null;
-    const drives = changed.has(id) || [startBinding, endBinding].some((b) => b && changed.has(b.elementId));
+    const drives =
+      changed.has(id) || [startBinding, endBinding].some((b) => b && changed.has(b.elementId));
     if ((startBinding || endBinding) && (drives || !unbound) && el.type !== 'line') {
       const next = { ...el, startBinding, endBinding } as ArrowElement | ConnectorElement;
       let route: RouteResult | null;
@@ -500,7 +614,12 @@ export function computeBoundLinearUpdates(
           if (t) boxes.push(getElementBounds(t));
         }
         const region = expandBounds(unionBounds(...boxes), 240);
-        const obstacles = next.routing === 'orthogonal' ? (options.obstacles ? options.obstacles(region) : scene.queryBounds(region)) : [];
+        const obstacles =
+          next.routing === 'orthogonal'
+            ? options.obstacles
+              ? options.obstacles(region)
+              : scene.queryBounds(region)
+            : [];
         route = computeConnectorRoute(next, getLive, obstacles);
       } else {
         route = computeArrowEndpoints(next, getLive);

@@ -37,9 +37,16 @@ describe('changesToOperations', () => {
     tx.update('a', { x: 30, y: 40 });
     tx.update('b', { width: 50, height: 20 });
     tx.update('t', { text: 'changed', strokeColor: '#ff0000' });
-    tx.create(createElement('ellipse', { id: 'e', index: indicesAbove(scene.getElements(), 1)[0]! }));
+    tx.create(
+      createElement('ellipse', { id: 'e', index: indicesAbove(scene.getElements(), 1)[0]! }),
+    );
     const ops = changesToOperations(tx.commit()!.changes, meta);
-    expect(ops.map((o) => o.type).sort()).toEqual(['CREATE_ELEMENT', 'MOVE_ELEMENT', 'RESIZE_ELEMENT', 'UPDATE_ELEMENT']);
+    expect(ops.map((o) => o.type).sort()).toEqual([
+      'CREATE_ELEMENT',
+      'MOVE_ELEMENT',
+      'RESIZE_ELEMENT',
+      'UPDATE_ELEMENT',
+    ]);
   });
 
   it('emits GROUP_ELEMENTS / UNGROUP_ELEMENTS', () => {
@@ -85,7 +92,12 @@ describe('applyOperation', () => {
     const base = createElement('rectangle', { id: 'r', width: 10, height: 10 });
     const s = store([base]);
     s.apply({ ...meta(base.version), type: 'MOVE_ELEMENT', elementId: 'r', x: 100, y: 100 });
-    const res = s.apply({ ...meta(base.version), type: 'UPDATE_ELEMENT', elementId: 'r', patch: { strokeColor: '#00ff00' } });
+    const res = s.apply({
+      ...meta(base.version),
+      type: 'UPDATE_ELEMENT',
+      elementId: 'r',
+      patch: { strokeColor: '#00ff00' },
+    });
     expect(res.conflicted).toBe(true);
     const r = s.get('r')!;
     expect(r.x).toBe(100);
@@ -106,15 +118,30 @@ describe('applyOperation', () => {
   it('rejects invalid elements and protected keys', () => {
     const base = createElement('rectangle', { id: 'r' });
     const s = store([base]);
-    const bad = s.apply({ ...meta(1), type: 'UPDATE_ELEMENT', elementId: 'r', patch: { opacity: 5000 } });
+    const bad = s.apply({
+      ...meta(1),
+      type: 'UPDATE_ELEMENT',
+      elementId: 'r',
+      patch: { opacity: 5000 },
+    });
     expect(bad.rejected).toMatch(/Invalid element/);
-    s.apply({ ...meta(1), type: 'UPDATE_ELEMENT', elementId: 'r', patch: { type: 'text' } as never });
+    s.apply({
+      ...meta(1),
+      type: 'UPDATE_ELEMENT',
+      elementId: 'r',
+      patch: { type: 'text' } as never,
+    });
     expect(s.get('r')!.type).toBe('rectangle');
   });
 
   it('is idempotent for groups', () => {
     const s = store([createElement('rectangle', { id: 'r' })]);
-    const op: Operation = { ...meta(null), type: 'GROUP_ELEMENTS', groupId: 'g', elementIds: ['r'] };
+    const op: Operation = {
+      ...meta(null),
+      type: 'GROUP_ELEMENTS',
+      groupId: 'g',
+      elementIds: ['r'],
+    };
     s.apply(op);
     s.apply(op);
     expect(s.get('r')!.groupIds).toEqual(['g']);
@@ -122,7 +149,11 @@ describe('applyOperation', () => {
 
   it('rejects CREATE_CONNECTION for non-connectors', () => {
     const s = store([]);
-    const res = s.apply({ ...meta(null), type: 'CREATE_CONNECTION', element: createElement('rectangle', { id: 'x' }) });
+    const res = s.apply({
+      ...meta(null),
+      type: 'CREATE_CONNECTION',
+      element: createElement('rectangle', { id: 'x' }),
+    });
     expect(res.rejected).toBeTruthy();
   });
 });

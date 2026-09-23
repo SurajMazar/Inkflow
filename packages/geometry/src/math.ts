@@ -35,5 +35,7 @@ export const radToDeg = (rad: number) => (rad * 180) / Math.PI;
 /** Snaps an angle to the nearest multiple of `stepRad`, when within `thresholdRad`. */
 export function snapAngle(angle: number, stepRad: number, thresholdRad = stepRad / 2): number {
   const snapped = Math.round(angle / stepRad) * stepRad;
-  return Math.abs(snapped - angle) <= thresholdRad ? normalizeAngle(snapped) : normalizeAngle(angle);
+  return Math.abs(snapped - angle) <= thresholdRad
+    ? normalizeAngle(snapped)
+    : normalizeAngle(angle);
 }

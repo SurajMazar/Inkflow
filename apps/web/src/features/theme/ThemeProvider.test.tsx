@@ -9,7 +9,8 @@ import { __resetAnonymousPreferencesForTests } from '@/features/auth/preferences
 import { useTheme } from './ThemeProvider';
 
 function ThemeControls() {
-  const { theme, resolvedTheme, setTheme, highContrast, setHighContrast, setReduceMotion } = useTheme();
+  const { theme, resolvedTheme, setTheme, highContrast, setHighContrast, setReduceMotion } =
+    useTheme();
   return (
     <div>
       <p data-testid="state">{`${theme}/${resolvedTheme}/${highContrast ? 'hc' : 'normal'}`}</p>
@@ -54,15 +55,22 @@ describe('ThemeProvider', () => {
     const user = userEvent.setup();
     renderWithProviders(<ThemeControls />);
     const root = document.documentElement;
-    await waitFor(() => expect(screen.getByTestId('state')).toHaveTextContent('system/light/normal'));
+    await waitFor(() =>
+      expect(screen.getByTestId('state')).toHaveTextContent('system/light/normal'),
+    );
     expect(root).not.toHaveClass('dark');
 
     await user.click(screen.getByText('dark'));
     expect(root).toHaveClass('dark');
     expect(root.style.colorScheme).toBe('dark');
-    expect(document.querySelector('meta[name="theme-color"]')).toHaveAttribute('content', '#131316');
+    expect(document.querySelector('meta[name="theme-color"]')).toHaveAttribute(
+      'content',
+      '#131316',
+    );
     expect(JSON.parse(window.localStorage.getItem('inkflow:preferences')!).theme).toBe('dark');
-    expect(JSON.parse(window.localStorage.getItem('inkflow:appearance')!)).toMatchObject({ theme: 'dark' });
+    expect(JSON.parse(window.localStorage.getItem('inkflow:appearance')!)).toMatchObject({
+      theme: 'dark',
+    });
 
     await user.click(screen.getByText('light'));
     expect(root).not.toHaveClass('dark');
@@ -73,7 +81,9 @@ describe('ThemeProvider', () => {
     installFetchMock(anonymous);
     darkQueryMatches = true;
     renderWithProviders(<ThemeControls />);
-    await waitFor(() => expect(screen.getByTestId('state')).toHaveTextContent('system/dark/normal'));
+    await waitFor(() =>
+      expect(screen.getByTestId('state')).toHaveTextContent('system/dark/normal'),
+    );
     expect(document.documentElement).toHaveClass('dark');
 
     darkQueryMatches = false;
@@ -102,13 +112,21 @@ describe('ThemeProvider', () => {
         method: 'PATCH',
         path: '/users/me',
         respond: (call) => ({
-          body: { ...me, preferences: { ...me.preferences, ...(call.body as { preferences: object }).preferences } },
+          body: {
+            ...me,
+            preferences: {
+              ...me.preferences,
+              ...(call.body as { preferences: object }).preferences,
+            },
+          },
         }),
       },
     ]);
     const user = userEvent.setup();
     renderWithProviders(<ThemeControls />);
-    await waitFor(() => expect(screen.getByTestId('state')).toHaveTextContent('system/light/normal'));
+    await waitFor(() =>
+      expect(screen.getByTestId('state')).toHaveTextContent('system/light/normal'),
+    );
     await user.click(screen.getByText('dark'));
     expect(document.documentElement).toHaveClass('dark');
     await waitFor(() => expect(mock.callsTo('PATCH', '/users/me')).toHaveLength(1));
@@ -124,9 +142,13 @@ describe('ThemeProvider', () => {
     ]);
     const user = userEvent.setup();
     renderWithProviders(<ThemeControls />);
-    await waitFor(() => expect(screen.getByTestId('state')).toHaveTextContent('system/light/normal'));
+    await waitFor(() =>
+      expect(screen.getByTestId('state')).toHaveTextContent('system/light/normal'),
+    );
     await user.click(screen.getByText('dark'));
-    await waitFor(() => expect(screen.getByTestId('state')).toHaveTextContent('system/light/normal'));
+    await waitFor(() =>
+      expect(screen.getByTestId('state')).toHaveTextContent('system/light/normal'),
+    );
     expect(document.documentElement).not.toHaveClass('dark');
     expect(await screen.findByText('Something went wrong on our side')).toBeInTheDocument();
   });

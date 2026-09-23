@@ -20,7 +20,9 @@ export function findCachedBoard(
 ): BoardSummaryDto | undefined {
   const detail = queryClient.getQueryData<BoardDetailDto>(queryKeys.boards.detail(boardId));
   if (detail?.board) return detail.board;
-  for (const [, list] of queryClient.getQueriesData<BoardSummaryDto[]>({ queryKey: queryKeys.boards.lists })) {
+  for (const [, list] of queryClient.getQueriesData<BoardSummaryDto[]>({
+    queryKey: queryKeys.boards.lists,
+  })) {
     const found = list?.find((b) => b.id === boardId);
     if (found) return found;
   }
@@ -74,7 +76,9 @@ export function useBoardSharing(boardId: string, options: UseBoardSharingOptions
     mutationFn: (body: AddBoardShareRequest) => api.sharing.addShare(boardId, body),
     onSuccess: (sharing, body) => {
       setSharing(sharing);
-      const added = sharing.members.some((m) => m.user.email.toLowerCase() === body.email.toLowerCase());
+      const added = sharing.members.some(
+        (m) => m.user.email.toLowerCase() === body.email.toLowerCase(),
+      );
       notify.success(added ? 'Access granted' : 'Invitation sent', { description: body.email });
     },
   });
@@ -108,7 +112,8 @@ export function useBoardSharing(boardId: string, options: UseBoardSharingOptions
   });
 
   const setWorkspaceAccess = useMutation({
-    mutationFn: (workspaceAccess: WorkspaceAccess) => api.boards.update(boardId, { workspaceAccess }),
+    mutationFn: (workspaceAccess: WorkspaceAccess) =>
+      api.boards.update(boardId, { workspaceAccess }),
     onMutate: (workspaceAccess) => {
       const previous = queryClient.getQueryData<BoardSharingDto>(key);
       if (previous) setSharing({ ...previous, workspaceAccess });
@@ -128,7 +133,9 @@ export function useBoardSharing(boardId: string, options: UseBoardSharingOptions
     mutationFn: (body: CreateShareLinkRequest) => api.sharing.createLink(boardId, body),
     onSuccess: (link) => {
       queryClient.setQueryData<BoardSharingDto>(key, (sharing) =>
-        sharing ? { ...sharing, links: [link, ...sharing.links.filter((l) => l.id !== link.id)] } : sharing,
+        sharing
+          ? { ...sharing, links: [link, ...sharing.links.filter((l) => l.id !== link.id)] }
+          : sharing,
       );
     },
     onError: (error) => toastApiError(error, "Couldn't create the link"),

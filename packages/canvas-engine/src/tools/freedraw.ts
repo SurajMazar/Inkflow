@@ -1,4 +1,9 @@
-import { createElement, normalizeLinearPoints, type FreedrawBrush, type PressurePoint } from '@inkflow/elements';
+import {
+  createElement,
+  normalizeLinearPoints,
+  type FreedrawBrush,
+  type PressurePoint,
+} from '@inkflow/elements';
 import { simplifyRDP } from '@inkflow/geometry';
 import { indicesAbove } from '@inkflow/scene';
 import type { CanvasPointerEvent } from '../types';
@@ -6,12 +11,21 @@ import { BaseTool } from './base';
 
 type FreedrawToolType = 'pencil' | 'brush' | 'highlighter';
 
-const BRUSH: Record<FreedrawToolType, FreedrawBrush> = { pencil: 'pencil', brush: 'brush', highlighter: 'highlighter' };
+const BRUSH: Record<FreedrawToolType, FreedrawBrush> = {
+  pencil: 'pencil',
+  brush: 'brush',
+  highlighter: 'highlighter',
+};
 const HIGHLIGHTER_DEFAULT = '#fab005';
 
 /** Vector freehand drawing with pressure (or simulated pressure), smoothing and simplification. */
 export class FreedrawTool extends BaseTool {
-  private drawing: { id: string; origin: { x: number; y: number }; points: PressurePoint[]; hasPressure: boolean } | null = null;
+  private drawing: {
+    id: string;
+    origin: { x: number; y: number };
+    points: PressurePoint[];
+    hasPressure: boolean;
+  } | null = null;
 
   constructor(
     editor: ConstructorParameters<typeof BaseTool>[0],
@@ -36,9 +50,15 @@ export class FreedrawTool extends BaseTool {
     const style = editor.state.style;
     const highlighter = this.id === 'highlighter';
     const el = createElement('freedraw', {
-      strokeColor: highlighter && style.strokeColor === '#1e1e1e' ? HIGHLIGHTER_DEFAULT : style.strokeColor,
+      strokeColor:
+        highlighter && style.strokeColor === '#1e1e1e' ? HIGHLIGHTER_DEFAULT : style.strokeColor,
       backgroundColor: 'transparent',
-      strokeWidth: this.id === 'brush' ? style.strokeWidth * 2 : highlighter ? Math.max(4, style.strokeWidth * 3) : style.strokeWidth,
+      strokeWidth:
+        this.id === 'brush'
+          ? style.strokeWidth * 2
+          : highlighter
+            ? Math.max(4, style.strokeWidth * 3)
+            : style.strokeWidth,
       opacity: highlighter ? Math.min(style.opacity, 45) : style.opacity,
       roughness: 0,
       x: e.world.x,
@@ -50,7 +70,12 @@ export class FreedrawTool extends BaseTool {
     const [index] = indicesAbove(editor.scene.getElementsIncludingDeleted(), 1);
     tx.create({ ...el, index: index! });
     editor.setState({ selectedIds: [], interaction: 'drawing' });
-    this.drawing = { id: el.id, origin: e.world, points: [[0, 0, e.pressure]], hasPressure: e.hasPressure };
+    this.drawing = {
+      id: el.id,
+      origin: e.world,
+      points: [[0, 0, e.pressure]],
+      hasPressure: e.hasPressure,
+    };
   }
 
   override onPointerMove(e: CanvasPointerEvent): void {
@@ -81,7 +106,13 @@ export class FreedrawTool extends BaseTool {
       tolerance,
     ).map((p) => [p.x, p.y, p.pressure] as PressurePoint);
     const norm = normalizeLinearPoints(d.origin.x, d.origin.y, simplified);
-    tx.update(d.id, { x: norm.x, y: norm.y, width: norm.width, height: norm.height, points: norm.points });
+    tx.update(d.id, {
+      x: norm.x,
+      y: norm.y,
+      width: norm.width,
+      height: norm.height,
+      points: norm.points,
+    });
     editor.refreshFrameMembership(tx, [d.id]);
     editor.commitGesture();
     editor.setState({ interaction: 'idle' });

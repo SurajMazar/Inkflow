@@ -24,7 +24,10 @@ export class VersionsController {
   @AllowShareToken()
   @Get()
   @ApiOperation({ summary: 'Version history' })
-  list(@CurrentPrincipal() principal: Principal, @IdParam('id', 'Board') boardId: string): Promise<BoardVersionDto[]> {
+  list(
+    @CurrentPrincipal() principal: Principal,
+    @IdParam('id', 'Board') boardId: string,
+  ): Promise<BoardVersionDto[]> {
     return this.versions.list(principal, boardId);
   }
 
@@ -54,7 +57,9 @@ export class VersionsController {
   @AllowShareToken()
   @Post(':versionId/restore')
   @HttpCode(200)
-  @ApiOperation({ summary: 'Restore a version (returns the automatic backup of the pre-restore state)' })
+  @ApiOperation({
+    summary: 'Restore a version (returns the automatic backup of the pre-restore state)',
+  })
   restore(
     @CurrentPrincipal() principal: Principal,
     @IdParam('id', 'Board') boardId: string,

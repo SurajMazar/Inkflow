@@ -20,7 +20,8 @@ export async function loadExportImages(
   const images = new Map<string, CanvasImageSource>();
   const failed = new Set<string>();
   const ids = new Set<string>();
-  for (const el of elements) if (el.type === 'image' && el.fileId && !el.isDeleted) ids.add(el.fileId);
+  for (const el of elements)
+    if (el.type === 'image' && el.fileId && !el.isDeleted) ids.add(el.fileId);
   await Promise.all(
     [...ids].map(async (id) => {
       const file = files[id];
@@ -51,7 +52,12 @@ export function defaultCreateCanvas(width: number, height: number): ExportCanvas
 }
 
 /** Scale lowered so that the output fits `maxPixels` and the maximum canvas side. */
-export function clampExportScale(width: number, height: number, scale: number, maxPixels = DEFAULT_MAX_PIXELS): number {
+export function clampExportScale(
+  width: number,
+  height: number,
+  scale: number,
+  maxPixels = DEFAULT_MAX_PIXELS,
+): number {
   let s = scale > 0 ? scale : 1;
   const w = Math.max(1e-6, width);
   const h = Math.max(1e-6, height);
@@ -61,9 +67,17 @@ export function clampExportScale(width: number, height: number, scale: number, m
 }
 
 /** Renders the scope into a new canvas sized `bounds × scale` (scale clamped to `maxPixels`). */
-export async function exportToCanvas(scope: ExportScope, options: RasterExportOptions): Promise<HTMLCanvasElement> {
+export async function exportToCanvas(
+  scope: ExportScope,
+  options: RasterExportOptions,
+): Promise<HTMLCanvasElement> {
   const bounds = getExportBounds(scope, options);
-  const scale = clampExportScale(bounds.width, bounds.height, options.scale, options.maxPixels ?? DEFAULT_MAX_PIXELS);
+  const scale = clampExportScale(
+    bounds.width,
+    bounds.height,
+    options.scale,
+    options.maxPixels ?? DEFAULT_MAX_PIXELS,
+  );
   const width = Math.max(1, Math.round(bounds.width * scale));
   const height = Math.max(1, Math.round(bounds.height * scale));
   const canvas = (options.createCanvas ?? defaultCreateCanvas)(width, height);
@@ -91,7 +105,10 @@ export async function canvasToPngBlob(canvas: ExportCanvas): Promise<Blob> {
   if (typeof off.convertToBlob === 'function') return off.convertToBlob({ type: 'image/png' });
   const html = canvas as HTMLCanvasElement;
   return new Promise<Blob>((resolve, reject) => {
-    html.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('Canvas encoding failed'))), 'image/png');
+    html.toBlob(
+      (blob) => (blob ? resolve(blob) : reject(new Error('Canvas encoding failed'))),
+      'image/png',
+    );
   });
 }
 
@@ -101,10 +118,16 @@ export function embedSceneInPng(png: Uint8Array, sceneJson: string): Promise<Uin
 }
 
 /** Exports a PNG; with `embedScene` the scene JSON is embedded so the PNG can be re-opened. */
-export async function exportToPngBlob(scope: ExportScope, options: RasterExportOptions): Promise<Blob> {
+export async function exportToPngBlob(
+  scope: ExportScope,
+  options: RasterExportOptions,
+): Promise<Blob> {
   const canvas = await exportToCanvas(scope, options);
   const blob = await canvasToPngBlob(canvas);
-  if (!options.embedScene) return blob.type === 'image/png' ? blob : new Blob([await blob.arrayBuffer()], { type: 'image/png' });
+  if (!options.embedScene)
+    return blob.type === 'image/png'
+      ? blob
+      : new Blob([await blob.arrayBuffer()], { type: 'image/png' });
   const bytes = new Uint8Array(await blob.arrayBuffer());
   const withScene = await embedSceneInPng(bytes, sceneJsonForEmbedding(scope));
   return new Blob([withScene as BlobPart], { type: 'image/png' });

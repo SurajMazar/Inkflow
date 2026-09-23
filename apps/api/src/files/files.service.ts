@@ -50,8 +50,8 @@ export function imageError(err: unknown): never {
 
 export function sanitizeFileName(name: string | undefined | null): string {
   const base = (name ?? '').split(/[\\/]/).pop() ?? '';
-  // eslint-disable-next-line no-control-regex
   const cleaned = base
+    // eslint-disable-next-line no-control-regex
     .replace(/[\u0000-\u001f\u007f"<>|:*?]/g, '')
     .trim()
     .slice(0, 200);

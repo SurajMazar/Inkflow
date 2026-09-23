@@ -137,9 +137,20 @@ Mentions use the body token `@[Display Name](userId)`; the server notifies menti
 
 ## Files
 
-| POST | `/files` | multipart `file` + field `boardId` | `FileDto` (EDITOR+ on board; png/jpeg/webp/gif/svg ≤ 20 MB, validated by magic bytes) |
+| POST | `/files` | multipart `file` + field `boardId` (+ optional `fileId`) | `FileDto` (EDITOR+ on board; png/jpeg/webp/gif/svg ≤ 20 MB, validated by magic bytes) |
 | GET | `/files/:id` | – | `FileDto` |
 | GET | `/files/:id/content` | `?st=` optional | file bytes (permission-checked, `Cache-Control: private`) |
+
+- `fileId` (optional) is a client-generated UUID v4. When present and unused, the file is stored
+  under that id. Re-uploading the same id for the same board with identical content returns the
+  existing `FileDto` (idempotent retry); the same id on another board or with different content →
+  `409 CONFLICT`. An invalid UUID → `400 VALIDATION_FAILED`.
+- Operations that create/update image elements whose `fileId` does not exist (yet) are accepted
+  (the upload may be in flight or queued offline); they are rejected only when the file exists but
+  belongs to a different board. `file_references` rows are created when such an operation is
+  applied if the file exists, and when the upload completes later (for image elements of that
+  board referencing the id).
+- `GET /boards/:id` → `document.files` contains metadata only for referenced files that exist.
 
 ## Templates, notifications, search, health
 

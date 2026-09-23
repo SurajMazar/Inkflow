@@ -32,6 +32,21 @@ export interface ShapeGeometry {
   labelBox?: Rect;
   /** Area in which the icon is drawn, if the shape reserves one. */
   iconBox?: Rect;
+  /**
+   * Closed shapes filled with the stroke color and never stroked separately (bullseye centre of a
+   * final state, status LEDs). Drawn after `details`.
+   */
+  fills?: Path[];
+  /**
+   * Outline used for connector attachment, port projection and selection highlights when the
+   * drawn `outline` does not cover the node box (stick-figure actors, person silhouettes with a
+   * label underneath, padlocks). Defaults to `outline`.
+   */
+  connectionOutline?: Path;
+  /** Secondary text area (org-chart subtitle). Renderers draw `node.metadata.subtitle` there. */
+  subtitleBox?: Rect;
+  /** Mirrors `NodeShapeDefinition.elliptical` for consumers that only see the geometry. */
+  elliptical?: boolean;
 }
 
 export interface NodeShapeDefinition {
@@ -89,6 +104,13 @@ export interface AutoLayoutOptions {
   rankSpacing?: number;
   /** Deterministic seed for force layouts. */
   seed?: number;
+  /**
+   * Tree layouts only: lay out the root's subtrees on both sides (mind map). Defaults to true for
+   * direction `LR` and false otherwise.
+   */
+  mindMap?: boolean;
+  /** Force layouts only: number of simulation iterations (default depends on graph size). */
+  iterations?: number;
 }
 
 export interface TableLayout {
@@ -100,7 +122,11 @@ export interface TableLayout {
   keyColumnWidth: number;
   nameColumnX: number;
   typeColumnX: number;
-  rows: { columnId: string; y: number; height: number }[];
+  rows: { columnId: string; y: number; height: number; badge: string }[];
+  /** Horizontal padding inside cells and font metrics used for measuring. */
+  padding: number;
+  fontSize: number;
+  headerFontSize: number;
 }
 
 export interface UmlClassLayout {
@@ -112,13 +138,33 @@ export interface UmlClassLayout {
   attributesHeight: number;
   methodsY: number;
   methodsHeight: number;
+  /** Lines of the name compartment (optional «stereotype» line first, then the name). */
+  nameLines: { text: string; y: number; bold: boolean; italic: boolean }[];
+  attributeLines: { text: string; y: number; underline: boolean }[];
+  methodLines: { text: string; y: number; underline: boolean; italic: boolean }[];
+  paddingX: number;
+  fontSize: number;
 }
 
 export interface SequenceLayout {
   width: number;
   height: number;
   headerHeight: number;
-  participants: { id: string; centerX: number; headerX: number; headerWidth: number }[];
+  participants: {
+    id: string;
+    centerX: number;
+    headerX: number;
+    headerWidth: number;
+    /** Top of the participant header (0, or the y of the `create` message that creates it). */
+    headerY: number;
+    headerHeight: number;
+    kind: 'participant' | 'actor' | 'database' | 'boundary' | 'control' | 'entity';
+    name: string;
+    /** Lifeline extent for this participant (ends early at a `destroy` message). */
+    lifelineTop: number;
+    lifelineBottom: number;
+    destroyed: boolean;
+  }[];
   lifelineTop: number;
   lifelineBottom: number;
   messages: {
@@ -129,9 +175,22 @@ export interface SequenceLayout {
     self: boolean;
     kind: 'sync' | 'async' | 'return' | 'create' | 'destroy';
     label: string;
+    from: string;
+    to: string;
+    /** Self messages: loop height (the arrow returns at `y + loopHeight`) and loop width. */
+    loopHeight: number;
+    loopWidth: number;
+    /** Label anchor (centre of the label's baseline box) and measured width. */
+    labelX: number;
+    labelY: number;
+    labelWidth: number;
   }[];
-  activations: { participantId: string; x: number; top: number; bottom: number; depth: number }[];
-  notes: { id: string; x: number; y: number; width: number; height: number; text: string }[];
+  /** `x` is the left edge of the activation bar; `width` is ACTIVATION_WIDTH. */
+  activations: { participantId: string; x: number; width: number; top: number; bottom: number; depth: number }[];
+  notes: { id: string; x: number; y: number; width: number; height: number; text: string; lines: string[] }[];
+  /** Font metrics used for labels (so renderers draw exactly what was measured). */
+  fontSize: number;
+  lineHeight: number;
 }
 
 export type LibraryCategory =

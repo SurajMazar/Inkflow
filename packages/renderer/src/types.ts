@@ -51,6 +51,8 @@ export interface StaticRenderOptions {
   showFrameNames: boolean;
   /** Cheaper rendering while panning/zooming large scenes. */
   lowFidelity?: boolean;
+  /** Element lookup (frames for clipping, binding targets). */
+  getElement: (id: string) => SceneElement | undefined;
 }
 
 export interface RenderStats {
@@ -155,6 +157,7 @@ export interface SceneRenderOptions {
   theme: RenderTheme;
   images: ImageSource;
   showFrameNames: boolean;
+  getElement: (id: string) => SceneElement | undefined;
 }
 
 export interface SvgRenderOptions {
@@ -168,6 +171,11 @@ export interface SvgRenderOptions {
   /** Embed @font-face rules (with the provided font data URLs) for self-contained SVGs. */
   fontFaces?: { family: string; dataUrl: string; weight?: string; style?: string }[];
   showFrameNames: boolean;
+  getElement: (id: string) => SceneElement | undefined;
+  /** Text embedded (XML-escaped) in a `<metadata>` element, e.g. the serialized scene. */
+  metadata?: string;
+  /** Prefix for generated ids (clip paths, filters) so several SVGs can be inlined in one page. */
+  idPrefix?: string;
 }
 
 export type { SceneElement };

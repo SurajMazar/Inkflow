@@ -1,5 +1,106 @@
 # Inkflow canvas engine
 
+The canvas engine is split into the **editor core** (`packages/canvas-engine`, framework-agnostic)
+and the **rendering pipeline** (`packages/renderer`). React only renders chrome around the editor
+and subscribes to its state; it never draws on the canvas.
+
+## Editor core
+
+`Editor` (`packages/canvas-engine/src/editor.ts`) owns:
+
+| Part | Purpose |
+| --- | --- |
+| `scene` (`@inkflow/scene`) | All elements (including tombstones), z-order, spatial/binding/group/frame indexes |
+| `history` | Undo/redo stacks of property-level deltas |
+| `store` (zustand vanilla) | UI-facing `EditorState`: tool, selection, viewport, style defaults, grid, snapping, text editing, collaborators, presentation… |
+| `tools` | One state machine per tool (selection, hand, shapes, linear, freedraw, eraser, text, image, comment, laser) |
+| `InteractionController` | Normalizes pointer/touch/pen/wheel/gesture/keyboard input into tool events, panning and pinch-zoom |
+| `ShortcutManager` | Layout-independent key combos → actions, user overrides, presentation keys |
+| `ActionRegistry` | Every command (≈120): edit, arrange, align, view, text, navigation, diagram, frames, export |
+| `ClipboardManager` | Copy/cut/paste via native clipboard events (no permission prompts), external content, style copy/paste |
+| `RenderLoop` | rAF-batched redraws of the static and interactive canvases, only when dirty |
+| `events` | `commit`, `transient`, `presence`, `appState`, `files`, `uiRequest`, `load` for persistence, collaboration and UI |
+
+### Coordinates
+
+World coordinates are infinite; the viewport is `{ x, y, zoom, width, height }` where
+`screen = (world - viewport.xy) * zoom`. `screenToWorld`, `worldToScreen`, `screenRectToWorld`,
+`worldRectToScreen`, `zoomAtPoint` (zoom around the cursor), `fitBounds`, `panBy` live in
+`viewport.ts`. Zoom is clamped to 5 %–3000 %.
+
+Input mapping:
+
+| Input | Behavior |
+| --- | --- |
+| Wheel | Pan (Shift = horizontal); zoom when "zoom with wheel" is enabled |
+| Ctrl/⌘ + wheel, trackpad pinch | Zoom around the cursor (Safari gesture events supported) |
+| Space + drag, middle mouse, Hand tool | Pan |
+| Two fingers | Pinch zoom + pan (any in-progress tool gesture is cancelled) |
+| Long press (touch) | Context menu |
+| Pen mode | Touch pans, only the stylus draws |
+
+### Transactions and history
+
+Every mutation goes through a `Transaction`. Gestures (`beginGesture` → pointer moves → `commitGesture`)
+apply changes live, emit `transient` states for collaborators, and commit as **one** history entry
+and **one** batch of operations. One-shot changes use `editor.mutate(label, fn)`. Continuous style
+edits (dragging a color or slider) and repeated nudges coalesce into a single undo step.
+
+History stores per-property `before`/`after` values (plus a snapshot to recreate elements), so undo
+only reverts what the user changed and never clobbers a collaborator's concurrent edit to other
+properties. Creations/deletions are `isDeleted` flips on tombstones.
+
+### Selection & transforms
+
+- Click selects the top-most hittable element; groups select as a unit (double-click enters a
+  group; Esc exits). Shift toggles, Mod+click deep-selects inside groups, Alt+click cycles through
+  overlapping elements (click-through). Dragging on empty canvas draws a marquee (elements fully
+  inside are selected).
+- Transparent shapes are hit by their outline, filled/labelled ones by their area; frames by their
+  border and title; children of clipping frames only inside the frame.
+- Resize (`transform/resize.ts`) works in the element's rotated frame and keeps the opposite handle
+  fixed in world space; Shift locks aspect (images/text lock by default), Alt resizes from the
+  center; dragging past the anchor flips. Multi-selection scales each element relative to the
+  selection box (uniformly when rotated elements are involved). Text scales its font on corner
+  drags and re-wraps on side drags; structured diagram elements never shrink below their content.
+- Rotation snaps to 15° with Shift; flips mirror positions and geometry.
+- Moving updates bound connectors and frame membership in the same transaction; Alt+drag duplicates;
+  Shift constrains to an axis.
+- Linear elements show point handles (drag, insert via midpoints, delete with ⌫) and endpoint
+  binding with port snapping; images have a crop mode (double-click).
+
+### Snapping
+
+`snapping.ts` provides object snapping to edges and centers of nearby elements (with alignment
+guides and markers), grid snapping, point snapping while drawing/resizing and angle snapping.
+Thresholds are screen-constant (8 px). Holding Mod while dragging temporarily inverts object snapping.
+
+### Text editing
+
+Text, shape labels, edge labels and frame names are edited in a real `<textarea>` overlaid on the
+canvas (`getTextEditorLayout()` provides screen position, rotation and font metrics). This gives
+native caret movement, selection, IME and accessibility. Enter inserts a newline; Esc or Mod+Enter
+commits; Mod+B/I/U toggle styles. Text width measurement uses the canvas `measureText` with the
+bundled fonts, which are loaded before the editor mounts.
+
+### Performance
+
+- Spatial index (uniform grid hash with an oversized-element list) for culling, hit testing,
+  marquee, eraser and snapping queries.
+- Scene arrays are patched in place when z-order is unchanged (no re-sort per drag frame).
+- The static canvas only redraws when the scene, viewport or theme changes; the overlay redraws on
+  interaction changes. Large scenes switch to low-fidelity rendering while panning.
+- Freehand points are simplified (RDP) on pointer up; coalesced pointer events keep strokes smooth.
+- A 10,000-element scene loads and queries within the test budget (`test/editor.test.ts`).
+
+### Tests
+
+`packages/canvas-engine/test`: viewport math, rotation-aware resize, multi-resize, rotate/flip,
+handles, snapping, shortcut parsing, search, and behavior tests that drive tools with synthetic
+pointer events (drawing, moving, marquee + grouping, resizing, arrows binding and following shapes,
+freedraw, eraser, text editing, clipboard, frames, presentation, read-only mode, remote changes,
+style coalescing, 10k-element scenes).
+
 ## Rendering pipeline
 
 The rendering engine lives in `packages/renderer` (`@inkflow/renderer`); file exporters live in

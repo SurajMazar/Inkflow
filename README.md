@@ -1,155 +1,357 @@
 # Inkflow
 
-Inkflow is an infinite-canvas whiteboard and diagramming platform in the style of Excalidraw. It
-draws with a hand-drawn look, has a semantic diagram engine (smart connectors, automatic routing
-and layout, ER, UML and sequence diagrams), supports real-time multiplayer and offline editing, and
-exports to PNG, SVG, PDF and JSON. PostgreSQL is the source of truth, and it runs locally with
-Podman.
+**An infinite-canvas whiteboard and diagramming platform with a hand-drawn look, real-time
+collaboration and offline editing.**
 
-![stack](https://img.shields.io/badge/stack-React%2019%20·%20NestJS%2011%20·%20PostgreSQL%2017%20·%20Redis%207-6965db)
+Inkflow is an Excalidraw-class editor built from scratch: a custom canvas engine and renderer, a
+semantic diagram engine (smart connectors, obstacle-avoiding routing, automatic layout, ER, UML
+and sequence diagrams), multiplayer editing over WebSockets, and a NestJS + PostgreSQL backend
+that stores every board, version and comment.
+
+![React 19](https://img.shields.io/badge/React-19-149eca)
+![NestJS 11](https://img.shields.io/badge/NestJS-11-e0234e)
+![PostgreSQL 17](https://img.shields.io/badge/PostgreSQL-17-336791)
+![Redis 7](https://img.shields.io/badge/Redis-7-dc382d)
+![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6)
+![Podman](https://img.shields.io/badge/runs%20on-Podman-892ca0)
+
+![Architecture diagram board in the Inkflow editor](docs/images/architecture-board.png)
+
+<table>
+  <tr>
+    <td><img src="docs/images/er-diagram.png" alt="ER diagram with crow's-foot relationships" /></td>
+    <td><img src="docs/images/dashboard.png" alt="Dashboard with recent boards and templates" /></td>
+  </tr>
+</table>
+
+---
+
+## Contents
+
+- [Features](#features)
+- [Tech stack](#tech-stack)
+- [Quick start](#quick-start)
+- [Running everything in containers](#running-everything-in-containers)
+- [Testing](#testing)
+- [Commands](#commands)
+- [Configuration](#configuration)
+- [Project structure](#project-structure)
+- [How it works](#how-it-works)
+- [Documentation](#documentation)
+- [Troubleshooting](#troubleshooting)
 
 ## Features
 
-- **Canvas**: infinite pan/zoom (wheel, trackpad pinch, touch pinch, space-drag, middle mouse),
-  HiDPI rendering, viewport culling, cached drawables, 10k+ element boards.
-- **Tools**: selection, hand, rectangle, rounded rectangle, ellipse, diamond, triangle, polygon,
-  star, line, arrow, connector, pencil, brush, highlighter, eraser, text, image, frame, diagram node,
-  comment, laser pointer.
-- **Hand-drawn style**: deterministic sketchy strokes (seeded), hachure, cross-hatch, zigzag and solid
-  fills, three sloppiness levels. Rendering is identical across reloads, devices, exports and
-  collaborators.
-- **Editing**: multi-select, marquee, shift/ctrl-click, click-through, rotation-aware resize with
-  aspect lock and center scaling, rotation snapping, flips, groups (nested), frames, alignment and
-  distribution, layers (z-order, lock, hide), object/grid/angle snapping with guides, copy/paste
-  (with groups, bindings, images), duplicate, transaction-based undo/redo, full keyboard shortcuts.
-- **Text**: inline editor with multiline, wrapping, auto width or fixed width, fonts, size, bold,
-  italic, underline, alignment, line height and letter spacing.
-- **Diagrams**: 50+ node shapes, 50+ icons, 60+ library symbols, ports, smart connectors (straight,
-  curved, bézier, elbow, orthogonal obstacle-avoiding routing), automatic layout (hierarchical, tree,
-  grid, horizontal, vertical, force-directed), ER tables with crow's-foot relationships, UML classes,
-  sequence diagrams, 25+ editable templates, Mermaid import.
-- **Collaboration**: live cursors, selections, presence, follow mode, real-time operations over
-  WebSockets with Redis fan-out, offline queueing and reconnection, comments with replies,
-  mentions and resolve/reopen, sharing (owner/editor/viewer, expiring links).
-- **Persistence**: autosave to PostgreSQL, IndexedDB cache, automatic and manual version history
-  with comparison and restore.
-- **Workspace**: workspaces, members and roles, projects, folders, favorites, recent, shared with
-  me, trash with restore, search across boards.
-- **Export/import**: PNG (transparent, scaled, re-importable), vector SVG, PDF (one page per frame),
-  JSON. Imports native JSON, Excalidraw, SVG, images and Mermaid.
-- **Presentation**: frames become slides, fullscreen, keyboard navigation, laser pointer.
-- **Accounts**: email/password with verification, password reset, sessions, Google and GitHub
-  OAuth (optional), CSRF protection, rate limiting.
+### Canvas and drawing
 
-## Quick start (local development)
+- Infinite canvas with pan and zoom: mouse wheel, trackpad pinch, touch pinch, space-drag,
+  middle-mouse drag, fit to content, selection or frame.
+- 22 tools: selection, hand, rectangle, rounded rectangle, ellipse, diamond, triangle, polygon,
+  star, line, arrow, connector, pencil, brush, highlighter, eraser, text, image, frame, diagram
+  node, comment and laser pointer.
+- Hand-drawn rendering with hachure, cross-hatch, zigzag and solid fills and three sloppiness
+  levels. Every shape is seeded, so it looks identical after a reload, on another device, in an
+  export or on a collaborator's screen.
+- Pressure-sensitive vector freehand drawing with smoothing and simplification.
+- HiDPI rendering, viewport culling and drawable caches keep boards with 10,000+ elements smooth.
 
-Prerequisites: Node.js ≥ 22.12 (24 recommended), pnpm 10, Podman with `podman compose`
-(on macOS: `brew install podman podman-compose` and `podman machine init && podman machine start`).
+### Editing
+
+- Single, multi, marquee, Shift and Ctrl/Cmd selection; Alt-click to select underneath.
+- Rotation-aware resize with aspect lock and center scaling, rotation snapping, flips.
+- Nested groups, frames, alignment and distribution, z-order, lock and hide.
+- Snapping to grid (dot, square or isometric), object edges and centers, connection points and angles, with guides.
+- Copy, cut, paste (including from other apps), paste in place and duplicate, preserving groups,
+  connections and images.
+- Transaction-based undo/redo: a whole drag is one undo step.
+- Inline text editing: multiline, wrapping, auto or fixed width, fonts, bold, italic, underline,
+  alignment, line height and letter spacing.
+- Images: upload, drag and drop, paste, crop, replace, opacity and aspect lock (PNG, JPEG, WebP, GIF, SVG).
+- More than 90 keyboard shortcuts (all customizable), a command palette and a context menu.
+- A color picker with presets, HEX/RGB/HSL input, alpha, an eyedropper, recent colors and favorites.
+
+### Diagrams
+
+- 61 node shapes and 77 icons, all extensible through a shape registry.
+- Smart connectors bound to nodes and ports, with straight, curved, bézier, elbow and
+  obstacle-avoiding orthogonal routing. Connectors follow their nodes when those move.
+- Automatic layout: hierarchical (Sugiyama), tree, grid, horizontal, vertical and force-directed.
+- ER tables with primary/foreign keys and crow's-foot cardinalities, UML classes and relations, and
+  sequence diagrams with lifelines, activations and notes.
+- A library of 101 technical symbols (servers, databases, queues, load balancers, cloud services…)
+  and 25 editable templates (microservices, OAuth, CI/CD, Kubernetes, ERD, payments…).
+- Import from Mermaid (flowchart, sequence, ER and class diagrams).
+
+### Collaboration and persistence
+
+- Real-time multiplayer: live cursors, selections, presence, follow mode and live previews while
+  others drag.
+- An operation-based sync protocol with per-property conflict resolution. Changes made offline are
+  queued in IndexedDB and synced when the connection returns.
+- Autosave to PostgreSQL with a "Saving… / Saved / Offline / Syncing…" indicator.
+- Automatic and manual version history, with comparison and restore.
+- Comments pinned to points, elements or frames, with replies, @mentions, resolve and reopen.
+- Sharing as owner, editor or viewer, plus public links that can expire. Permissions are enforced
+  by the server.
+
+### Workspace and product
+
+- Workspaces with members and roles, projects, folders, favorites, recent boards, shared with me,
+  trash and restore, and search across boards.
+- Export to PNG (transparent, scaled, re-importable), vector SVG, PDF (one page per frame) and JSON.
+- Import native JSON, Excalidraw files, SVG, images and Mermaid.
+- Presentation mode: frames become fullscreen slides with keyboard navigation and a laser pointer.
+- Accounts with email verification, password reset, session management, and optional Google and
+  GitHub login.
+- Light, dark and high-contrast themes, keyboard and screen-reader accessibility, and responsive
+  mobile layouts with touch drawing.
+
+## Tech stack
+
+| Layer   | Technology                                                                                                    |
+| ------- | ------------------------------------------------------------------------------------------------------------- |
+| Web app | React 19, TypeScript, Vite 7, Tailwind CSS 4, shadcn/ui (Radix), Zustand, React Router 7, TanStack Query, Zod |
+| Editor  | Custom canvas engine and renderer (HTML Canvas + SVG, Pointer Events), no third-party whiteboard library      |
+| API     | Node.js 24, NestJS 11, WebSockets (`ws`), OpenAPI                                                             |
+| Data    | PostgreSQL 17 (Prisma 6), Redis 7 (pub/sub, presence, rate limits), S3-compatible storage (MinIO locally)     |
+| Email   | SMTP (Mailpit locally)                                                                                        |
+| Tooling | pnpm workspaces, tsup, Vitest, Playwright, ESLint, Prettier, Podman                                           |
+
+## Quick start
+
+### Prerequisites
+
+- **Node.js** 22.12 or newer (24 recommended)
+- **pnpm** 10 (`corepack enable`)
+- **Podman** with `podman compose`
+
+  On macOS:
+
+  ```bash
+  brew install podman podman-compose
+  ```
+
+  ```bash
+  podman machine init && podman machine start
+  ```
+
+### 1. Install dependencies
 
 ```bash
 pnpm install
 ```
 
+### 2. Create your environment file
+
 ```bash
 cp .env.example .env
 ```
+
+The defaults work out of the box for local development.
+
+### 3. Start PostgreSQL, Redis, MinIO and Mailpit
 
 ```bash
 podman compose up -d postgres redis minio minio-init mailpit
 ```
 
+### 4. Apply database migrations
+
 ```bash
 pnpm db:migrate
 ```
+
+### 5. Load demo data (optional)
 
 ```bash
 pnpm db:seed
 ```
 
+### 6. Run the app
+
 ```bash
 pnpm dev
 ```
 
-- Web app: http://localhost:5173 (proxies `/api` and the WebSocket to the API on :4310)
-- API docs (OpenAPI): http://localhost:5173/api/docs
-- Emails (verification, resets, invites): Mailpit at http://localhost:8026
-- MinIO console: http://localhost:9001 (user `inkflow`, password `inkflow-dev-secret`)
+Open **http://localhost:5173** and sign in with the demo account:
 
-The seed creates the demo account **demo@inkflow.dev / inkflow-demo-2024** with a demo workspace
-containing a flowchart, an ER diagram, an architecture diagram, a UML diagram, a mind map and a
-kanban board.
+| Email              | Password            |
+| ------------------ | ------------------- |
+| `demo@inkflow.dev` | `inkflow-demo-2024` |
 
-Host ports can be changed through `INKFLOW_POSTGRES_PORT`, `INKFLOW_REDIS_PORT`,
-`INKFLOW_MINIO_PORT`, `INKFLOW_SMTP_PORT`, `INKFLOW_MAILPIT_UI_PORT` and `INKFLOW_WEB_PORT`.
+The demo workspace contains a flowchart, an ER diagram, an architecture diagram, a UML class
+diagram, a mind map and a kanban board. New accounts are verified through the email you'll find in
+Mailpit.
 
-### Full stack in containers
+### Local services
+
+| Service                   | URL / port                                               |
+| ------------------------- | -------------------------------------------------------- |
+| Web app                   | http://localhost:5173                                    |
+| API (proxied at `/api`)   | http://localhost:4310/api                                |
+| OpenAPI docs              | http://localhost:5173/api/docs                           |
+| Mailpit (captured emails) | http://localhost:8026                                    |
+| MinIO console             | http://localhost:9001 (`inkflow` / `inkflow-dev-secret`) |
+| PostgreSQL                | `localhost:5433` (`inkflow` / `inkflow`)                 |
+| Redis                     | `localhost:6379`                                         |
+
+Host ports can be changed with `INKFLOW_POSTGRES_PORT`, `INKFLOW_REDIS_PORT`, `INKFLOW_MINIO_PORT`,
+`INKFLOW_SMTP_PORT`, `INKFLOW_MAILPIT_UI_PORT` and `INKFLOW_WEB_PORT`.
+
+## Running everything in containers
+
+Build and start the API and web images alongside the infrastructure:
 
 ```bash
 podman compose --profile app up -d --build
 ```
 
-This builds and runs the API (production mode, migrations applied on start) and the web app
-(nginx, which also proxies `/api` and the WebSocket); open http://localhost:8190. The container
-stack does not read the host `.env`; set `INKFLOW_JWT_SECRET` and `INKFLOW_SESSION_SECRET` to your
-own values for anything beyond local testing. The web image build is tuned to fit the default 2 GB
-Podman machine; builds run one image at a time if memory is tight
-(`podman compose --profile app build api && podman compose --profile app build web`).
+Open **http://localhost:8190**. The API runs in production mode and applies migrations on start.
+nginx serves the web app and proxies `/api` and the WebSocket.
+
+- The container stack does not read your `.env`. Set `INKFLOW_JWT_SECRET` and
+  `INKFLOW_SESSION_SECRET` for anything beyond local testing.
+- The web image build fits the default 2 GB Podman machine. If a build is killed for memory, build
+  the images one at a time:
+
+  ```bash
+  podman compose --profile app build api && podman compose --profile app build web
+  ```
+
+Stop the stack:
+
+```bash
+podman compose --profile app down
+```
+
+`docker compose` works with the same file.
+
+## Testing
+
+| Suite       | Command                 | What it covers                                                                                                                                                                                                |
+| ----------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Unit        | `pnpm test`             | Geometry, transforms, selection, rendering, serialization, history, routing, layout, sync client, importers, UI components and the API's services (~730 tests)                                                |
+| Integration | `pnpm test:integration` | API against real PostgreSQL, Redis, MinIO and Mailpit: auth, permissions, boards, sharing, comments, files, versions, WebSocket collaboration                                                                 |
+| End-to-end  | `pnpm test:e2e`         | Playwright in real browsers: register and verify, draw, connect, undo/redo, persistence checked in PostgreSQL, sharing, two-browser collaboration, offline sync, exports, versions, permissions, mobile touch |
+
+Integration and E2E tests use a separate `inkflow_test` database and their own ports, so they
+don't touch your development data. Install the Playwright browser once:
+
+```bash
+pnpm exec playwright install chromium
+```
 
 ## Commands
 
-| Command                             | Description                                                                     |
-| ----------------------------------- | ------------------------------------------------------------------------------- |
-| `pnpm dev`                          | Build packages, then run packages in watch mode, the API and the web dev server |
-| `pnpm build`                        | Production build of all packages, the API and the web app                       |
-| `pnpm test`                         | Unit tests for every package and the web app, plus API unit tests               |
-| `pnpm test:integration`             | API integration tests against real PostgreSQL, Redis, MinIO and Mailpit         |
-| `pnpm test:e2e`                     | Playwright end-to-end tests (starts the API and web app)                        |
-| `pnpm lint` / `pnpm lint:fix`       | ESLint (zero warnings allowed)                                                  |
-| `pnpm format` / `pnpm format:check` | Prettier                                                                        |
-| `pnpm typecheck`                    | TypeScript for every workspace                                                  |
-| `pnpm db:migrate`                   | Create/apply migrations in development (`prisma migrate dev`)                   |
-| `pnpm db:migrate:deploy`            | Apply migrations in production (`prisma migrate deploy`)                        |
-| `pnpm db:seed`                      | Seed the demo workspace, boards and templates                                   |
-| `pnpm db:reset`                     | Drop and recreate the development database                                      |
-| `pnpm infra:up` / `pnpm infra:down` | Start/stop the Podman infrastructure services                                   |
-
-## Repository layout
-
-```text
-apps/
-  api/            NestJS API: REST, WebSocket gateway, jobs, seed
-  web/            React app: dashboard, auth, settings, board editor
-packages/
-  shared/         API contracts, roles, errors, utilities
-  config/         Environment schema
-  geometry/       Math, paths, spatial index, seeded random
-  elements/       Element model, schema, text layout, hit testing
-  scene/          Scene store, history, operations, migrations
-  diagram-engine/ Shapes, icons, ports, routing, layout, ER/UML/sequence, templates
-  renderer/       Hand-drawn canvas & SVG renderer
-  canvas-engine/  Editor core: tools, interactions, selection, snapping, shortcuts
-  collaboration/  Sync protocol and client
-  exporters/      PNG, SVG, PDF, JSON
-  importers/      JSON, Excalidraw, SVG, Mermaid, images
-  database/       Prisma schema, migrations, client
-  ui/             Accessible UI components
-e2e/              Playwright tests
-infra/            Container init scripts
-```
-
-## Documentation
-
-- [ARCHITECTURE.md](ARCHITECTURE.md): system design, layers, data flow, security model
-- [CANVAS_ENGINE.md](CANVAS_ENGINE.md): editor core, rendering pipeline, performance
-- [DIAGRAM_ENGINE.md](DIAGRAM_ENGINE.md): shapes, ports, routing, layout, templates, importers
-- [COLLABORATION.md](COLLABORATION.md): operations, conflict resolution, protocol, offline sync
-- [DATABASE.md](DATABASE.md): PostgreSQL schema, constraints, migrations
-- [DEPLOYMENT.md](DEPLOYMENT.md): production configuration and deployment
-- [docs/API_CONTRACT.md](docs/API_CONTRACT.md): REST and WebSocket contract
+| Command                             | Description                                                                         |
+| ----------------------------------- | ----------------------------------------------------------------------------------- |
+| `pnpm dev`                          | Build the packages, then run them in watch mode with the API and the web dev server |
+| `pnpm build`                        | Production build of every package, the API and the web app                          |
+| `pnpm test`                         | Unit tests                                                                          |
+| `pnpm test:integration`             | API integration tests                                                               |
+| `pnpm test:e2e`                     | Playwright end-to-end tests                                                         |
+| `pnpm lint` / `pnpm lint:fix`       | ESLint (zero warnings allowed)                                                      |
+| `pnpm format` / `pnpm format:check` | Prettier                                                                            |
+| `pnpm typecheck`                    | TypeScript for every workspace                                                      |
+| `pnpm db:migrate`                   | Create and apply migrations in development                                          |
+| `pnpm db:migrate:deploy`            | Apply committed migrations (production)                                             |
+| `pnpm db:seed`                      | Seed the demo workspace and boards                                                  |
+| `pnpm db:reset`                     | Drop and recreate the development database                                          |
+| `pnpm infra:up` / `pnpm infra:down` | Start or stop the infrastructure containers                                         |
+| `pnpm stack:up` / `pnpm stack:down` | Start or stop the full containerized stack                                          |
 
 ## Configuration
 
-All configuration comes from environment variables, documented in [.env.example](.env.example)
-and validated at startup (`packages/config/src/env.ts`). OAuth, SMTP and S3 credentials are
-optional in development: without SMTP, emails are logged by the API, and the OAuth buttons only
-appear when a provider is configured.
+All settings come from environment variables. They are documented in
+[`.env.example`](.env.example) and validated when the API starts. In production the API refuses
+placeholder secrets.
+
+| Variable                                                     | Purpose                                                         |
+| ------------------------------------------------------------ | --------------------------------------------------------------- |
+| `DATABASE_URL`                                               | PostgreSQL connection string                                    |
+| `REDIS_URL`                                                  | Redis connection string                                         |
+| `JWT_SECRET`, `SESSION_SECRET`                               | Signing and encryption secrets (32+ characters)                 |
+| `WEB_ORIGIN`, `PUBLIC_API_URL`                               | Public URLs used for CORS, email links and OAuth callbacks      |
+| `S3_ENDPOINT`, `S3_BUCKET`, `S3_ACCESS_KEY`, `S3_SECRET_KEY` | Object storage for images and thumbnails                        |
+| `SMTP_HOST`, `SMTP_PORT`, `MAIL_FROM`                        | Outgoing email; without SMTP, emails are written to the API log |
+| `GOOGLE_CLIENT_ID/SECRET`, `GITHUB_CLIENT_ID/SECRET`         | Optional OAuth; the login buttons appear only when configured   |
+| `REQUIRE_EMAIL_VERIFICATION`                                 | Require a verified email before signing in (default `true`)     |
+
+## Project structure
+
+```text
+apps/
+  api/             NestJS API: REST, WebSocket gateway, background jobs, seed
+  web/             React app: dashboard, auth, settings and the board editor
+packages/
+  shared/          API contracts (Zod schemas and DTOs), roles, errors, utilities
+  config/          Environment schema
+  geometry/        Vectors, bounds, intersections, SVG paths, spatial index, seeded random
+  elements/        Element model, schema, text layout, hit testing
+  scene/           Scene store, history, operations, document format and migrations
+  diagram-engine/  Shapes, icons, ports, routing, layout, ER/UML/sequence, library, templates
+  renderer/        Hand-drawn canvas and SVG renderer
+  canvas-engine/   Editor core: tools, input, selection, transforms, snapping, shortcuts
+  collaboration/   Sync protocol and client
+  exporters/       PNG, SVG, PDF and JSON export
+  importers/       JSON, Excalidraw, SVG, Mermaid and image import
+  database/        Prisma schema, migrations and client
+  ui/              Accessible UI components
+e2e/               Playwright tests
+infra/             Container init scripts
+```
+
+## How it works
+
+```text
+React UI ──▶ Editor state ──▶ Canvas engine (tools, input) ──▶ Scene model (transactions, history)
+                                                                   │
+                        Renderer (canvas + SVG) ◀──────────────────┤
+                                                                   ▼
+             IndexedDB (cache, offline queue) ◀── Sync client ──▶ WebSocket / HTTP
+                                                                   │
+                                   NestJS API ──▶ PostgreSQL (source of truth)
+                                        │    └──▶ Redis (fan-out, presence)
+                                        └───────▶ S3 (images)
+```
+
+- **Edits are transactions.** A gesture updates the scene live and commits as one undo step and
+  one batch of operations.
+- **Operations, not documents, travel over the wire.** Only changed properties are sent. The
+  server applies them in a PostgreSQL transaction and broadcasts the results to every instance
+  through Redis.
+- **Conflicts merge per property.** Two people moving and recoloring the same shape both keep their
+  change; deletions win unless explicitly undone.
+- **Diagrams are semantic.** Connectors reference their nodes and ports, and their routes are
+  recomputed whenever a node moves.
+
+## Documentation
+
+| Document                                     | Contents                                                      |
+| -------------------------------------------- | ------------------------------------------------------------- |
+| [ARCHITECTURE.md](ARCHITECTURE.md)           | System design, layers, data flow, security model              |
+| [CANVAS_ENGINE.md](CANVAS_ENGINE.md)         | Editor core, input handling, rendering pipeline, performance  |
+| [DIAGRAM_ENGINE.md](DIAGRAM_ENGINE.md)       | Shapes, ports, routing, layout, templates, importers          |
+| [COLLABORATION.md](COLLABORATION.md)         | Operations, conflict resolution, protocol, offline sync       |
+| [DATABASE.md](DATABASE.md)                   | PostgreSQL schema, constraints, indexes, migrations           |
+| [DEPLOYMENT.md](DEPLOYMENT.md)               | Production configuration, images, scaling, security checklist |
+| [docs/API_CONTRACT.md](docs/API_CONTRACT.md) | REST and WebSocket API reference                              |
+
+## Troubleshooting
+
+**A port is already in use.** Another project may be using 5433, 6379, 9000 or 8026. Change the
+port with the matching `INKFLOW_*_PORT` variable and update `.env` to match.
+
+**`podman compose` says no compose provider was found.** Install `podman-compose`
+(`brew install podman-compose` on macOS).
+
+**Nobody receives verification emails.** In development they are captured by Mailpit at
+http://localhost:8026. Without SMTP configured, the API prints the verification link in its log.
+
+**The container API exits right after starting.** It refuses the development placeholder secrets
+in production mode. Set `INKFLOW_JWT_SECRET` and `INKFLOW_SESSION_SECRET`, or keep the compose
+defaults for local testing.
+
+**The web image build is killed.** The Podman machine is out of memory. Build the images one at a
+time (see [Running everything in containers](#running-everything-in-containers)), or give the
+machine more memory with `podman machine set --memory 4096`.

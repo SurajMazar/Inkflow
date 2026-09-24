@@ -15,6 +15,15 @@ that stores every board, version and comment.
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6)
 ![Podman](https://img.shields.io/badge/runs%20on-Podman-892ca0)
 
+## Demo
+
+[![Inkflow demo: drawing, smart connectors, templates, real-time collaboration and presentation mode](docs/demo/inkflow-demo.gif)](docs/demo/inkflow-demo.mp4)
+
+**[▶ Watch the full narrated demo (1:49, MP4)](docs/demo/inkflow-demo.mp4)**. It covers the dashboard, drawing and
+styling, text and freehand, smart connectors, undo/redo, templates and the shape library, Mermaid
+import with auto layout, real-time collaboration with a second user, comments, version history,
+export, architecture and ER diagrams, presentation mode and dark mode.
+
 ![Architecture diagram board in the Inkflow editor](docs/images/architecture-board.png)
 
 <table>
@@ -28,6 +37,7 @@ that stores every board, version and comment.
 
 ## Contents
 
+- [Demo](#demo)
 - [Features](#features)
 - [Tech stack](#tech-stack)
 - [Quick start](#quick-start)

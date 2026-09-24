@@ -1,0 +1,49 @@
+[
+  [
+    "intro",
+    "This is Inkflow, an infinite canvas whiteboard with a hand drawn look, built from scratch. Your workspace keeps recent boards, projects, favorites and templates together."
+  ],
+  [
+    "draw",
+    "Let's create a board. Shapes are drawn with a seeded, sketchy style, so they look identical on every device and in every export."
+  ],
+  [
+    "style",
+    "The properties panel controls stroke and fill colors, hachure or solid fills, stroke width, dashes and sloppiness."
+  ],
+  ["text", "Text is edited inline, and freehand strokes are smooth, pressure aware vectors."],
+  [
+    "connect",
+    "Connectors are semantic. They bind to shapes and ports, and reroute automatically when a node moves. Every drag is a single undo step."
+  ],
+  [
+    "library",
+    "The library has over a hundred technical symbols and twenty five editable templates, from microservices to O Auth flows."
+  ],
+  [
+    "mermaid",
+    "You can also paste Mermaid text and get a real, editable diagram, then tidy it with automatic layout."
+  ],
+  [
+    "diagrams",
+    "Diagrams go deep: architecture maps with obstacle avoiding routing, and E R diagrams with crow's foot relationships."
+  ],
+  [
+    "collab",
+    "Collaboration is real time. A teammate joins through a share link, and you see their cursor and edits live. Offline changes are queued and synced when the connection returns."
+  ],
+  ["comments", "Comments pin to the canvas or to elements, with replies, mentions and resolve."],
+  [
+    "versions",
+    "Every board autosaves to PostgreSQL, with automatic and manual version history you can restore."
+  ],
+  [
+    "export",
+    "Export to P N G, vector S V G, P D F or JSON, for the whole board, a selection or a single frame."
+  ],
+  [
+    "present",
+    "Frames become slides in presentation mode, with keyboard navigation and a laser pointer."
+  ],
+  ["outro", "And there's a full dark mode. That's Inkflow."]
+]

@@ -1,0 +1,11 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: inkflow
+  annotations:
+    kubernetes.io/ingress.global-static-ip-name: inkflow-ip
+    networking.gke.io/managed-certificates: inkflow-cert
+    networking.gke.io/v1beta1.FrontendConfig: inkflow-frontend
+spec:
+  ingressClassName: gce
+  tls: null

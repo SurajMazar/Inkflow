@@ -45,7 +45,11 @@ export class StorageService implements OnModuleInit, OnApplicationShutdown {
       region: env.S3_REGION,
       ...(env.S3_ENDPOINT ? { endpoint: env.S3_ENDPOINT } : {}),
       forcePathStyle: env.S3_FORCE_PATH_STYLE,
-      credentials: { accessKeyId: env.S3_ACCESS_KEY, secretAccessKey: env.S3_SECRET_KEY },
+      // Static keys when configured; otherwise the SDK default chain (IRSA, task roles, instance profiles).
+      credentials:
+        env.S3_ACCESS_KEY && env.S3_SECRET_KEY
+          ? { accessKeyId: env.S3_ACCESS_KEY, secretAccessKey: env.S3_SECRET_KEY }
+          : undefined,
       maxAttempts: 3,
       // Broadest compatibility with S3-compatible stores (MinIO, R2, …).
       requestChecksumCalculation: 'WHEN_REQUIRED',

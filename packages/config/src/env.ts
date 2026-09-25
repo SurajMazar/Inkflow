@@ -46,8 +46,12 @@ export const apiEnvSchema = z
     S3_ENDPOINT: optionalString,
     S3_REGION: z.string().default('us-east-1'),
     S3_BUCKET: z.string().min(1).default('inkflow'),
-    S3_ACCESS_KEY: z.string().min(1),
-    S3_SECRET_KEY: z.string().min(1),
+    /**
+     * Static S3 credentials. Leave both unset to use the AWS SDK default credential chain
+     * (IAM roles for service accounts on EKS, ECS task roles, instance profiles).
+     */
+    S3_ACCESS_KEY: optionalString,
+    S3_SECRET_KEY: optionalString,
     S3_FORCE_PATH_STYLE: bool(true),
 
     SMTP_HOST: optionalString,
@@ -74,6 +78,14 @@ export const apiEnvSchema = z
     TRASH_RETENTION_DAYS: z.coerce.number().int().min(1).default(30),
   })
   .superRefine((env, ctx) => {
+    if (Boolean(env.S3_ACCESS_KEY) !== Boolean(env.S3_SECRET_KEY)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['S3_SECRET_KEY'],
+        message:
+          'Set both S3_ACCESS_KEY and S3_SECRET_KEY, or neither to use the default AWS credential chain',
+      });
+    }
     if (env.NODE_ENV !== 'production') return;
     for (const key of ['JWT_SECRET', 'SESSION_SECRET'] as const) {
       if (env[key].includes(DEV_SECRET_MARKER)) {

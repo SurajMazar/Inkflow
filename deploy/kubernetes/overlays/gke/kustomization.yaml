@@ -1,0 +1,37 @@
+# Google Kubernetes Engine: GCE ingress with a Google-managed certificate, Cloud SQL,
+# Memorystore for Redis and Cloud Storage (S3-compatible XML API with HMAC keys).
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../base
+  - gke-extras.yaml
+patches:
+  - path: ingress-gce.yaml
+  - path: config.yaml
+  - target: { kind: Service, name: api }
+    patch: |-
+      - op: add
+        path: /metadata/annotations
+        value:
+          cloud.google.com/neg: '{"ingress": true}'
+          cloud.google.com/backend-config: '{"default": "inkflow-api"}'
+  - target: { kind: Service, name: web }
+    patch: |-
+      - op: add
+        path: /metadata/annotations
+        value:
+          cloud.google.com/neg: '{"ingress": true}'
+  - target: { kind: ServiceAccount, name: inkflow-api }
+    patch: |-
+      - op: add
+        path: /metadata/annotations
+        value:
+          # Workload Identity: the Google service account used for Cloud SQL / Secret Manager access.
+          iam.gke.io/gcp-service-account: inkflow-api@my-project.iam.gserviceaccount.com
+images:
+  - name: inkflow-api
+    newName: us-docker.pkg.dev/my-project/inkflow/inkflow-api
+    newTag: '1.0.0'
+  - name: inkflow-web
+    newName: us-docker.pkg.dev/my-project/inkflow/inkflow-web
+    newTag: '1.0.0'

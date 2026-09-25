@@ -1,0 +1,25 @@
+# Non-secret configuration. Secrets (DATABASE_URL, REDIS_URL, JWT_SECRET, SESSION_SECRET, S3 and
+# SMTP credentials, OAuth secrets) live in the `inkflow-secrets` Secret (see secret.example.yaml).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: inkflow-config
+data:
+  NODE_ENV: production
+  PORT: '4000'
+  HOST: 0.0.0.0
+  LOG_LEVEL: info
+  TRUST_PROXY: 'true'
+  COOKIE_SECURE: 'true'
+  WEB_ORIGIN: https://inkflow.example.com
+  PUBLIC_API_URL: https://inkflow.example.com/api
+  REQUIRE_EMAIL_VERIFICATION: 'true'
+  S3_REGION: us-east-1
+  S3_BUCKET: inkflow-prod-files
+  S3_FORCE_PATH_STYLE: 'false'
+  SMTP_PORT: '587'
+  SMTP_SECURE: 'false'
+  MAIL_FROM: Inkflow <no-reply@inkflow.example.com>
+  RATE_LIMIT_WINDOW_SECONDS: '60'
+  RATE_LIMIT_MAX: '600'
+  AUTH_RATE_LIMIT_MAX: '20'

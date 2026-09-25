@@ -42,6 +42,7 @@ export, architecture and ER diagrams, presentation mode and dark mode.
 - [Tech stack](#tech-stack)
 - [Quick start](#quick-start)
 - [Running everything in containers](#running-everything-in-containers)
+- [Deployment](#deployment)
 - [Testing](#testing)
 - [Commands](#commands)
 - [Configuration](#configuration)
@@ -235,6 +236,34 @@ podman compose --profile app down
 ```
 
 `docker compose` works with the same file.
+
+## Deployment
+
+Inkflow runs anywhere that offers containers, managed PostgreSQL and Redis, S3-compatible storage
+and a TLS load balancer with WebSocket support. [DEPLOYMENT.md](DEPLOYMENT.md) has the full guide:
+requirements, a best-practices checklist (security, reliability, backups, observability), and
+step-by-step recipes.
+
+| Target          | How                                                                                         | Assets in this repo                                                   |
+| --------------- | ------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| Single VM       | Podman/Docker Compose behind Caddy for TLS                                                  | `docker-compose.yml`                                                  |
+| Any Kubernetes  | Kustomize base with ingress-nginx and cert-manager, migration Job, HPA, PDBs                | [`deploy/kubernetes/base`](deploy/kubernetes/base)                    |
+| AWS EKS         | ALB ingress + ACM, RDS, ElastiCache, S3 through IRSA, ECR                                   | [`deploy/kubernetes/overlays/eks`](deploy/kubernetes/overlays/eks)    |
+| AWS ECS Fargate | Two services behind one ALB, Secrets Manager, task role for S3, one-off migration task      | [DEPLOYMENT.md](DEPLOYMENT.md#c2-amazon-ecs-on-fargate-no-kubernetes) |
+| GCP GKE         | GCE ingress + managed certificate, Cloud SQL, Memorystore, Cloud Storage, Workload Identity | [`deploy/kubernetes/overlays/gke`](deploy/kubernetes/overlays/gke)    |
+| GCP Cloud Run   | API and web services behind one HTTPS load balancer, Cloud Run migration job                | [DEPLOYMENT.md](DEPLOYMENT.md#d2-cloud-run-serverless)                |
+
+Essentials in every environment:
+
+- Build immutable images in CI (`.github/workflows/ci.yml` tests, then pushes both images to GHCR
+  tagged by commit).
+- Run migrations once per release (`docker run IMAGE migrate`, the Kubernetes Job, an ECS task or
+  a Cloud Run job) and set `SKIP_MIGRATIONS=true` on the API.
+- Keep secrets in a secrets manager; use workload identity for storage where possible.
+- Route `/api` (including the `/api/ws` WebSocket) to the API with a long idle timeout, and
+  everything else to the web service.
+- Run at least two replicas of each service with health checks (`/api/health/ready`) and
+  database backups with point-in-time recovery.
 
 ## Testing
 

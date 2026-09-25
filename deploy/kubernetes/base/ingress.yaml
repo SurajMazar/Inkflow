@@ -1,0 +1,27 @@
+# Routes /api (REST + WebSocket) straight to the API and everything else to the web app.
+# The base targets ingress-nginx; the eks/gke overlays switch to the cloud load balancers.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: inkflow
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: 25m
+    nginx.ingress.kubernetes.io/proxy-read-timeout: '3600'
+    nginx.ingress.kubernetes.io/proxy-send-timeout: '3600'
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts: [inkflow.example.com]
+      secretName: inkflow-tls
+  rules:
+    - host: inkflow.example.com
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service: { name: api, port: { number: 4000 } }
+          - path: /
+            pathType: Prefix
+            backend:
+              service: { name: web, port: { number: 8080 } }

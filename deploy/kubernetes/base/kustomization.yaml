@@ -1,0 +1,17 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: inkflow
+resources:
+  - namespace.yaml
+  - configmap.yaml
+  - migrate-job.yaml
+  - api.yaml
+  - web.yaml
+  - ingress.yaml
+images:
+  - name: inkflow-api
+    newName: ghcr.io/surajmazar/inkflow-api
+    newTag: latest
+  - name: inkflow-web
+    newName: ghcr.io/surajmazar/inkflow-web
+    newTag: latest

@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: inkflow-config
+data:
+  S3_REGION: us-east-1
+  S3_BUCKET: inkflow-prod-files
+  S3_FORCE_PATH_STYLE: 'false'

@@ -1,0 +1,28 @@
+# Amazon EKS: AWS Load Balancer Controller (ALB) ingress, IRSA for S3, RDS + ElastiCache + S3.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../base
+patches:
+  - path: ingress-alb.yaml
+  - path: config.yaml
+  - target: { kind: ServiceAccount, name: inkflow-api }
+    patch: |-
+      - op: add
+        path: /metadata/annotations
+        value:
+          # IAM role with s3:GetObject/PutObject/DeleteObject/ListBucket on the files bucket.
+          eks.amazonaws.com/role-arn: arn:aws:iam::123456789012:role/inkflow-api
+  - target: { kind: Service, name: api }
+    patch: |-
+      - op: add
+        path: /metadata/annotations
+        value:
+          alb.ingress.kubernetes.io/healthcheck-path: /api/health/ready
+images:
+  - name: inkflow-api
+    newName: 123456789012.dkr.ecr.us-east-1.amazonaws.com/inkflow-api
+    newTag: '1.0.0'
+  - name: inkflow-web
+    newName: 123456789012.dkr.ecr.us-east-1.amazonaws.com/inkflow-web
+    newTag: '1.0.0'

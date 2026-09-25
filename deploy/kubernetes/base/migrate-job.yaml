@@ -1,0 +1,33 @@
+# Applies Prisma migrations before (or alongside) a rollout. Re-create it for each release:
+#   kubectl -n inkflow delete job inkflow-migrate --ignore-not-found && kubectl apply -k <overlay>
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: inkflow-migrate
+  labels:
+    app.kubernetes.io/name: inkflow-migrate
+spec:
+  backoffLimit: 3
+  ttlSecondsAfterFinished: 3600
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: inkflow-migrate
+    spec:
+      restartPolicy: OnFailure
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+      containers:
+        - name: migrate
+          image: inkflow-api
+          args: ['migrate']
+          envFrom:
+            - secretRef:
+                name: inkflow-secrets
+          resources:
+            requests: { cpu: 100m, memory: 256Mi }
+            limits: { memory: 512Mi }
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: { drop: ['ALL'] }
